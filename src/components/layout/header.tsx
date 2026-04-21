@@ -72,7 +72,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-[#64748B]"
+            className="md:hidden text-muted-foreground"
             onClick={onMobileMenuToggle}
           >
             <Menu className="h-5 w-5" />
@@ -81,11 +81,11 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           {/* Search trigger */}
           <button
             onClick={() => setSearchOpen(true)}
-            className="hidden sm:flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#64748B] transition-colors hover:border-[#6366F1]/40 hover:bg-white"
+            className="hidden sm:flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:bg-card"
           >
             <Search className="h-4 w-4" />
             <span>Search…</span>
-            <kbd className="ml-4 hidden rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-medium text-[#94A3B8] lg:inline">
+            <kbd className="ml-4 hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground lg:inline">
               <span className="text-xs">⌘</span> K
             </kbd>
           </button>
@@ -97,7 +97,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="text-[#64748B] hover:text-[#0F172A]"
+            className="text-muted-foreground hover:text-foreground"
             onClick={toggleTheme}
           >
             {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -107,7 +107,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="relative text-[#64748B] hover:text-[#0F172A]"
+            className="relative text-muted-foreground hover:text-foreground"
           >
             <Bell className="h-5 w-5" />
             {notifCount > 0 && (
@@ -119,13 +119,13 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
           {/* User Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-[#F1F5F9] outline-none">
+            <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted outline-none">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-[#6366F1] text-xs font-bold text-white">
+                <AvatarFallback className="bg-primary text-xs font-bold text-white">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <span className="hidden text-sm font-medium text-[#0F172A] md:block">
+              <span className="hidden text-sm font-medium text-foreground md:block">
                 {user?.name || "User"}
               </span>
             </DropdownMenuTrigger>
@@ -133,7 +133,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
               <div className="flex items-center gap-2 px-2 py-1.5">
                 <div className="flex flex-col">
                   <p className="text-sm font-medium">{user?.name || "User"}</p>
-                  <p className="text-xs text-[#64748B]">
+                  <p className="text-xs text-muted-foreground">
                     {user?.email || "user@example.com"}
                   </p>
                 </div>
@@ -148,7 +148,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-[#EF4444]">
+              <DropdownMenuItem onClick={logout} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign Out
               </DropdownMenuItem>

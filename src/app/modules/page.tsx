@@ -54,7 +54,7 @@ export default function ModulesPage() {
       <ProtectedRoute>
         <AppLayout>
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </AppLayout>
       </ProtectedRoute>
@@ -84,8 +84,8 @@ export default function ModulesPage() {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-[#0F172A]">Modules</h1>
-            <p className="mt-1 text-[#64748B]">
+            <h1 className="text-2xl font-bold text-foreground">Modules</h1>
+            <p className="mt-1 text-muted-foreground">
               Access your client-specific tools and integrated services.
             </p>
           </div>
@@ -93,18 +93,18 @@ export default function ModulesPage() {
           {/* Module Grid */}
           {displayModules.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F1F5F9]">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                 <span className="text-2xl">📦</span>
               </div>
-              <p className="text-lg font-medium text-[#0F172A]">No modules available</p>
-              <p className="mt-1 text-sm text-[#64748B]">Your modules will appear here when assigned.</p>
+              <p className="text-lg font-medium text-foreground">No modules available</p>
+              <p className="mt-1 text-sm text-muted-foreground">Your modules will appear here when assigned.</p>
             </div>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2">
               {displayModules.map((mod) => (
                 <div
                   key={mod.id}
-                  className={`group relative rounded-xl border ${mod.accentBorder} bg-white p-6 shadow-sm transition-shadow hover:shadow-md`}
+                  className={`group relative rounded-xl border ${mod.accentBorder} bg-card p-6 shadow-sm transition-shadow hover:shadow-md`}
                 >
                   {/* Status Badge */}
                   <span
@@ -121,10 +121,10 @@ export default function ModulesPage() {
                   </div>
 
                   {/* Title & Description */}
-                  <h3 className="text-lg font-semibold text-[#0F172A]">
+                  <h3 className="text-lg font-semibold text-foreground">
                     {mod.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[#64748B]">
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {mod.description}
                   </p>
 
@@ -133,7 +133,7 @@ export default function ModulesPage() {
                     {mod.status === "Coming Soon" ? (
                       <Button
                         variant="outline"
-                        className={`border-[#E2E8F0] text-[#94A3B8] cursor-not-allowed`}
+                        className={`border-border text-muted-foreground cursor-not-allowed`}
                         disabled
                       >
                         Coming Soon

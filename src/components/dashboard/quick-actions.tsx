@@ -11,7 +11,7 @@ const actions = [
     label: "View Projects",
     href: "/projects",
     icon: FolderKanban,
-    color: "bg-[#6366F1]/10 text-[#6366F1] hover:bg-[#6366F1]/20",
+    color: "bg-primary/10 text-primary hover:bg-primary/20",
   },
   {
     label: "Pay Invoice",
@@ -35,8 +35,8 @@ const actions = [
 
 export function QuickActions() {
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
-      <h3 className="mb-4 text-base font-semibold text-[#0F172A]">
+    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      <h3 className="mb-4 text-base font-semibold text-foreground">
         Quick Actions
       </h3>
       <div className="grid grid-cols-2 gap-3">

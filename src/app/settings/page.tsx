@@ -44,7 +44,7 @@ export default function SettingsPage() {
       <ProtectedRoute>
         <AppLayout>
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </AppLayout>
       </ProtectedRoute>
@@ -63,15 +63,15 @@ export default function SettingsPage() {
       <AppLayout>
         <div className="max-w-2xl space-y-6">
           <div>
-            <h1 className="text-2xl font-bold text-[#0F172A]">Settings</h1>
-            <p className="mt-1 text-[#64748B]">Manage your account preferences.</p>
+            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+            <p className="mt-1 text-muted-foreground">Manage your account preferences.</p>
           </div>
 
           {/* Profile */}
-          <Card className="border-[#E2E8F0]">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <User className="h-4 w-4 text-[#6366F1]" />
+                <User className="h-4 w-4 text-primary" />
                 Profile
               </CardTitle>
             </CardHeader>
@@ -82,7 +82,7 @@ export default function SettingsPage() {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="border-[#E2E8F0]"
+                  className="border-border"
                 />
               </div>
               <div className="space-y-2">
@@ -91,18 +91,18 @@ export default function SettingsPage() {
                   id="email"
                   value={email}
                   disabled
-                  className="border-[#E2E8F0] bg-[#F8FAFC] text-[#94A3B8]"
+                  className="border-border bg-background text-muted-foreground"
                 />
-                <p className="text-xs text-[#94A3B8]">Contact your account manager to change your email.</p>
+                <p className="text-xs text-muted-foreground">Contact your account manager to change your email.</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Password */}
-          <Card className="border-[#E2E8F0]">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <User className="h-4 w-4 text-[#6366F1]" />
+                <User className="h-4 w-4 text-primary" />
                 Change Password
               </CardTitle>
             </CardHeader>
@@ -112,7 +112,7 @@ export default function SettingsPage() {
                 <Input
                   id="current-password"
                   type="password"
-                  className="border-[#E2E8F0]"
+                  className="border-border"
                 />
               </div>
               <div className="space-y-2">
@@ -120,7 +120,7 @@ export default function SettingsPage() {
                 <Input
                   id="new-password"
                   type="password"
-                  className="border-[#E2E8F0]"
+                  className="border-border"
                 />
               </div>
               <div className="space-y-2">
@@ -128,81 +128,81 @@ export default function SettingsPage() {
                 <Input
                   id="confirm-password"
                   type="password"
-                  className="border-[#E2E8F0]"
+                  className="border-border"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Notifications */}
-          <Card className="border-[#E2E8F0]">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Bell className="h-4 w-4 text-[#6366F1]" />
+                <Bell className="h-4 w-4 text-primary" />
                 Notifications
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[#0F172A]">Invoice emails</p>
-                  <p className="text-xs text-[#64748B]">Get notified when a new invoice is sent</p>
+                  <p className="text-sm font-medium text-foreground">Invoice emails</p>
+                  <p className="text-xs text-muted-foreground">Get notified when a new invoice is sent</p>
                 </div>
                 <Checkbox
                   checked={notifications.invoiceEmail}
                   onCheckedChange={(c) => setNotifications({ ...notifications, invoiceEmail: !!c })}
-                  className="data-[state=checked]:bg-[#6366F1] data-[state=checked]:border-[#6366F1]"
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-[#6366F1]"
                 />
               </div>
               <Separator className="bg-[#E2E8F0]" />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[#0F172A]">Message emails</p>
-                  <p className="text-xs text-[#64748B]">Get notified when you receive a new message</p>
+                  <p className="text-sm font-medium text-foreground">Message emails</p>
+                  <p className="text-xs text-muted-foreground">Get notified when you receive a new message</p>
                 </div>
                 <Checkbox
                   checked={notifications.messageEmail}
                   onCheckedChange={(c) => setNotifications({ ...notifications, messageEmail: !!c })}
-                  className="data-[state=checked]:bg-[#6366F1] data-[state=checked]:border-[#6366F1]"
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-[#6366F1]"
                 />
               </div>
               <Separator className="bg-[#E2E8F0]" />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[#0F172A]">Project updates</p>
-                  <p className="text-xs text-[#64748B]">Get notified on project milestones and changes</p>
+                  <p className="text-sm font-medium text-foreground">Project updates</p>
+                  <p className="text-xs text-muted-foreground">Get notified on project milestones and changes</p>
                 </div>
                 <Checkbox
                   checked={notifications.projectUpdate}
                   onCheckedChange={(c) => setNotifications({ ...notifications, projectUpdate: !!c })}
-                  className="data-[state=checked]:bg-[#6366F1] data-[state=checked]:border-[#6366F1]"
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-[#6366F1]"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Appearance */}
-          <Card className="border-[#E2E8F0]">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Palette className="h-4 w-4 text-[#6366F1]" />
+                <Palette className="h-4 w-4 text-primary" />
                 Appearance
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[#0F172A]">Dark Mode</p>
-                  <p className="text-xs text-[#64748B]">Switch between light and dark theme</p>
+                  <p className="text-sm font-medium text-foreground">Dark Mode</p>
+                  <p className="text-xs text-muted-foreground">Switch between light and dark theme</p>
                 </div>
                 <button
                   onClick={toggleTheme}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    isDark ? "bg-[#6366F1]" : "bg-[#E2E8F0]"
+                    isDark ? "bg-primary" : "bg-[#E2E8F0]"
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                    className={`inline-block h-4 w-4 rounded-full bg-card transition-transform ${
                       isDark ? "translate-x-6" : "translate-x-1"
                     }`}
                   />
@@ -212,17 +212,17 @@ export default function SettingsPage() {
           </Card>
 
           {/* Language */}
-          <Card className="border-[#E2E8F0]">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Globe className="h-4 w-4 text-[#6366F1]" />
+                <Globe className="h-4 w-4 text-primary" />
                 Language
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <Label>Display Language</Label>
-                <select className="flex h-10 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0F172A] focus:border-[#6366F1] focus:outline-none focus:ring-1 focus:ring-[#6366F1]">
+                <select className="flex h-10 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
                   <option>English</option>
                   <option>Français</option>
                   <option>中文</option>
@@ -235,7 +235,7 @@ export default function SettingsPage() {
           <div className="flex justify-end">
             <Button
               onClick={handleSave}
-              className="bg-[#6366F1] hover:bg-[#4F46E5] px-8"
+              className="bg-primary hover:bg-primary/90 px-8"
             >
               {saved ? (
                 <>

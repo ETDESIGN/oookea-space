@@ -2,11 +2,11 @@ import { cn } from "@/lib/utils";
 import type { InvoiceStatus } from "@/types";
 
 const config: Record<InvoiceStatus, { label: string; className: string }> = {
-  draft: { label: "Draft", className: "bg-[#94A3B8]/10 text-[#94A3B8] border-[#94A3B8]/20" },
-  sent: { label: "Sent", className: "bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20" },
+  draft: { label: "Draft", className: "bg-[#94A3B8]/10 text-muted-foreground border-[#94A3B8]/20" },
+  sent: { label: "Sent", className: "bg-primary/10 text-primary border-[#6366F1]/20" },
   paid: { label: "Paid", className: "bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20" },
-  overdue: { label: "Overdue", className: "bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20" },
-  cancelled: { label: "Cancelled", className: "bg-[#64748B]/10 text-[#64748B] border-[#64748B]/20" },
+  overdue: { label: "Overdue", className: "bg-[#EF4444]/10 text-destructive border-[#EF4444]/20" },
+  cancelled: { label: "Cancelled", className: "bg-[#64748B]/10 text-muted-foreground border-[#64748B]/20" },
 };
 
 export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {

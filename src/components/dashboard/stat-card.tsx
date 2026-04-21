@@ -20,26 +20,26 @@ export function StatCard({
   color,
 }: StatCardProps) {
   return (
-    <Card className="border-[#E2E8F0] bg-white shadow-sm hover:shadow-md transition-shadow">
+    <Card className="border-border bg-card shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-[#64748B]">{title}</p>
-            <p className="text-3xl font-bold tracking-tight text-[#0F172A]">
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-3xl font-bold tracking-tight text-foreground">
               {value}
             </p>
             {description && (
-              <p className="text-xs text-[#94A3B8]">{description}</p>
+              <p className="text-xs text-muted-foreground">{description}</p>
             )}
             {trend && (
               <p
                 className={cn(
                   "text-xs font-medium",
-                  trend.positive ? "text-[#22C55E]" : "text-[#EF4444]"
+                  trend.positive ? "text-[#22C55E]" : "text-destructive"
                 )}
               >
                 {trend.positive ? "↑" : "↓"} {Math.abs(trend.value)}%{" "}
-                <span className="text-[#94A3B8]">vs last month</span>
+                <span className="text-muted-foreground">vs last month</span>
               </p>
             )}
           </div>

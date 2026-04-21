@@ -46,8 +46,8 @@ export default function ProjectsPage() {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-[#0F172A]">Projects</h1>
-            <p className="mt-1 text-[#64748B]">
+            <h1 className="text-2xl font-bold text-foreground">Projects</h1>
+            <p className="mt-1 text-muted-foreground">
               Track progress on all your active and completed projects.
             </p>
           </div>
@@ -55,12 +55,12 @@ export default function ProjectsPage() {
           {/* Filters */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Tabs value={filter} onValueChange={setFilter}>
-              <TabsList className="bg-[#F1F5F9]">
+              <TabsList className="bg-muted">
                 {statusFilters.map((s) => (
                   <TabsTrigger
                     key={s.value}
                     value={s.value}
-                    className="data-[state=active]:bg-white data-[state=active]:text-[#6366F1] data-[state=active]:shadow-sm"
+                    className="data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
                   >
                     {s.label}
                   </TabsTrigger>
@@ -70,24 +70,24 @@ export default function ProjectsPage() {
 
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search projects…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-9 w-64 pl-9 border-[#E2E8F0] bg-white"
+                  className="h-9 w-64 pl-9 border-border bg-card"
                 />
               </div>
-              <div className="flex rounded-lg border border-[#E2E8F0] bg-white p-0.5">
+              <div className="flex rounded-lg border border-border bg-card p-0.5">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`rounded-md p-1.5 ${viewMode === "grid" ? "bg-[#6366F1] text-white" : "text-[#64748B]"}`}
+                  className={`rounded-md p-1.5 ${viewMode === "grid" ? "bg-primary text-white" : "text-muted-foreground"}`}
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`rounded-md p-1.5 ${viewMode === "list" ? "bg-[#6366F1] text-white" : "text-[#64748B]"}`}
+                  className={`rounded-md p-1.5 ${viewMode === "list" ? "bg-primary text-white" : "text-muted-foreground"}`}
                 >
                   <List className="h-4 w-4" />
                 </button>
@@ -98,18 +98,18 @@ export default function ProjectsPage() {
           {/* Loading */}
           {projects === undefined && (
             <div className="flex items-center justify-center py-20">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E2E8F0] border-t-[#6366F1]" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary" />
             </div>
           )}
 
           {/* Projects Grid / List */}
           {projects !== undefined && filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F1F5F9]">
-                <Search className="h-8 w-8 text-[#94A3B8]" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                <Search className="h-8 w-8 text-muted-foreground" />
               </div>
-              <p className="text-lg font-medium text-[#0F172A]">No projects found</p>
-              <p className="mt-1 text-sm text-[#64748B]">Try adjusting your search or filters.</p>
+              <p className="text-lg font-medium text-foreground">No projects found</p>
+              <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
             </div>
           ) : projects !== undefined && viewMode === "grid" ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -134,14 +134,14 @@ export default function ProjectsPage() {
               ))}
             </div>
           ) : projects !== undefined ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white">
+            <div className="rounded-xl border border-border bg-card">
               {filtered.map((project, i) => (
                 <a
                   key={project._id}
                   href={`/projects/${project.slug}`}
-                  className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-[#F8FAFC] ${i > 0 ? "border-t border-[#E2E8F0]" : ""}`}
+                  className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-background ${i > 0 ? "border-t border-border" : ""}`}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#6366F1]/10 text-[#6366F1]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <span className="text-lg">
                       {project.category === "Website" ? "🌐" :
                        project.category === "Branding" ? "🎨" :
@@ -150,12 +150,12 @@ export default function ProjectsPage() {
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-[#0F172A]">{project.title}</p>
-                    <p className="text-xs text-[#64748B]">{project.category}</p>
+                    <p className="font-medium text-foreground">{project.title}</p>
+                    <p className="text-xs text-muted-foreground">{project.category}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-[#0F172A]">{project.progress}%</p>
-                    <p className="text-xs text-[#64748B]">
+                    <p className="text-sm font-medium text-foreground">{project.progress}%</p>
+                    <p className="text-xs text-muted-foreground">
                       {project.status === "active" ? "Active" :
                        project.status === "completed" ? "Completed" : "On Hold"}
                     </p>

@@ -71,7 +71,7 @@ export default function AdminDashboardPage() {
       title: "Total Clients",
       value: isLoading ? "—" : String(totalClients),
       icon: Users,
-      color: "bg-[#6366F1]/10 text-[#6366F1]",
+      color: "bg-primary/10 text-primary",
     },
     {
       title: "Active Projects",
@@ -89,17 +89,17 @@ export default function AdminDashboardPage() {
       title: "Outstanding",
       value: isLoading ? "—" : `$${outstanding.toLocaleString()}`,
       icon: AlertCircle,
-      color: "bg-[#EF4444]/10 text-[#EF4444]",
+      color: "bg-[#EF4444]/10 text-destructive",
     },
   ];
 
   const statusColor: Record<string, string> = {
     active: "bg-[#22C55E]/10 text-[#22C55E]",
-    inactive: "bg-[#94A3B8]/10 text-[#94A3B8]",
+    inactive: "bg-[#94A3B8]/10 text-muted-foreground",
     paid: "bg-[#22C55E]/10 text-[#22C55E]",
-    sent: "bg-[#6366F1]/10 text-[#6366F1]",
-    overdue: "bg-[#EF4444]/10 text-[#EF4444]",
-    draft: "bg-[#94A3B8]/10 text-[#94A3B8]",
+    sent: "bg-primary/10 text-primary",
+    overdue: "bg-[#EF4444]/10 text-destructive",
+    draft: "bg-[#94A3B8]/10 text-muted-foreground",
   };
 
   // Recent clients (up to 5)
@@ -113,10 +113,10 @@ export default function AdminDashboardPage() {
         <div className="space-y-6">
           {/* Welcome */}
           <div>
-            <h1 className="text-2xl font-bold text-[#0F172A]">
+            <h1 className="text-2xl font-bold text-foreground">
               Welcome back, {user.name} 👋
             </h1>
-            <p className="mt-1 text-[#64748B]">
+            <p className="mt-1 text-muted-foreground">
               Here&apos;s an overview of your client portal activity.
             </p>
           </div>
@@ -124,12 +124,12 @@ export default function AdminDashboardPage() {
           {/* Stat Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat) => (
-              <Card key={stat.title} className="border-[#E2E8F0] bg-white shadow-sm hover:shadow-md transition-shadow">
+              <Card key={stat.title} className="border-border bg-card shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-[#64748B]">{stat.title}</p>
-                      <p className="text-3xl font-bold tracking-tight text-[#0F172A]">
+                      <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                      <p className="text-3xl font-bold tracking-tight text-foreground">
                         {stat.value}
                       </p>
                     </div>
@@ -145,20 +145,20 @@ export default function AdminDashboardPage() {
           {/* Revenue Chart Placeholder + Quick Actions */}
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Revenue Chart Placeholder */}
-            <Card className="border-[#E2E8F0] bg-white shadow-sm lg:col-span-2">
+            <Card className="border-border bg-card shadow-sm lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-[#6366F1]" />
+                  <BarChart3 className="h-5 w-5 text-primary" />
                   Revenue Overview
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex h-48 flex-col items-center justify-center rounded-lg border border-dashed border-[#E2E8F0] bg-[#F8FAFC]">
-                  <BarChart3 className="h-10 w-10 text-[#94A3B8]" />
-                  <p className="mt-2 text-sm font-medium text-[#64748B]">
+                <div className="flex h-48 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-background">
+                  <BarChart3 className="h-10 w-10 text-muted-foreground" />
+                  <p className="mt-2 text-sm font-medium text-muted-foreground">
                     Revenue chart coming soon
                   </p>
-                  <p className="text-xs text-[#94A3B8]">
+                  <p className="text-xs text-muted-foreground">
                     Monthly revenue breakdown will appear here
                   </p>
                 </div>
@@ -166,14 +166,14 @@ export default function AdminDashboardPage() {
             </Card>
 
             {/* Quick Actions */}
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
-              <h3 className="mb-4 text-base font-semibold text-[#0F172A]">
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <h3 className="mb-4 text-base font-semibold text-foreground">
                 Quick Actions
               </h3>
               <div className="grid grid-cols-1 gap-3">
                 <Link
                   href="/admin/clients"
-                  className="flex items-center gap-3 rounded-lg bg-[#6366F1]/10 p-3 text-[#6366F1] transition-colors hover:bg-[#6366F1]/20"
+                  className="flex items-center gap-3 rounded-lg bg-primary/10 p-3 text-primary transition-colors hover:bg-primary/20"
                 >
                   <Plus className="h-5 w-5 shrink-0" />
                   <span className="text-sm font-medium">Add Client</span>
@@ -199,15 +199,15 @@ export default function AdminDashboardPage() {
           {/* Recent Clients + Recent Invoices */}
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Recent Clients */}
-            <Card className="border-[#E2E8F0] bg-white shadow-sm">
+            <Card className="border-border bg-card shadow-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-[#6366F1]" />
+                    <Users className="h-5 w-5 text-primary" />
                     Recent Clients
                   </CardTitle>
                   <Link href="/admin/clients">
-                    <Button variant="ghost" size="sm" className="text-[#6366F1]">
+                    <Button variant="ghost" size="sm" className="text-primary">
                       View all
                     </Button>
                   </Link>
@@ -219,7 +219,7 @@ export default function AdminDashboardPage() {
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#6366F1] border-t-transparent" />
                   </div>
                 ) : recentClients.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-[#64748B]">No clients yet.</p>
+                  <p className="py-8 text-center text-sm text-muted-foreground">No clients yet.</p>
                 ) : (
                   <Table>
                     <TableHeader>
@@ -233,11 +233,11 @@ export default function AdminDashboardPage() {
                       {recentClients.map((client) => (
                         <TableRow key={client._id} className="cursor-pointer">
                           <TableCell>
-                            <Link href={`/admin/clients/${client._id}`} className="font-medium text-[#0F172A] hover:text-[#6366F1]">
+                            <Link href={`/admin/clients/${client._id}`} className="font-medium text-foreground hover:text-primary">
                               {client.name}
                             </Link>
                           </TableCell>
-                          <TableCell className="hidden text-[#64748B] sm:table-cell">
+                          <TableCell className="hidden text-muted-foreground sm:table-cell">
                             {client.email}
                           </TableCell>
                           <TableCell className="text-right">
@@ -256,15 +256,15 @@ export default function AdminDashboardPage() {
             </Card>
 
             {/* Recent Invoices */}
-            <Card className="border-[#E2E8F0] bg-white shadow-sm">
+            <Card className="border-border bg-card shadow-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-[#6366F1]" />
+                    <FileText className="h-5 w-5 text-primary" />
                     Recent Invoices
                   </CardTitle>
                   <Link href="/admin/invoices">
-                    <Button variant="ghost" size="sm" className="text-[#6366F1]">
+                    <Button variant="ghost" size="sm" className="text-primary">
                       View all
                     </Button>
                   </Link>
@@ -276,7 +276,7 @@ export default function AdminDashboardPage() {
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#6366F1] border-t-transparent" />
                   </div>
                 ) : recentInvoices.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-[#64748B]">No invoices yet.</p>
+                  <p className="py-8 text-center text-sm text-muted-foreground">No invoices yet.</p>
                 ) : (
                   <Table>
                     <TableHeader>
@@ -289,10 +289,10 @@ export default function AdminDashboardPage() {
                     <TableBody>
                       {recentInvoices.map((inv) => (
                         <TableRow key={inv._id}>
-                          <TableCell className="font-medium text-[#0F172A]">
+                          <TableCell className="font-medium text-foreground">
                             {inv.number}
                           </TableCell>
-                          <TableCell className="text-right font-medium text-[#0F172A]">
+                          <TableCell className="text-right font-medium text-foreground">
                             ${inv.total.toLocaleString()}
                           </TableCell>
                           <TableCell className="text-right">

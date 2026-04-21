@@ -134,7 +134,7 @@ export default function AdminInvoicesPage() {
     { label: "Total Invoiced", value: formatCurrency(totalInvoiced), icon: DollarSign, color: "text-primary", bg: "bg-primary/10" },
     { label: "Paid", value: formatCurrency(totalPaid), icon: CheckCircle2, color: "text-[#22C55E]", bg: "bg-[#22C55E]/10" },
     { label: "Outstanding", value: formatCurrency(totalOutstanding), icon: Clock, color: "text-[#F59E0B]", bg: "bg-[#F59E0B]/10" },
-    { label: "Overdue", value: formatCurrency(totalOverdue), icon: AlertCircle, color: "text-[#EF4444]", bg: "bg-[#EF4444]/10" },
+    { label: "Overdue", value: formatCurrency(totalOverdue), icon: AlertCircle, color: "text-destructive", bg: "bg-[#EF4444]/10" },
   ];
 
   return (

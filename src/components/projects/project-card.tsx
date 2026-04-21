@@ -8,9 +8,9 @@ import type { Project, ProjectStatus } from "@/types";
 
 const statusConfig: Record<ProjectStatus, { label: string; color: string }> = {
   active: { label: "Active", color: "bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20" },
-  completed: { label: "Completed", color: "bg-[#6366F1]/10 text-[#6366F1] border-[#6366F1]/20" },
+  completed: { label: "Completed", color: "bg-primary/10 text-primary border-[#6366F1]/20" },
   "on-hold": { label: "On Hold", color: "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20" },
-  draft: { label: "Draft", color: "bg-[#94A3B8]/10 text-[#94A3B8] border-[#94A3B8]/20" },
+  draft: { label: "Draft", color: "bg-[#94A3B8]/10 text-muted-foreground border-[#94A3B8]/20" },
 };
 
 interface ProjectCardProps {
@@ -22,7 +22,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   return (
     <Link href={`/projects/${project.slug}`}>
-      <Card className="group cursor-pointer border-[#E2E8F0] bg-white shadow-sm transition-all hover:shadow-lg hover:border-[#6366F1]/30 hover:-translate-y-0.5">
+      <Card className="group cursor-pointer border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5">
         {/* Thumbnail */}
         <div className="relative h-44 overflow-hidden rounded-t-xl bg-gradient-to-br from-[#6366F1]/20 via-[#8B5CF6]/10 to-[#EEF2FF]">
           {project.thumbnail ? (
@@ -50,32 +50,32 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <CardContent className="p-5">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h3 className="truncate text-base font-semibold text-[#0F172A] group-hover:text-[#6366F1] transition-colors">
+              <h3 className="truncate text-base font-semibold text-foreground group-hover:text-primary transition-colors">
                 {project.title}
               </h3>
-              <p className="mt-0.5 text-xs text-[#64748B]">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 {project.category}
               </p>
             </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-[#94A3B8] transition-transform group-hover:translate-x-1 group-hover:text-[#6366F1]" />
+            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
           </div>
 
           {/* Progress */}
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#64748B]">Progress</span>
-              <span className="font-medium text-[#0F172A]">
+              <span className="text-muted-foreground">Progress</span>
+              <span className="font-medium text-foreground">
                 {project.progress}%
               </span>
             </div>
             <Progress
               value={project.progress}
-              className="h-2 bg-[#F1F5F9]"
+              className="h-2 bg-muted"
             />
           </div>
 
           {/* Date */}
-          <div className="mt-4 flex items-center gap-1.5 text-xs text-[#94A3B8]">
+          <div className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
             <span>
               Due{" "}

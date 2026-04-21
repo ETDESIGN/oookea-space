@@ -28,16 +28,16 @@ import { Id } from "../../../../../convex/_generated/dataModel";
 const statusColors: Record<string, string> = {
   active: "bg-[#22C55E]/10 text-[#22C55E]",
   "on-hold": "bg-[#F59E0B]/10 text-[#F59E0B]",
-  completed: "bg-[#6366F1]/10 text-[#6366F1]",
-  draft: "bg-[#94A3B8]/10 text-[#94A3B8]",
+  completed: "bg-primary/10 text-primary",
+  draft: "bg-[#94A3B8]/10 text-muted-foreground",
 };
 
 const invoiceStatusColors: Record<string, string> = {
   paid: "bg-[#22C55E]/10 text-[#22C55E]",
-  sent: "bg-[#6366F1]/10 text-[#6366F1]",
-  overdue: "bg-[#EF4444]/10 text-[#EF4444]",
-  draft: "bg-[#94A3B8]/10 text-[#94A3B8]",
-  cancelled: "bg-[#94A3B8]/10 text-[#94A3B8]",
+  sent: "bg-primary/10 text-primary",
+  overdue: "bg-[#EF4444]/10 text-destructive",
+  draft: "bg-[#94A3B8]/10 text-muted-foreground",
+  cancelled: "bg-[#94A3B8]/10 text-muted-foreground",
 };
 
 export default function ClientDetailPage() {
@@ -80,7 +80,7 @@ export default function ClientDetailPage() {
       <ProtectedRoute>
         <AppLayout>
           <div className="flex items-center justify-center py-20">
-            <p className="text-[#64748B]">Access denied.</p>
+            <p className="text-muted-foreground">Access denied.</p>
           </div>
         </AppLayout>
       </ProtectedRoute>
@@ -112,12 +112,12 @@ export default function ClientDetailPage() {
         <div className="space-y-6">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm">
-            <Link href="/admin/clients" className="flex items-center gap-1 text-[#6366F1] hover:text-[#4F46E5]">
+            <Link href="/admin/clients" className="flex items-center gap-1 text-primary hover:text-primary">
               <ArrowLeft className="h-4 w-4" />
               Clients
             </Link>
-            <span className="text-[#94A3B8]">/</span>
-            <span className="text-[#64748B]">{client?.name ?? "Loading…"}</span>
+            <span className="text-muted-foreground">/</span>
+            <span className="text-muted-foreground">{client?.name ?? "Loading…"}</span>
           </div>
 
           {isLoading ? (
@@ -126,33 +126,33 @@ export default function ClientDetailPage() {
             </div>
           ) : !client ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <p className="text-lg font-medium text-[#0F172A]">Client not found</p>
-              <p className="mt-1 text-sm text-[#64748B]">This client may have been removed.</p>
+              <p className="text-lg font-medium text-foreground">Client not found</p>
+              <p className="mt-1 text-sm text-muted-foreground">This client may have been removed.</p>
             </div>
           ) : (
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Main Content */}
               <div className="space-y-6 lg:col-span-2">
                 {/* Client Info */}
-                <Card className="border-[#E2E8F0]">
+                <Card className="border-border">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#6366F1] text-lg font-bold text-white">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
                           {client.name.split(" ").map((n) => n[0]).join("")}
                         </div>
                         <div>
-                          <h2 className="text-xl font-bold text-[#0F172A]">{client.name}</h2>
-                          <p className="text-sm text-[#64748B]">{client.company || "—"}</p>
+                          <h2 className="text-xl font-bold text-foreground">{client.name}</h2>
+                          <p className="text-sm text-muted-foreground">{client.company || "—"}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${isActive ? "bg-[#22C55E]/10 text-[#22C55E]" : "bg-[#94A3B8]/10 text-[#94A3B8]"}`}>
+                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${isActive ? "bg-[#22C55E]/10 text-[#22C55E]" : "bg-[#94A3B8]/10 text-muted-foreground"}`}>
                           {isActive ? "Active" : "Inactive"}
                         </span>
                         <button
                           onClick={handleToggleStatus}
-                          className="text-xs text-[#6366F1] hover:text-[#4F46E5] font-medium"
+                          className="text-xs text-primary hover:text-primary font-medium"
                         >
                           <ToggleLeft className="h-5 w-5" />
                         </button>
@@ -163,20 +163,20 @@ export default function ClientDetailPage() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <p className="text-xs font-medium text-[#94A3B8] uppercase">Email</p>
-                        <p className="mt-1 text-sm text-[#0F172A]">{client.email}</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase">Email</p>
+                        <p className="mt-1 text-sm text-foreground">{client.email}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-[#94A3B8] uppercase">Phone</p>
-                        <p className="mt-1 text-sm text-[#0F172A]">{client.phone || "—"}</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase">Phone</p>
+                        <p className="mt-1 text-sm text-foreground">{client.phone || "—"}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-[#94A3B8] uppercase">Company</p>
-                        <p className="mt-1 text-sm text-[#0F172A]">{client.company || "—"}</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase">Company</p>
+                        <p className="mt-1 text-sm text-foreground">{client.company || "—"}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-[#94A3B8] uppercase">Joined</p>
-                        <p className="mt-1 text-sm text-[#0F172A]">
+                        <p className="text-xs font-medium text-muted-foreground uppercase">Joined</p>
+                        <p className="mt-1 text-sm text-foreground">
                           {new Date(client.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                         </p>
                       </div>
@@ -185,10 +185,10 @@ export default function ClientDetailPage() {
                 </Card>
 
                 {/* Projects */}
-                <Card className="border-[#E2E8F0]">
+                <Card className="border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <FolderKanban className="h-4 w-4 text-[#6366F1]" />
+                      <FolderKanban className="h-4 w-4 text-primary" />
                       Projects ({projects?.length ?? 0})
                     </CardTitle>
                   </CardHeader>
@@ -198,19 +198,19 @@ export default function ClientDetailPage() {
                         <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#6366F1] border-t-transparent" />
                       </div>
                     ) : projects.length === 0 ? (
-                      <p className="py-8 text-center text-sm text-[#64748B]">No projects yet.</p>
+                      <p className="py-8 text-center text-sm text-muted-foreground">No projects yet.</p>
                     ) : (
                       projects.map((p) => (
-                        <div key={p._id} className="flex items-center gap-4 rounded-lg border border-[#E2E8F0] p-3">
+                        <div key={p._id} className="flex items-center gap-4 rounded-lg border border-border p-3">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[#0F172A]">{p.title}</p>
-                            <span className={`inline-flex mt-1 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[p.status] || "bg-[#94A3B8]/10 text-[#94A3B8]"}`}>
+                            <p className="text-sm font-medium text-foreground">{p.title}</p>
+                            <span className={`inline-flex mt-1 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColors[p.status] || "bg-[#94A3B8]/10 text-muted-foreground"}`}>
                               {p.status}
                             </span>
                           </div>
                           <div className="text-right w-24">
-                            <p className="text-sm font-medium text-[#0F172A]">{p.progress}%</p>
-                            <Progress value={p.progress} className="mt-1 h-1.5 bg-[#F1F5F9]" />
+                            <p className="text-sm font-medium text-foreground">{p.progress}%</p>
+                            <Progress value={p.progress} className="mt-1 h-1.5 bg-muted" />
                           </div>
                         </div>
                       ))
@@ -219,10 +219,10 @@ export default function ClientDetailPage() {
                 </Card>
 
                 {/* Invoices */}
-                <Card className="border-[#E2E8F0]">
+                <Card className="border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <FileText className="h-4 w-4 text-[#6366F1]" />
+                      <FileText className="h-4 w-4 text-primary" />
                       Recent Invoices
                     </CardTitle>
                   </CardHeader>
@@ -232,20 +232,20 @@ export default function ClientDetailPage() {
                         <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#6366F1] border-t-transparent" />
                       </div>
                     ) : invoices.length === 0 ? (
-                      <p className="py-8 text-center text-sm text-[#64748B]">No invoices yet.</p>
+                      <p className="py-8 text-center text-sm text-muted-foreground">No invoices yet.</p>
                     ) : (
                       <div className="space-y-2">
                         {invoices.map((inv) => (
-                          <div key={inv._id} className="flex items-center justify-between rounded-lg border border-[#E2E8F0] p-3">
+                          <div key={inv._id} className="flex items-center justify-between rounded-lg border border-border p-3">
                             <div className="flex items-center gap-3">
-                              <span className="text-sm font-mono font-medium text-[#0F172A]">{inv.number}</span>
+                              <span className="text-sm font-mono font-medium text-foreground">{inv.number}</span>
                               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${invoiceStatusColors[inv.status] || ""}`}>
                                 {inv.status}
                               </span>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-medium text-[#0F172A]">${inv.total.toLocaleString()}</p>
-                              <p className="text-[10px] text-[#94A3B8]">{new Date(inv.issueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                              <p className="text-sm font-medium text-foreground">${inv.total.toLocaleString()}</p>
+                              <p className="text-[10px] text-muted-foreground">{new Date(inv.issueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
                             </div>
                           </div>
                         ))}
@@ -258,42 +258,42 @@ export default function ClientDetailPage() {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Storage placeholder */}
-                <Card className="border-[#E2E8F0]">
+                <Card className="border-border">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-2 mb-4">
-                      <HardDrive className="h-4 w-4 text-[#6366F1]" />
-                      <h3 className="text-sm font-semibold text-[#0F172A]">Storage</h3>
+                      <HardDrive className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-semibold text-foreground">Storage</h3>
                     </div>
                     <div className="text-center mb-3">
-                      <span className="text-sm text-[#64748B]">Storage info coming soon</span>
+                      <span className="text-sm text-muted-foreground">Storage info coming soon</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Modules */}
-                <Card className="border-[#E2E8F0]">
+                <Card className="border-border">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-2 mb-4">
-                      <Blocks className="h-4 w-4 text-[#6366F1]" />
-                      <h3 className="text-sm font-semibold text-[#0F172A]">Modules</h3>
+                      <Blocks className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-semibold text-foreground">Modules</h3>
                     </div>
                     {modules === undefined ? (
                       <div className="flex justify-center py-4">
                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#6366F1] border-t-transparent" />
                       </div>
                     ) : modules.length === 0 ? (
-                      <p className="text-sm text-[#64748B]">No modules assigned.</p>
+                      <p className="text-sm text-muted-foreground">No modules assigned.</p>
                     ) : (
                       <div className="space-y-3">
                         {modules.map((mod) => (
                           <div key={mod._id} className="flex items-center justify-between">
-                            <span className="text-sm text-[#0F172A]">{mod.title}</span>
+                            <span className="text-sm text-foreground">{mod.title}</span>
                             <Checkbox
                               checked={mod.enabled}
                               onCheckedChange={(checked) =>
                                 handleToggleModule(mod._id, !!checked)
                               }
-                              className="data-[state=checked]:bg-[#6366F1] data-[state=checked]:border-[#6366F1]"
+                              className="data-[state=checked]:bg-primary data-[state=checked]:border-[#6366F1]"
                             />
                           </div>
                         ))}
@@ -303,18 +303,18 @@ export default function ClientDetailPage() {
                 </Card>
 
                 {/* Quick Actions */}
-                <Card className="border-[#E2E8F0]">
+                <Card className="border-border">
                   <CardContent className="p-6 space-y-2">
-                    <h3 className="text-sm font-semibold text-[#0F172A] mb-3">Quick Actions</h3>
-                    <Button variant="outline" className="w-full justify-start border-[#E2E8F0]">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Quick Actions</h3>
+                    <Button variant="outline" className="w-full justify-start border-border">
                       <Mail className="mr-2 h-4 w-4" />
                       Send Message
                     </Button>
-                    <Button variant="outline" className="w-full justify-start border-[#E2E8F0]">
+                    <Button variant="outline" className="w-full justify-start border-border">
                       <FileText className="mr-2 h-4 w-4" />
                       Create Invoice
                     </Button>
-                    <Button variant="outline" className="w-full justify-start border-[#E2E8F0]">
+                    <Button variant="outline" className="w-full justify-start border-border">
                       <KeyRound className="mr-2 h-4 w-4" />
                       Reset Password
                     </Button>

@@ -109,7 +109,7 @@ export default function FilesPage() {
       <ProtectedRoute>
         <AppLayout>
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </AppLayout>
       </ProtectedRoute>
@@ -122,29 +122,29 @@ export default function FilesPage() {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-[#0F172A]">File Vault</h1>
-            <p className="mt-1 text-[#64748B]">
+            <h1 className="text-2xl font-bold text-foreground">File Vault</h1>
+            <p className="mt-1 text-muted-foreground">
               Manage and download all your project files and assets.
             </p>
           </div>
 
           {/* Storage Usage */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+          <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#6366F1]/10">
-                  <HardDrive className="h-5 w-5 text-[#6366F1]" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <HardDrive className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-[#0F172A]">Storage</p>
-                  <p className="text-xs text-[#64748B]">
+                  <p className="text-sm font-medium text-foreground">Storage</p>
+                  <p className="text-xs text-muted-foreground">
                     {formatStorage(STORAGE_USED)} of {formatStorage(STORAGE_TOTAL)} used
                   </p>
                 </div>
               </div>
-              <p className="text-lg font-semibold text-[#0F172A]">{usedPercent}%</p>
+              <p className="text-lg font-semibold text-foreground">{usedPercent}%</p>
             </div>
-            <Progress value={usedPercent} className="mt-3 h-2.5 bg-[#F1F5F9]" />
+            <Progress value={usedPercent} className="mt-3 h-2.5 bg-muted" />
           </div>
 
           {/* Upload Zone */}
@@ -153,12 +153,12 @@ export default function FilesPage() {
           {/* Filters */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="bg-[#F1F5F9]">
+              <TabsList className="bg-muted">
                 {fileTabs.map((tab) => (
                   <TabsTrigger
                     key={tab.value}
                     value={tab.value}
-                    className="data-[state=active]:bg-white data-[state=active]:text-[#6366F1] data-[state=active]:shadow-sm"
+                    className="data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
                   >
                     {tab.label}
                   </TabsTrigger>
@@ -168,24 +168,24 @@ export default function FilesPage() {
 
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search files…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-9 w-64 pl-9 border-[#E2E8F0] bg-white"
+                  className="h-9 w-64 pl-9 border-border bg-card"
                 />
               </div>
-              <div className="flex rounded-lg border border-[#E2E8F0] bg-white p-0.5">
+              <div className="flex rounded-lg border border-border bg-card p-0.5">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`rounded-md p-1.5 ${viewMode === "grid" ? "bg-[#6366F1] text-white" : "text-[#64748B]"}`}
+                  className={`rounded-md p-1.5 ${viewMode === "grid" ? "bg-primary text-white" : "text-muted-foreground"}`}
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`rounded-md p-1.5 ${viewMode === "list" ? "bg-[#6366F1] text-white" : "text-[#64748B]"}`}
+                  className={`rounded-md p-1.5 ${viewMode === "list" ? "bg-primary text-white" : "text-muted-foreground"}`}
                 >
                   <List className="h-4 w-4" />
                 </button>
@@ -196,11 +196,11 @@ export default function FilesPage() {
           {/* Files */}
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F1F5F9]">
-                <Search className="h-8 w-8 text-[#94A3B8]" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                <Search className="h-8 w-8 text-muted-foreground" />
               </div>
-              <p className="text-lg font-medium text-[#0F172A]">No files found</p>
-              <p className="mt-1 text-sm text-[#64748B]">Try adjusting your search or filters.</p>
+              <p className="text-lg font-medium text-foreground">No files found</p>
+              <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
             </div>
           ) : viewMode === "grid" ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

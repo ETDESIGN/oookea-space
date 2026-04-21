@@ -80,33 +80,33 @@ export default function InvoicesPage() {
           {/* Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-[#0F172A]">Invoices</h1>
-              <p className="mt-1 text-[#64748B]">
+              <h1 className="text-2xl font-bold text-foreground">Invoices</h1>
+              <p className="mt-1 text-muted-foreground">
                 View and manage your invoices and payment history.
               </p>
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search invoices…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-9 w-64 pl-9 border-[#E2E8F0] bg-white"
+                className="h-9 w-64 pl-9 border-border bg-card"
               />
             </div>
           </div>
 
           {/* Tabs */}
           <Tabs value={filter} onValueChange={setFilter}>
-            <TabsList className="bg-[#F1F5F9]">
+            <TabsList className="bg-muted">
               {statusFilters.map((s) => (
                 <TabsTrigger
                   key={s.value}
                   value={s.value}
-                  className="data-[state=active]:bg-white data-[state=active]:text-[#6366F1] data-[state=active]:shadow-sm"
+                  className="data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
                 >
                   {s.label}
-                  <span className="ml-1.5 text-xs text-[#94A3B8]">
+                  <span className="ml-1.5 text-xs text-muted-foreground">
                     {statusCounts[s.value] ?? 0}
                   </span>
                 </TabsTrigger>
@@ -117,42 +117,42 @@ export default function InvoicesPage() {
           {/* Loading */}
           {invoices === undefined && (
             <div className="flex items-center justify-center py-20">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E2E8F0] border-t-[#6366F1]" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary" />
             </div>
           )}
 
           {/* Table */}
           {invoices !== undefined && filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F1F5F9]">
-                <FileText className="h-8 w-8 text-[#94A3B8]" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                <FileText className="h-8 w-8 text-muted-foreground" />
               </div>
-              <p className="text-lg font-medium text-[#0F172A]">No invoices found</p>
-              <p className="mt-1 text-sm text-[#64748B]">
+              <p className="text-lg font-medium text-foreground">No invoices found</p>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Try adjusting your search or filters.
               </p>
             </div>
           ) : invoices !== undefined ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white">
+            <div className="rounded-xl border border-border bg-card">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-[#E2E8F0] hover:bg-transparent">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
+                  <TableRow className="border-b border-border hover:bg-transparent">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Invoice #
                     </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Issue Date
                     </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Due Date
                     </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Amount
                     </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Status
                     </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-[#64748B] text-right">
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -161,18 +161,18 @@ export default function InvoicesPage() {
                   {filtered.map((invoice) => (
                     <TableRow
                       key={invoice._id}
-                      className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]"
+                      className="border-b border-border last:border-0 hover:bg-background"
                     >
-                      <TableCell className="font-medium text-[#0F172A]">
+                      <TableCell className="font-medium text-foreground">
                         {invoice.number}
                       </TableCell>
-                      <TableCell className="text-[#64748B]">
+                      <TableCell className="text-muted-foreground">
                         {formatDate(invoice.issueDate)}
                       </TableCell>
-                      <TableCell className="text-[#64748B]">
+                      <TableCell className="text-muted-foreground">
                         {formatDate(invoice.dueDate)}
                       </TableCell>
-                      <TableCell className="font-semibold text-[#0F172A]">
+                      <TableCell className="font-semibold text-foreground">
                         {formatCurrency(invoice.total)}
                       </TableCell>
                       <TableCell>
@@ -182,7 +182,7 @@ export default function InvoicesPage() {
                         <div className="flex items-center justify-end gap-2">
                           <a
                             href={`/invoices/${invoice._id}`}
-                            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-[#6366F1] hover:text-[#4F46E5] hover:bg-[#6366F1]/5 transition-colors"
+                            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-primary hover:text-primary hover:bg-primary/5 transition-colors"
                           >
                             <Eye className="h-3.5 w-3.5" />
                             View
@@ -191,7 +191,7 @@ export default function InvoicesPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 gap-1.5 text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]"
+                              className="h-8 gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted"
                               onClick={() => window.open(invoice.pdfUrl, "_blank")}
                             >
                               <Download className="h-3.5 w-3.5" />

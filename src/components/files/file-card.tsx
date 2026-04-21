@@ -16,11 +16,11 @@ import type { FileItem, FileType } from "@/types";
 
 const fileTypeConfig: Record<FileType, { icon: React.ElementType; color: string; bg: string }> = {
   image: { icon: FileImage, color: "text-[#EC4899]", bg: "bg-[#EC4899]/10" },
-  document: { icon: FileText, color: "text-[#6366F1]", bg: "bg-[#6366F1]/10" },
+  document: { icon: FileText, color: "text-primary", bg: "bg-primary/10" },
   video: { icon: FileVideo, color: "text-[#F59E0B]", bg: "bg-[#F59E0B]/10" },
   design: { icon: FileImage, color: "text-[#8B5CF6]", bg: "bg-[#8B5CF6]/10" },
-  archive: { icon: FileArchive, color: "text-[#64748B]", bg: "bg-[#64748B]/10" },
-  other: { icon: File, color: "text-[#94A3B8]", bg: "bg-[#94A3B8]/10" },
+  archive: { icon: FileArchive, color: "text-muted-foreground", bg: "bg-[#64748B]/10" },
+  other: { icon: File, color: "text-muted-foreground", bg: "bg-[#94A3B8]/10" },
 };
 
 function formatFileSize(bytes: number): string {
@@ -50,7 +50,7 @@ export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
 
   if (viewMode === "list") {
     return (
-      <div className="flex items-center gap-4 rounded-lg border border-[#E2E8F0] bg-white px-4 py-3 transition-colors hover:border-[#6366F1]/30 hover:shadow-sm">
+      <div className="flex items-center gap-4 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30 hover:shadow-sm">
         <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", config.bg)}>
           {file.thumbnail ? (
             <img
@@ -63,16 +63,16 @@ export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-[#0F172A]">{file.name}</p>
-          <p className="text-xs text-[#64748B]">
+          <p className="truncate text-sm font-medium text-foreground">{file.name}</p>
+          <p className="text-xs text-muted-foreground">
             {formatFileSize(file.size)} · {formatDate(file.uploadedAt)}
           </p>
         </div>
-        <p className="hidden text-xs text-[#94A3B8] sm:block">{file.uploadedBy}</p>
+        <p className="hidden text-xs text-muted-foreground sm:block">{file.uploadedBy}</p>
         <Button
           variant="ghost"
           size="sm"
-          className="shrink-0 text-[#64748B] hover:text-[#6366F1]"
+          className="shrink-0 text-muted-foreground hover:text-primary"
           onClick={() => window.open(file.url, "_blank")}
         >
           <Download className="h-4 w-4" />
@@ -82,9 +82,9 @@ export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
   }
 
   return (
-    <Card className="group border-[#E2E8F0] bg-white shadow-sm transition-all hover:shadow-lg hover:border-[#6366F1]/30 hover:-translate-y-0.5">
+    <Card className="group border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5">
       {/* Thumbnail Area */}
-      <div className="relative flex h-36 items-center justify-center overflow-hidden rounded-t-xl bg-[#F8FAFC]">
+      <div className="relative flex h-36 items-center justify-center overflow-hidden rounded-t-xl bg-background">
         {file.type === "image" && file.thumbnail ? (
           <img
             src={file.thumbnail}
@@ -99,17 +99,17 @@ export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
       </div>
 
       <CardContent className="p-4">
-        <p className="truncate text-sm font-medium text-[#0F172A]" title={file.name}>
+        <p className="truncate text-sm font-medium text-foreground" title={file.name}>
           {file.name}
         </p>
         <div className="mt-1 flex items-center justify-between">
-          <p className="text-xs text-[#64748B]">
+          <p className="text-xs text-muted-foreground">
             {formatFileSize(file.size)} · {formatDate(file.uploadedAt)}
           </p>
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-[#94A3B8] hover:text-[#6366F1]"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
             onClick={() => window.open(file.url, "_blank")}
           >
             <Download className="h-4 w-4" />

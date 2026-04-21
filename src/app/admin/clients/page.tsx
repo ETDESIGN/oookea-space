@@ -132,21 +132,21 @@ export default function ClientsManagementPage() {
           {/* Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-[#0F172A]">
+              <h1 className="text-2xl font-bold text-foreground">
                 Client Management
               </h1>
-              <p className="mt-1 text-[#64748B]">
+              <p className="mt-1 text-muted-foreground">
                 Manage all portal clients, their projects, and access.
               </p>
             </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger className="bg-[#6366F1] hover:bg-[#5558E6] text-white gap-2 inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium">
+              <DialogTrigger className="bg-primary hover:bg-primary/90 text-white gap-2 inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium">
                 <Plus className="h-4 w-4" />
                 Add Client
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="text-[#0F172A]">Add New Client</DialogTitle>
+                  <DialogTitle className="text-foreground">Add New Client</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
@@ -158,7 +158,7 @@ export default function ClientsManagementPage() {
                       onChange={(e) =>
                         setNewClient((p) => ({ ...p, name: e.target.value }))
                       }
-                      className="border-[#E2E8F0]"
+                      className="border-border"
                     />
                   </div>
                   <div className="space-y-2">
@@ -171,7 +171,7 @@ export default function ClientsManagementPage() {
                       onChange={(e) =>
                         setNewClient((p) => ({ ...p, email: e.target.value }))
                       }
-                      className="border-[#E2E8F0]"
+                      className="border-border"
                     />
                   </div>
                   <div className="space-y-2">
@@ -184,7 +184,7 @@ export default function ClientsManagementPage() {
                       onChange={(e) =>
                         setNewClient((p) => ({ ...p, password: e.target.value }))
                       }
-                      className="border-[#E2E8F0]"
+                      className="border-border"
                     />
                   </div>
                   <div className="space-y-2">
@@ -196,16 +196,16 @@ export default function ClientsManagementPage() {
                       onChange={(e) =>
                         setNewClient((p) => ({ ...p, company: e.target.value }))
                       }
-                      className="border-[#E2E8F0]"
+                      className="border-border"
                     />
                   </div>
                 </div>
                 <DialogFooter className="gap-2">
-                  <DialogClose className="inline-flex items-center justify-center rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium hover:bg-[#F8FAFC]">
+                  <DialogClose className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-background">
                     Cancel
                   </DialogClose>
                   <Button
-                    className="bg-[#6366F1] hover:bg-[#5558E6] text-white"
+                    className="bg-primary hover:bg-primary/90 text-white"
                     onClick={handleAddClient}
                     disabled={!newClient.name || !newClient.email}
                   >
@@ -218,36 +218,36 @@ export default function ClientsManagementPage() {
 
           {/* Summary Cards */}
           <div className="grid gap-4 sm:grid-cols-3">
-            <Card className="border-[#E2E8F0] bg-white shadow-sm">
+            <Card className="border-border bg-card shadow-sm">
               <CardContent className="flex items-center gap-4 p-5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#6366F1]/10">
-                  <Users className="h-5 w-5 text-[#6366F1]" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                  <Users className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#64748B]">Total Clients</p>
-                  <p className="text-xl font-bold text-[#0F172A]">{clients?.length ?? "—"}</p>
+                  <p className="text-sm text-muted-foreground">Total Clients</p>
+                  <p className="text-xl font-bold text-foreground">{clients?.length ?? "—"}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-[#E2E8F0] bg-white shadow-sm">
+            <Card className="border-border bg-card shadow-sm">
               <CardContent className="flex items-center gap-4 p-5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#22C55E]/10">
                   <Power className="h-5 w-5 text-[#22C55E]" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#64748B]">Active</p>
-                  <p className="text-xl font-bold text-[#0F172A]">{activeCount}</p>
+                  <p className="text-sm text-muted-foreground">Active</p>
+                  <p className="text-xl font-bold text-foreground">{activeCount}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-[#E2E8F0] bg-white shadow-sm">
+            <Card className="border-border bg-card shadow-sm">
               <CardContent className="flex items-center gap-4 p-5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#94A3B8]/10">
-                  <PowerOff className="h-5 w-5 text-[#94A3B8]" />
+                  <PowerOff className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#64748B]">Inactive</p>
-                  <p className="text-xl font-bold text-[#0F172A]">{inactiveCount}</p>
+                  <p className="text-sm text-muted-foreground">Inactive</p>
+                  <p className="text-xl font-bold text-foreground">{inactiveCount}</p>
                 </div>
               </CardContent>
             </Card>
@@ -256,40 +256,40 @@ export default function ClientsManagementPage() {
           {/* Search + Filter Tabs */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Tabs value={filter} onValueChange={setFilter}>
-              <TabsList className="bg-[#F1F5F9]">
+              <TabsList className="bg-muted">
                 <TabsTrigger
                   value="all"
-                  className="data-[state=active]:bg-white data-[state=active]:text-[#6366F1] data-[state=active]:shadow-sm"
+                  className="data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
                 >
                   All
                 </TabsTrigger>
                 <TabsTrigger
                   value="active"
-                  className="data-[state=active]:bg-white data-[state=active]:text-[#6366F1] data-[state=active]:shadow-sm"
+                  className="data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
                 >
                   Active
                 </TabsTrigger>
                 <TabsTrigger
                   value="inactive"
-                  className="data-[state=active]:bg-white data-[state=active]:text-[#6366F1] data-[state=active]:shadow-sm"
+                  className="data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
                 >
                   Inactive
                 </TabsTrigger>
               </TabsList>
             </Tabs>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search clients…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-9 w-64 pl-9 border-[#E2E8F0] bg-white"
+                className="h-9 w-64 pl-9 border-border bg-card"
               />
             </div>
           </div>
 
           {/* Client Table */}
-          <Card className="border-[#E2E8F0] bg-white shadow-sm">
+          <Card className="border-border bg-card shadow-sm">
             <CardContent className="p-0">
               {isLoading ? (
                 <div className="flex justify-center py-16">
@@ -297,13 +297,13 @@ export default function ClientsManagementPage() {
                 </div>
               ) : filteredClients.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F1F5F9]">
-                    <Search className="h-7 w-7 text-[#94A3B8]" />
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                    <Search className="h-7 w-7 text-muted-foreground" />
                   </div>
-                  <p className="text-lg font-medium text-[#0F172A]">
+                  <p className="text-lg font-medium text-foreground">
                     No clients found
                   </p>
-                  <p className="mt-1 text-sm text-[#64748B]">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Try adjusting your search or filters.
                   </p>
                 </div>
@@ -326,31 +326,31 @@ export default function ClientsManagementPage() {
                         <TableRow key={client._id} className="group">
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#6366F1]/10 text-sm font-semibold text-[#6366F1]">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                                 {client.name
                                   .split(" ")
                                   .map((n) => n[0])
                                   .join("")
                                   .slice(0, 2)}
                               </div>
-                              <span className="font-medium text-[#0F172A]">
+                              <span className="font-medium text-foreground">
                                 {client.name}
                               </span>
                             </div>
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            <span className="flex items-center gap-1.5 text-[#64748B]">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
                               <Mail className="h-3.5 w-3.5" />
                               {client.email}
                             </span>
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
-                            <span className="flex items-center gap-1.5 text-[#64748B]">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
                               <Building2 className="h-3.5 w-3.5" />
                               {client.company || "—"}
                             </span>
                           </TableCell>
-                          <TableCell className="text-center font-medium text-[#0F172A]">
+                          <TableCell className="text-center font-medium text-foreground">
                             {pCount}
                           </TableCell>
                           <TableCell className="text-center">
@@ -358,7 +358,7 @@ export default function ClientsManagementPage() {
                               className={`rounded-full border-0 ${
                                 client.status === "active"
                                   ? "bg-[#22C55E]/10 text-[#22C55E]"
-                                  : "bg-[#94A3B8]/10 text-[#94A3B8]"
+                                  : "bg-[#94A3B8]/10 text-muted-foreground"
                               }`}
                             >
                               {client.status === "active" ? "Active" : "Inactive"}
@@ -370,7 +370,7 @@ export default function ClientsManagementPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 text-[#64748B] hover:text-[#6366F1]"
+                                  className="h-8 w-8 text-muted-foreground hover:text-primary"
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
@@ -378,7 +378,7 @@ export default function ClientsManagementPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-[#64748B] hover:text-[#6366F1]"
+                                className="h-8 w-8 text-muted-foreground hover:text-primary"
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -387,7 +387,7 @@ export default function ClientsManagementPage() {
                                 size="icon"
                                 className={`h-8 w-8 ${
                                   client.status === "active"
-                                    ? "text-[#94A3B8] hover:text-[#EF4444]"
+                                    ? "text-muted-foreground hover:text-destructive"
                                     : "text-[#22C55E] hover:text-[#22C55E]"
                                 }`}
                                 onClick={() => toggleStatus(client._id, client.status)}

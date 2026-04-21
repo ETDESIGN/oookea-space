@@ -47,7 +47,7 @@ export default function ModuleDetailPage() {
       <ProtectedRoute>
         <AppLayout>
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </AppLayout>
       </ProtectedRoute>
@@ -59,8 +59,8 @@ export default function ModuleDetailPage() {
       <ProtectedRoute>
         <AppLayout>
           <div className="flex flex-col items-center justify-center py-20">
-            <p className="text-lg font-medium text-[#0F172A]">Module not found</p>
-            <Link href="/modules" className="mt-2 text-sm text-[#6366F1] hover:underline">
+            <p className="text-lg font-medium text-foreground">Module not found</p>
+            <Link href="/modules" className="mt-2 text-sm text-primary hover:underline">
               Back to Modules
             </Link>
           </div>
@@ -77,19 +77,19 @@ export default function ModuleDetailPage() {
       <AppLayout>
         <div className="space-y-6">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-sm text-[#64748B]">
+          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Link
               href="/modules"
-              className="transition-colors hover:text-[#6366F1]"
+              className="transition-colors hover:text-primary"
             >
               Modules
             </Link>
             <ChevronRight className="h-4 w-4" />
-            <span className="font-medium text-[#0F172A]">{mod.title}</span>
+            <span className="font-medium text-foreground">{mod.title}</span>
           </nav>
 
           {/* Module Info Card */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-start gap-4">
                 <div
@@ -99,7 +99,7 @@ export default function ModuleDetailPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-3">
-                    <h1 className="text-xl font-bold text-[#0F172A]">
+                    <h1 className="text-xl font-bold text-foreground">
                       {mod.title}
                     </h1>
                     <span
@@ -108,7 +108,7 @@ export default function ModuleDetailPage() {
                       {status}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-[#64748B]">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {mod.description}
                   </p>
                 </div>
@@ -116,7 +116,7 @@ export default function ModuleDetailPage() {
 
               <Button
                 variant="outline"
-                className="shrink-0 border-[#E2E8F0]"
+                className="shrink-0 border-border"
                 onClick={() => router.push("/modules")}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -125,7 +125,7 @@ export default function ModuleDetailPage() {
             </div>
 
             {/* Long Description */}
-            <div className="mt-6 rounded-lg bg-[#F8FAFC] p-4">
+            <div className="mt-6 rounded-lg bg-background p-4">
               <p className="text-sm leading-relaxed text-[#334155]">
                 {mod.description}
               </p>
@@ -133,31 +133,31 @@ export default function ModuleDetailPage() {
           </div>
 
           {/* Module iframe Placeholder */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-6 py-3">
+          <div className="rounded-xl border border-border bg-card shadow-sm">
+            <div className="flex items-center justify-between border-b border-border px-6 py-3">
               <div className="flex items-center gap-2">
-                <ExternalLink className="h-4 w-4 text-[#94A3B8]" />
-                <span className="text-sm font-medium text-[#0F172A]">
+                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">
                   Module Workspace
                 </span>
               </div>
-              <span className="text-xs text-[#94A3B8]">
+              <span className="text-xs text-muted-foreground">
                 {status === "Coming Soon"
                   ? "Not available yet"
                   : "Embedded view"}
               </span>
             </div>
-            <div className="flex h-[480px] items-center justify-center bg-[#F8FAFC]">
+            <div className="flex h-[480px] items-center justify-center bg-background">
               <div className="flex flex-col items-center gap-3 text-center">
                 <div
                   className={`flex h-16 w-16 items-center justify-center rounded-2xl ${accent.accentBg} text-3xl`}
                 >
                   {accent.icon}
                 </div>
-                <p className="text-sm font-medium text-[#64748B]">
+                <p className="text-sm font-medium text-muted-foreground">
                   Module iframe will load here
                 </p>
-                <p className="text-xs text-[#94A3B8]">
+                <p className="text-xs text-muted-foreground">
                   The {mod.title} interface will be embedded in this area.
                 </p>
               </div>

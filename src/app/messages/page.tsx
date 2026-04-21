@@ -109,7 +109,7 @@ export default function MessagesPage() {
       <ProtectedRoute>
         <AppLayout>
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </AppLayout>
       </ProtectedRoute>
@@ -122,29 +122,29 @@ export default function MessagesPage() {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-[#0F172A]">Messages</h1>
-            <p className="mt-1 text-[#64748B]">
+            <h1 className="text-2xl font-bold text-foreground">Messages</h1>
+            <p className="mt-1 text-muted-foreground">
               Communicate with your team on project updates and deliverables.
             </p>
           </div>
 
           {/* Two-panel layout */}
-          <div className="flex h-[calc(100vh-220px)] overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
+          <div className="flex h-[calc(100vh-220px)] overflow-hidden rounded-xl border border-border bg-card">
             {/* Left panel — Thread list */}
             <div
-              className={`flex w-full flex-col border-r border-[#E2E8F0] lg:w-96 lg:min-w-[320px] ${
+              className={`flex w-full flex-col border-r border-border lg:w-96 lg:min-w-[320px] ${
                 selectedThreadId ? "hidden lg:flex" : "flex"
               }`}
             >
               {/* Search */}
-              <div className="border-b border-[#E2E8F0] p-3">
+              <div className="border-b border-border p-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder="Search messages…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="h-9 w-full pl-9 border-[#E2E8F0] bg-[#F8FAFC]"
+                    className="h-9 w-full pl-9 border-border bg-background"
                   />
                 </div>
               </div>
@@ -153,23 +153,23 @@ export default function MessagesPage() {
               <div className="flex-1 overflow-y-auto">
                 {filteredThreads.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <Mail className="mb-3 h-8 w-8 text-[#94A3B8]" />
-                    <p className="text-sm font-medium text-[#0F172A]">No messages found</p>
-                    <p className="mt-1 text-xs text-[#64748B]">Try adjusting your search.</p>
+                    <Mail className="mb-3 h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm font-medium text-foreground">No messages found</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Try adjusting your search.</p>
                   </div>
                 ) : (
                   filteredThreads.map((thread, i) => (
                     <button
                       key={thread._id}
                       onClick={() => setSelectedThreadId(thread._id)}
-                      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[#F8FAFC] ${
-                        selectedThreadId === thread._id ? "bg-[#F1F5F9]" : ""
-                      } ${i > 0 ? "border-t border-[#E2E8F0]" : ""}`}
+                      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-background ${
+                        selectedThreadId === thread._id ? "bg-muted" : ""
+                      } ${i > 0 ? "border-t border-border" : ""}`}
                     >
                       {/* Unread dot */}
                       <div className="relative mt-1">
                         <Avatar size="default">
-                          <AvatarFallback className="bg-[#6366F1]/10 text-[#6366F1] text-xs">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
                             {getInitials(thread.subject.split("—")[0].trim())}
                           </AvatarFallback>
                         </Avatar>
@@ -178,10 +178,10 @@ export default function MessagesPage() {
                       {/* Content */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="truncate text-sm font-medium text-[#0F172A]">
+                          <p className="truncate text-sm font-medium text-foreground">
                             {thread.clientId === user?.id ? "Support" : thread.subject.split("—")[0].trim()}
                           </p>
-                          <span className="shrink-0 text-[11px] text-[#94A3B8]">
+                          <span className="shrink-0 text-[11px] text-muted-foreground">
                             {formatRelativeTime(thread.lastMessageAt)}
                           </span>
                         </div>
@@ -204,7 +204,7 @@ export default function MessagesPage() {
               {selectedThread ? (
                 <>
                   {/* Thread header */}
-                  <div className="flex items-center gap-3 border-b border-[#E2E8F0] px-5 py-3">
+                  <div className="flex items-center gap-3 border-b border-border px-5 py-3">
                     <Button
                       variant="ghost"
                       size="icon-sm"
@@ -214,17 +214,17 @@ export default function MessagesPage() {
                       <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <Avatar size="sm">
-                      <AvatarFallback className="bg-[#6366F1]/10 text-[#6366F1] text-[10px]">
+                      <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
                         {getInitials(selectedThread.subject.split("—")[0].trim())}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-[#0F172A]">
+                      <p className="text-sm font-medium text-foreground">
                         {selectedThread.subject}
                       </p>
                     </div>
                     <Button variant="ghost" size="icon-sm">
-                      <MoreVertical className="h-4 w-4 text-[#64748B]" />
+                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
                     </Button>
                   </div>
 
@@ -233,7 +233,7 @@ export default function MessagesPage() {
                     <div className="space-y-4">
                       {selectedThreadMessages === undefined ? (
                         <div className="flex items-center justify-center py-8">
-                          <Loader2 className="h-6 w-6 animate-spin text-[#6366F1]" />
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
                         </div>
                       ) : (
                         selectedThreadMessages.map((msg) => {
@@ -251,15 +251,15 @@ export default function MessagesPage() {
                                   }`}
                                 >
                                   {!isMe && (
-                                    <span className="text-xs font-medium text-[#0F172A]">
+                                    <span className="text-xs font-medium text-foreground">
                                       {msg.senderRole === "admin" ? "Admin" : "Client"}
                                     </span>
                                   )}
-                                  <span className="text-[11px] text-[#94A3B8]">
+                                  <span className="text-[11px] text-muted-foreground">
                                     {formatMessageTime(msg.createdAt)}
                                   </span>
                                   {isMe && (
-                                    <span className="text-xs font-medium text-[#6366F1]">
+                                    <span className="text-xs font-medium text-primary">
                                       You
                                     </span>
                                   )}
@@ -269,8 +269,8 @@ export default function MessagesPage() {
                                 <div
                                   className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                                     isMe
-                                      ? "rounded-br-md bg-[#6366F1] text-white"
-                                      : "rounded-bl-md bg-[#F1F5F9] text-[#0F172A]"
+                                      ? "rounded-br-md bg-primary text-white"
+                                      : "rounded-bl-md bg-muted text-foreground"
                                   }`}
                                 >
                                   {msg.body}
@@ -285,7 +285,7 @@ export default function MessagesPage() {
                   </div>
 
                   {/* Reply area */}
-                  <div className="border-t border-[#E2E8F0] p-4">
+                  <div className="border-t border-border p-4">
                     <div className="flex items-end gap-3">
                       <div className="flex-1">
                         <Textarea
@@ -298,14 +298,14 @@ export default function MessagesPage() {
                               handleSend();
                             }
                           }}
-                          className="min-h-[44px] resize-none border-[#E2E8F0] bg-[#F8FAFC] text-sm"
+                          className="min-h-[44px] resize-none border-border bg-background text-sm"
                           rows={1}
                         />
                       </div>
                       <Button
                         onClick={handleSend}
                         disabled={!replyText.trim()}
-                        className="h-[44px] bg-[#6366F1] px-4 text-white hover:bg-[#5558E6] disabled:opacity-50"
+                        className="h-[44px] bg-primary px-4 text-white hover:bg-primary/90 disabled:opacity-50"
                       >
                         <Send className="mr-1.5 h-4 w-4" />
                         Send
@@ -316,13 +316,13 @@ export default function MessagesPage() {
               ) : (
                 /* Empty state */
                 <div className="flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F1F5F9]">
-                    <MailOpen className="h-8 w-8 text-[#94A3B8]" />
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                    <MailOpen className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <p className="text-lg font-medium text-[#0F172A]">
+                  <p className="text-lg font-medium text-foreground">
                     Select a conversation
                   </p>
-                  <p className="mt-1 text-sm text-[#64748B]">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Choose a thread from the left to view messages.
                   </p>
                 </div>

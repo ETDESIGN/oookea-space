@@ -36,9 +36,9 @@ import { Id } from "../../../../convex/_generated/dataModel";
 // ─── Helpers ────────────────────────────────────────────────────
 const statusConfig: Record<string, { label: string; color: string; icon: typeof FolderKanban }> = {
   active: { label: "Active", color: "bg-[#22C55E]/10 text-[#22C55E]", icon: FolderKanban },
-  completed: { label: "Completed", color: "bg-[#6366F1]/10 text-[#6366F1]", icon: CheckCircle2 },
+  completed: { label: "Completed", color: "bg-primary/10 text-primary", icon: CheckCircle2 },
   "on-hold": { label: "On Hold", color: "bg-[#F59E0B]/10 text-[#F59E0B]", icon: PauseCircle },
-  draft: { label: "Draft", color: "bg-[#94A3B8]/10 text-[#94A3B8]", icon: FolderKanban },
+  draft: { label: "Draft", color: "bg-[#94A3B8]/10 text-muted-foreground", icon: FolderKanban },
 };
 
 const categoryColors: Record<string, string> = {
@@ -113,7 +113,7 @@ function CreateProjectDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button className="gap-2 bg-[#6366F1] hover:bg-[#4F46E5]">
+          <Button className="gap-2 bg-primary hover:bg-primary/90">
             <Plus className="h-4 w-4" />
             Create Project
           </Button>
@@ -133,7 +133,7 @@ function CreateProjectDialog() {
               id="project-client"
               value={client}
               onChange={(e) => setClient(e.target.value)}
-              className="flex h-9 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1]/50"
+              className="flex h-9 w-full rounded-lg border border-border bg-card px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             >
               <option value="">Select client…</option>
               {clients?.map((c) => (
@@ -150,7 +150,7 @@ function CreateProjectDialog() {
               placeholder="e.g. Website Redesign"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="border-[#E2E8F0]"
+              className="border-border"
             />
           </div>
 
@@ -163,7 +163,7 @@ function CreateProjectDialog() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief project description…"
               rows={3}
-              className="flex w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm shadow-sm placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1]/50"
+              className="flex w-full rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             />
           </div>
 
@@ -175,7 +175,7 @@ function CreateProjectDialog() {
                 id="project-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="flex h-9 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1]/50"
+                className="flex h-9 w-full rounded-lg border border-border bg-card px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
               >
                 <option value="Website">Website</option>
                 <option value="Branding">Branding</option>
@@ -191,7 +191,7 @@ function CreateProjectDialog() {
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="border-[#E2E8F0]"
+                className="border-border"
               />
             </div>
           </div>
@@ -200,7 +200,7 @@ function CreateProjectDialog() {
         <DialogFooter>
           <DialogClose render={<Button variant="outline">Cancel</Button>} />
           <Button
-            className="bg-[#6366F1] hover:bg-[#4F46E5]"
+            className="bg-primary hover:bg-primary/90"
             onClick={handleSubmit}
             disabled={!client || !title}
           >
@@ -221,7 +221,7 @@ function AdminProjectCard({ project }: { project: { _id: Id<"projects">; title: 
   const client = useQuery(api.projects.getUserById, { id: project.clientId });
 
   return (
-    <Card className="group border-[#E2E8F0] bg-white shadow-sm transition-all hover:shadow-lg hover:border-[#6366F1]/30 hover:-translate-y-0.5">
+    <Card className="group border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5">
       {/* Thumbnail */}
       <div className="relative h-36 overflow-hidden rounded-t-xl bg-gradient-to-br from-[#6366F1]/20 via-[#8B5CF6]/10 to-[#EEF2FF]">
         <div className="flex h-full items-center justify-center">
@@ -238,10 +238,10 @@ function AdminProjectCard({ project }: { project: { _id: Id<"projects">; title: 
       <CardContent className="p-4">
         {/* Title + Client */}
         <div className="space-y-1">
-          <h3 className="truncate text-sm font-semibold text-[#0F172A] group-hover:text-[#6366F1] transition-colors">
+          <h3 className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
             {project.title}
           </h3>
-          <p className="text-xs font-medium text-[#6366F1]">
+          <p className="text-xs font-medium text-primary">
             {client?.name ?? "Loading…"}
           </p>
         </div>
@@ -256,12 +256,12 @@ function AdminProjectCard({ project }: { project: { _id: Id<"projects">; title: 
         {/* Progress */}
         <div className="mt-3 space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[#64748B]">Progress</span>
-            <span className="font-medium text-[#0F172A]">{project.progress}%</span>
+            <span className="text-muted-foreground">Progress</span>
+            <span className="font-medium text-foreground">{project.progress}%</span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-[#F1F5F9]">
+          <div className="h-1.5 w-full rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-[#6366F1] transition-all"
+              className="h-full rounded-full bg-primary transition-all"
               style={{ width: `${project.progress}%` }}
             />
           </div>
@@ -269,7 +269,7 @@ function AdminProjectCard({ project }: { project: { _id: Id<"projects">; title: 
 
         {/* Deadline */}
         {project.deadline && (
-          <div className="mt-3 flex items-center gap-1.5 text-xs text-[#94A3B8]">
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
             <span>Due {formatDate(project.deadline)}</span>
           </div>
@@ -312,7 +312,7 @@ export default function AdminProjectsPage() {
       <ProtectedRoute>
         <AppLayout>
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </AppLayout>
       </ProtectedRoute>
@@ -342,9 +342,9 @@ export default function AdminProjectsPage() {
 
   const stats = [
     { label: "Active", value: active, color: "text-[#22C55E]", bg: "bg-[#22C55E]/10" },
-    { label: "Completed", value: completed, color: "text-[#6366F1]", bg: "bg-[#6366F1]/10" },
+    { label: "Completed", value: completed, color: "text-primary", bg: "bg-primary/10" },
     { label: "On Hold", value: onHold, color: "text-[#F59E0B]", bg: "bg-[#F59E0B]/10" },
-    { label: "Total", value: total, color: "text-[#0F172A]", bg: "bg-[#F1F5F9]" },
+    { label: "Total", value: total, color: "text-foreground", bg: "bg-muted" },
   ];
 
   return (
@@ -354,8 +354,8 @@ export default function AdminProjectsPage() {
           {/* Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-[#0F172A]">Project Management</h1>
-              <p className="mt-1 text-[#64748B]">
+              <h1 className="text-2xl font-bold text-foreground">Project Management</h1>
+              <p className="mt-1 text-muted-foreground">
                 Manage all client projects across your portfolio.
               </p>
             </div>
@@ -365,14 +365,14 @@ export default function AdminProjectsPage() {
           {/* Stats Row */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {stats.map((stat) => (
-              <Card key={stat.label} className="border-[#E2E8F0] bg-white shadow-sm">
+              <Card key={stat.label} className="border-border bg-card shadow-sm">
                 <CardContent className="flex items-center gap-4 p-5">
                   <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${stat.bg}`}>
                     <LayoutGrid className={`h-5 w-5 ${stat.color}`} />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-[#64748B]">{stat.label}</p>
-                    <p className="text-2xl font-bold text-[#0F172A]">{stat.value}</p>
+                    <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
+                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -382,15 +382,15 @@ export default function AdminProjectsPage() {
           {/* Filters */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Tabs value={filter} onValueChange={setFilter}>
-              <TabsList className="bg-[#F1F5F9]">
+              <TabsList className="bg-muted">
                 {statusFilters.map((s) => (
                   <TabsTrigger
                     key={s.value}
                     value={s.value}
-                    className="data-[state=active]:bg-white data-[state=active]:text-[#6366F1] data-[state=active]:shadow-sm"
+                    className="data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
                   >
                     {s.label}
-                    <span className="ml-1.5 text-xs text-[#94A3B8]">
+                    <span className="ml-1.5 text-xs text-muted-foreground">
                       {statusCounts[s.value]}
                     </span>
                   </TabsTrigger>
@@ -402,11 +402,11 @@ export default function AdminProjectsPage() {
           {/* Projects Grid */}
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F1F5F9]">
-                <FolderKanban className="h-8 w-8 text-[#94A3B8]" />
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                <FolderKanban className="h-8 w-8 text-muted-foreground" />
               </div>
-              <p className="text-lg font-medium text-[#0F172A]">No projects found</p>
-              <p className="mt-1 text-sm text-[#64748B]">Try adjusting your filters.</p>
+              <p className="text-lg font-medium text-foreground">No projects found</p>
+              <p className="mt-1 text-sm text-muted-foreground">Try adjusting your filters.</p>
             </div>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

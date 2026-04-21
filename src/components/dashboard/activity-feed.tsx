@@ -24,7 +24,7 @@ const activityIcons: Record<string, LucideIcon> = {
 };
 
 const activityColors: Record<string, string> = {
-  comment: "bg-[#6366F1]/10 text-[#6366F1]",
+  comment: "bg-primary/10 text-primary",
   upload: "bg-[#8B5CF6]/10 text-[#8B5CF6]",
   milestone: "bg-[#22C55E]/10 text-[#22C55E]",
   update: "bg-[#F59E0B]/10 text-[#F59E0B]",
@@ -49,12 +49,12 @@ export function ActivityFeed() {
 
   if (activity === undefined) {
     return (
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-base font-semibold text-[#0F172A]">
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <h3 className="mb-4 text-base font-semibold text-foreground">
           Recent Activity
         </h3>
         <div className="flex items-center justify-center py-8">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#E2E8F0] border-t-[#6366F1]" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" />
         </div>
       </div>
     );
@@ -62,18 +62,18 @@ export function ActivityFeed() {
 
   if (activity.length === 0) {
     return (
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-base font-semibold text-[#0F172A]">
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <h3 className="mb-4 text-base font-semibold text-foreground">
           Recent Activity
         </h3>
-        <p className="text-sm text-[#64748B] text-center py-8">No recent activity.</p>
+        <p className="text-sm text-muted-foreground text-center py-8">No recent activity.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
-      <h3 className="mb-4 text-base font-semibold text-[#0F172A]">
+    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      <h3 className="mb-4 text-base font-semibold text-foreground">
         Recent Activity
       </h3>
       <div className="space-y-4">
@@ -87,10 +87,10 @@ export function ActivityFeed() {
                 <Icon className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-[#0F172A] leading-snug">
+                <p className="text-sm text-foreground leading-snug">
                   {item.message}
                 </p>
-                <div className="mt-1 flex items-center gap-2 text-xs text-[#94A3B8]">
+                <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{formatTimeAgo(item.createdAt)}</span>
                 </div>
               </div>
