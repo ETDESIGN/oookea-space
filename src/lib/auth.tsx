@@ -1,141 +1,141 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  type ReactNode,
-} from "react";
-import type { User, AuthTokens } from "@/types";
-import { wpLogin, wpGetCurrentUser } from "@/lib/wp";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ReactNode, createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 
-// ─── Token Storage ──────────────────────────────────────────────
-const TOKEN_KEY = "oookea_token";
+const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-function getStoredToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
+// ─── Types ──────────────────────────────────────────────────────
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "client";
+  company?: string;
+  phone?: string;
+  avatar?: string;
+  status: "active" | "inactive";
 }
 
-function storeToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token);
-}
-
-function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
-}
-
-// ─── Context ────────────────────────────────────────────────────
-interface AuthState {
+interface AuthContextType {
   user: User | null;
-  token: string | null;
   isLoading: boolean;
-  isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthState | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isLoading: true,
+  login: async () => ({ success: false }),
+  logout: () => {},
+});
 
-// ─── Provider ───────────────────────────────────────────────────
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const useAuth = () => useContext(AuthContext);
+
+// ─── Inner Provider (runs inside ConvexProvider) ────────────────
+function AuthInner({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [storedUserId, setStoredUserId] = useState<string | null>(null);
 
-  // Hydrate from localStorage on mount
+  // Check stored session on mount (client only)
   useEffect(() => {
-    const stored = getStoredToken();
-    if (stored) {
-      setToken(stored);
-      wpGetCurrentUser(stored)
-        .then((wpUser) => {
-          if (wpUser) {
-            setUser({
-              id: Number(wpUser.id),
-              name: (wpUser.name as string) || "User",
-              email: (wpUser.email as string) || "",
-              avatar: (wpUser.avatar as Record<string, string>)?.url || undefined,
-              role: "client",
-              createdAt: new Date().toISOString(),
-            });
-          }
-        })
-        .catch(() => {
-          clearToken();
-          setToken(null);
-        })
-        .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
-    }
+    const stored = localStorage.getItem("oookea_user_id");
+    if (stored) setStoredUserId(stored);
+    else setIsLoading(false);
   }, []);
 
-  const login = useCallback(async (username: string, password: string) => {
-    const result = await wpLogin(username, password);
-    storeToken(result.token);
-    setToken(result.token);
+  // Fetch user from Convex when we have a stored ID
+  const convexUser = useQuery(
+    api.projects.getUserById,
+    storedUserId ? { id: storedUserId as Id<"users"> } : "skip"
+  );
 
-    const wpUser = await wpGetCurrentUser(result.token);
-    if (wpUser) {
-      setUser({
-        id: Number(wpUser.id),
-        name: (wpUser.name as string) || result.user_display_name || "User",
-        email: (wpUser.email as string) || result.user_email || "",
-        avatar: (wpUser.avatar as Record<string, string>)?.url || undefined,
-        role: "client",
-        createdAt: new Date().toISOString(),
-      });
+  useEffect(() => {
+    if (convexUser !== undefined) {
+      if (convexUser) {
+        setUser({
+          id: convexUser._id,
+          name: convexUser.name,
+          email: convexUser.email,
+          role: convexUser.role as "admin" | "client",
+          company: convexUser.company ?? undefined,
+          phone: convexUser.phone ?? undefined,
+          avatar: convexUser.avatar ?? undefined,
+          status: convexUser.status as "active" | "inactive",
+        });
+      } else {
+        localStorage.removeItem("oookea_user_id");
+        setStoredUserId(null);
+        setUser(null);
+      }
+      setIsLoading(false);
+    }
+  }, [convexUser]);
+
+  const login = useCallback(async (email: string, _password: string) => {
+    try {
+      const result = await convex.query(api.projects.loginUser, { email });
+      if (result) {
+        const userData: User = {
+          id: result._id,
+          name: result.name,
+          email: result.email,
+          role: result.role as "admin" | "client",
+          company: result.company ?? undefined,
+          phone: result.phone ?? undefined,
+          status: result.status as "active" | "inactive",
+        };
+        setUser(userData);
+        localStorage.setItem("oookea_user_id", result._id);
+        setStoredUserId(result._id);
+        return { success: true };
+      }
+      return { success: false, error: "Invalid email or password" };
+    } catch {
+      return { success: false, error: "Login failed. Please try again." };
     }
   }, []);
 
   const logout = useCallback(() => {
-    clearToken();
-    setToken(null);
     setUser(null);
+    localStorage.removeItem("oookea_user_id");
+    setStoredUserId(null);
   }, []);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isLoading,
-        isAuthenticated: !!token && !!user,
-        login,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// ─── Hook ───────────────────────────────────────────────────────
-export function useAuth(): AuthState {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
-  return ctx;
+// ─── Outer Provider (Convex + Auth) ─────────────────────────────
+export function AuthProvider({ children }: { children: ReactNode }) {
+  return (
+    <ConvexProvider client={convex}>
+      <AuthInner>{children}</AuthInner>
+    </ConvexProvider>
+  );
 }
 
-// ─── Protected Route Wrapper ────────────────────────────────────
+// ─── Protected Route ────────────────────────────────────────────
 export function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#F8FAFC]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#6366F1] border-t-transparent" />
-          <p className="text-sm text-[#64748B]">Loading…</p>
-        </div>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E2E8F0] border-t-[#6366F1]" />
       </div>
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     if (typeof window !== "undefined") {
       window.location.href = "/login";
     }

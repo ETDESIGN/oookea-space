@@ -6,13 +6,13 @@ import { useAuth } from "@/lib/auth";
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
-      router.replace(isAuthenticated ? "/dashboard" : "/login");
+      router.replace(user ? "/dashboard" : "/login");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [user, isLoading, router]);
 
   return (
     <div className="flex h-screen items-center justify-center bg-[#F8FAFC]">
