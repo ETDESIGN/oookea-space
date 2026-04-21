@@ -58,7 +58,7 @@ export interface Project {
 }
 
 // ─── Invoice ────────────────────────────────────────────────────
-export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
+export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue" | "cancelled";
 
 export interface InvoiceItem {
   id: string;

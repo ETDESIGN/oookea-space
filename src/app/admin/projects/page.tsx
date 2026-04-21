@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -28,198 +27,14 @@ import {
   PauseCircle,
   LayoutGrid,
   Calendar,
-  Search,
+  Loader2,
 } from "lucide-react";
-import type { Project, ProjectStatus } from "@/types";
-
-// ─── Mock Clients ───────────────────────────────────────────────
-const clients = [
-  "TechCorp",
-  "GreenLeaf",
-  "BlueWave",
-  "Acme Corp",
-  "Globex Inc",
-  "Soylent Corp",
-  "Initech",
-  "Umbrella Corp",
-];
-
-// ─── Mock Data ──────────────────────────────────────────────────
-const initialProjects: Project[] = [
-  {
-    id: "1",
-    slug: "techcorp-website-redesign",
-    title: "Website Redesign",
-    description: "Complete redesign of the corporate website with modern UI/UX",
-    status: "active",
-    progress: 75,
-    thumbnail: "",
-    category: "Website",
-    startDate: "2026-01-15",
-    deadline: "2026-05-15",
-    client: "TechCorp",
-    brief: "Full redesign of the corporate website.",
-    deliverables: [],
-    activity: [],
-    tags: ["design", "development"],
-  },
-  {
-    id: "2",
-    slug: "greenleaf-brand-identity",
-    title: "Brand Identity Package",
-    description: "Logo, color palette, typography system, and brand guidelines",
-    status: "completed",
-    progress: 100,
-    thumbnail: "",
-    category: "Branding",
-    startDate: "2025-11-01",
-    deadline: "2026-02-28",
-    client: "GreenLeaf",
-    brief: "Complete brand identity package.",
-    deliverables: [],
-    activity: [],
-    tags: ["branding"],
-  },
-  {
-    id: "3",
-    slug: "bluewave-ai-workflow",
-    title: "AI Marketing Workflow",
-    description: "Custom AI-powered marketing automation and content generation system",
-    status: "active",
-    progress: 40,
-    thumbnail: "",
-    category: "AI Workflow",
-    startDate: "2026-03-01",
-    deadline: "2026-06-30",
-    client: "BlueWave",
-    brief: "AI-driven marketing workflows.",
-    deliverables: [],
-    activity: [],
-    tags: ["ai", "marketing"],
-  },
-  {
-    id: "4",
-    slug: "techcorp-sourcing-platform",
-    title: "Product Sourcing Platform",
-    description: "Supplier discovery and product sourcing dashboard",
-    status: "on-hold",
-    progress: 20,
-    thumbnail: "",
-    category: "Sourcing",
-    startDate: "2026-02-15",
-    deadline: "2026-07-01",
-    client: "TechCorp",
-    brief: "Custom sourcing platform for discovering suppliers.",
-    deliverables: [],
-    activity: [],
-    tags: ["sourcing"],
-  },
-  {
-    id: "5",
-    slug: "acme-ecommerce-build",
-    title: "E-Commerce Platform",
-    description: "Full-stack e-commerce platform with payment integration",
-    status: "active",
-    progress: 55,
-    thumbnail: "",
-    category: "Website",
-    startDate: "2026-02-01",
-    deadline: "2026-06-15",
-    client: "Acme Corp",
-    brief: "Full e-commerce build with Stripe integration.",
-    deliverables: [],
-    activity: [],
-    tags: ["development", "ecommerce"],
-  },
-  {
-    id: "6",
-    slug: "greenleaf-packaging-design",
-    title: "Sustainable Packaging Design",
-    description: "Eco-friendly packaging design for new product line",
-    status: "completed",
-    progress: 100,
-    thumbnail: "",
-    category: "Branding",
-    startDate: "2025-10-01",
-    deadline: "2026-01-31",
-    client: "GreenLeaf",
-    brief: "Sustainable packaging design for product line.",
-    deliverables: [],
-    activity: [],
-    tags: ["design", "packaging"],
-  },
-  {
-    id: "7",
-    slug: "globex-ai-chatbot",
-    title: "Customer Support AI Chatbot",
-    description: "Intelligent chatbot for customer support automation",
-    status: "active",
-    progress: 65,
-    thumbnail: "",
-    category: "AI Workflow",
-    startDate: "2026-03-15",
-    deadline: "2026-07-30",
-    client: "Globex Inc",
-    brief: "AI chatbot for customer support.",
-    deliverables: [],
-    activity: [],
-    tags: ["ai", "chatbot"],
-  },
-  {
-    id: "8",
-    slug: "bluewave-mobile-app",
-    title: "Mobile App Development",
-    description: "Cross-platform mobile app for field operations",
-    status: "on-hold",
-    progress: 30,
-    thumbnail: "",
-    category: "Website",
-    startDate: "2026-01-10",
-    deadline: "2026-05-30",
-    client: "BlueWave",
-    brief: "Cross-platform mobile app.",
-    deliverables: [],
-    activity: [],
-    tags: ["mobile", "development"],
-  },
-  {
-    id: "9",
-    slug: "soylent-brand-refresh",
-    title: "Brand Refresh Campaign",
-    description: "Complete brand refresh including digital and print assets",
-    status: "completed",
-    progress: 100,
-    thumbnail: "",
-    category: "Branding",
-    startDate: "2025-09-01",
-    deadline: "2026-01-15",
-    client: "Soylent Corp",
-    brief: "Brand refresh across all touchpoints.",
-    deliverables: [],
-    activity: [],
-    tags: ["branding", "design"],
-  },
-  {
-    id: "10",
-    slug: "initech-supplier-portal",
-    title: "Supplier Portal",
-    description: "Vendor management and procurement portal",
-    status: "active",
-    progress: 50,
-    thumbnail: "",
-    category: "Sourcing",
-    startDate: "2026-04-01",
-    deadline: "2026-08-31",
-    client: "Initech",
-    brief: "Supplier management portal.",
-    deliverables: [],
-    activity: [],
-    tags: ["sourcing", "portal"],
-  },
-];
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
 
 // ─── Helpers ────────────────────────────────────────────────────
-const statusConfig: Record<ProjectStatus, { label: string; color: string; icon: typeof FolderKanban }> = {
+const statusConfig: Record<string, { label: string; color: string; icon: typeof FolderKanban }> = {
   active: { label: "Active", color: "bg-[#22C55E]/10 text-[#22C55E]", icon: FolderKanban },
   completed: { label: "Completed", color: "bg-[#6366F1]/10 text-[#6366F1]", icon: CheckCircle2 },
   "on-hold": { label: "On Hold", color: "bg-[#F59E0B]/10 text-[#F59E0B]", icon: PauseCircle },
@@ -258,7 +73,7 @@ function formatDate(dateStr: string): string {
 }
 
 // ─── Create Project Dialog ──────────────────────────────────────
-function CreateProjectDialog({ onCreated }: { onCreated: (project: Project) => void }) {
+function CreateProjectDialog() {
   const [open, setOpen] = useState(false);
   const [client, setClient] = useState("");
   const [title, setTitle] = useState("");
@@ -266,28 +81,26 @@ function CreateProjectDialog({ onCreated }: { onCreated: (project: Project) => v
   const [category, setCategory] = useState("Website");
   const [deadline, setDeadline] = useState("");
 
-  const handleSubmit = () => {
+  const createProject = useMutation(api.projects.createProject);
+
+  const clients = useQuery(api.projects.listClients);
+
+  const handleSubmit = async () => {
     if (!client || !title || !category) return;
 
-    const newProject: Project = {
-      id: crypto.randomUUID(),
-      slug: title.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now(),
+    const slug = title.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
+
+    await createProject({
       title,
+      slug,
       description,
-      status: "active",
-      progress: 0,
-      thumbnail: "",
       category,
+      clientId: client as Id<"users">,
       startDate: new Date().toISOString().split("T")[0],
       deadline: deadline || undefined,
-      client,
       brief: description,
-      deliverables: [],
-      activity: [],
-      tags: [],
-    };
+    });
 
-    onCreated(newProject);
     setOpen(false);
     setClient("");
     setTitle("");
@@ -323,8 +136,8 @@ function CreateProjectDialog({ onCreated }: { onCreated: (project: Project) => v
               className="flex h-9 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1]/50"
             >
               <option value="">Select client…</option>
-              {clients.map((c) => (
-                <option key={c} value={c}>{c}</option>
+              {clients?.map((c) => (
+                <option key={c._id} value={c._id}>{c.name}</option>
               ))}
             </select>
           </div>
@@ -400,9 +213,12 @@ function CreateProjectDialog({ onCreated }: { onCreated: (project: Project) => v
 }
 
 // ─── Project Card (Admin) ───────────────────────────────────────
-function AdminProjectCard({ project }: { project: Project }) {
-  const status = statusConfig[project.status];
+function AdminProjectCard({ project }: { project: { _id: Id<"projects">; title: string; status: string; progress: number; category: string; deadline?: string; clientId: Id<"users">; createdAt: number } }) {
+  const status = statusConfig[project.status] ?? statusConfig.draft;
   const catColor = categoryColors[project.category] || categoryColors.Other;
+
+  // Fetch client name
+  const client = useQuery(api.projects.getUserById, { id: project.clientId });
 
   return (
     <Card className="group border-[#E2E8F0] bg-white shadow-sm transition-all hover:shadow-lg hover:border-[#6366F1]/30 hover:-translate-y-0.5">
@@ -426,7 +242,7 @@ function AdminProjectCard({ project }: { project: Project }) {
             {project.title}
           </h3>
           <p className="text-xs font-medium text-[#6366F1]">
-            {project.client}
+            {client?.name ?? "Loading…"}
           </p>
         </div>
 
@@ -467,9 +283,10 @@ function AdminProjectCard({ project }: { project: Project }) {
 export default function AdminProjectsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [filter, setFilter] = useState("all");
-  const [clientFilter, setClientFilter] = useState("all");
+
+  const projects = useQuery(api.projects.listProjects, {});
+  const clients = useQuery(api.projects.listClients);
 
   // Admin guard
   useEffect(() => {
@@ -484,6 +301,18 @@ export default function AdminProjectsPage() {
         <AppLayout>
           <div className="flex h-64 items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#6366F1] border-t-transparent" />
+          </div>
+        </AppLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (projects === undefined || clients === undefined) {
+    return (
+      <ProtectedRoute>
+        <AppLayout>
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
           </div>
         </AppLayout>
       </ProtectedRoute>
@@ -505,17 +334,11 @@ export default function AdminProjectsPage() {
 
   // Filtered projects
   const filtered = projects.filter((p) => {
-    const matchesStatus = filter === "all" || p.status === filter;
-    const matchesClient = clientFilter === "all" || p.client === clientFilter;
-    return matchesStatus && matchesClient;
+    return filter === "all" || p.status === filter;
   });
 
-  const handleCreated = (project: Project) => {
-    setProjects((prev) => [project, ...prev]);
-  };
-
-  // Unique clients from projects
-  const uniqueClients = Array.from(new Set(projects.map((p) => p.client))).sort();
+  // Unique client IDs from projects
+  const uniqueClientIds = Array.from(new Set(projects.map((p) => p.clientId)));
 
   const stats = [
     { label: "Active", value: active, color: "text-[#22C55E]", bg: "bg-[#22C55E]/10" },
@@ -536,7 +359,7 @@ export default function AdminProjectsPage() {
                 Manage all client projects across your portfolio.
               </p>
             </div>
-            <CreateProjectDialog onCreated={handleCreated} />
+            <CreateProjectDialog />
           </div>
 
           {/* Stats Row */}
@@ -574,18 +397,6 @@ export default function AdminProjectsPage() {
                 ))}
               </TabsList>
             </Tabs>
-
-            {/* Client Filter Dropdown */}
-            <select
-              value={clientFilter}
-              onChange={(e) => setClientFilter(e.target.value)}
-              className="flex h-9 rounded-lg border border-[#E2E8F0] bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1]/50"
-            >
-              <option value="all">All Clients</option>
-              {uniqueClients.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
           </div>
 
           {/* Projects Grid */}
@@ -600,7 +411,7 @@ export default function AdminProjectsPage() {
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((project) => (
-                <AdminProjectCard key={project.id} project={project} />
+                <AdminProjectCard key={project._id} project={project} />
               ))}
             </div>
           )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { use, useState } from "react";
 import { ProtectedRoute } from "@/lib/auth";
 import { useAuth } from "@/lib/auth";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -23,53 +24,11 @@ import {
   Building2,
   Calendar,
   Hash,
+  Loader2,
 } from "lucide-react";
-import type { Invoice } from "@/types";
-
-const mockInvoice: Invoice = {
-  id: "2",
-  number: "INV-2026-002",
-  status: "sent",
-  issueDate: "2026-03-01",
-  dueDate: "2026-04-01",
-  client: "Acme Corp",
-  items: [
-    {
-      id: "i3",
-      description: "Brand Identity Package",
-      quantity: 1,
-      unitPrice: 3500,
-      total: 3500,
-    },
-    {
-      id: "i4",
-      description: "Social Media Kit",
-      quantity: 1,
-      unitPrice: 1200,
-      total: 1200,
-    },
-    {
-      id: "i5",
-      description: "Brand Guidelines PDF",
-      quantity: 1,
-      unitPrice: 800,
-      total: 800,
-    },
-    {
-      id: "i6",
-      description: "Revision Rounds (2×)",
-      quantity: 2,
-      unitPrice: 500,
-      total: 1000,
-    },
-  ],
-  subtotal: 6500,
-  tax: 650,
-  total: 7150,
-  notes:
-    "Payment is due within 30 days of the issue date. Please include the invoice number in your payment reference. Thank you for choosing Oookea!",
-  projectSlug: "brand-identity",
-};
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -92,9 +51,39 @@ export default function InvoiceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { user } = useAuth();
+  const { id } = use(params);
 
-  // In production, fetch invoice by ID from API using params.id
-  const invoice = mockInvoice;
+  const invoice = useQuery(
+    api.projects.getInvoice,
+    id ? { id: id as Id<"invoices"> } : "skip"
+  );
+
+  if (invoice === undefined) {
+    return (
+      <ProtectedRoute>
+        <AppLayout>
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+          </div>
+        </AppLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (invoice === null) {
+    return (
+      <ProtectedRoute>
+        <AppLayout>
+          <div className="flex flex-col items-center justify-center py-20">
+            <p className="text-lg font-medium text-[#0F172A]">Invoice not found</p>
+            <a href="/invoices" className="mt-2 text-sm text-[#6366F1] hover:underline">
+              Back to Invoices
+            </a>
+          </div>
+        </AppLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -124,9 +113,6 @@ export default function InvoiceDetailPage({
               <Button
                 size="sm"
                 className="gap-1.5 bg-[#6366F1] hover:bg-[#4F46E5] text-white"
-                onClick={() => {
-                  /* PDF download placeholder */
-                }}
               >
                 <Download className="h-4 w-4" />
                 Download PDF
@@ -192,9 +178,9 @@ export default function InvoiceDetailPage({
                   <div className="flex items-start gap-3">
                     <Building2 className="mt-0.5 h-5 w-5 text-[#6366F1]" />
                     <div>
-                      <p className="font-semibold text-[#0F172A]">{invoice.client}</p>
+                      <p className="font-semibold text-[#0F172A]">{user?.company || user?.name || "Client"}</p>
                       <p className="mt-0.5 text-sm text-[#64748B]">
-                        {user?.email || "contact@acmecorp.com"}
+                        {user?.email || ""}
                       </p>
                     </div>
                   </div>
@@ -224,7 +210,7 @@ export default function InvoiceDetailPage({
                     <TableBody>
                       {invoice.items.map((item, idx) => (
                         <TableRow
-                          key={item.id}
+                          key={idx}
                           className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]"
                         >
                           <TableCell className="font-medium text-[#0F172A]">
@@ -255,9 +241,9 @@ export default function InvoiceDetailPage({
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-[#64748B]">Tax (10%)</span>
+                      <span className="text-[#64748B]">Tax ({invoice.taxRate}%)</span>
                       <span className="font-medium text-[#0F172A]">
-                        {formatCurrency(invoice.tax)}
+                        {formatCurrency(invoice.taxAmount)}
                       </span>
                     </div>
                     <Separator className="bg-[#E2E8F0]" />

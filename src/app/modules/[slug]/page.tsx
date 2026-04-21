@@ -2,40 +2,26 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { ArrowLeft, ChevronRight, ExternalLink, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
 
 type ModuleStatus = "Active" | "Beta" | "Coming Soon";
 
-interface ModuleDetail {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  status: ModuleStatus;
-  icon: string;
-  accentBg: string;
-  accentText: string;
-  longDescription: string;
-}
-
-const moduleLookup: Record<string, ModuleDetail> = {
-  "ai-marketing-workflow": {
-    id: "1",
-    slug: "ai-marketing-workflow",
-    title: "AI Marketing Workflow",
-    description:
-      "Automate your marketing pipeline with AI-driven content generation, campaign scheduling, and performance analytics.",
-    status: "Active",
-    icon: "🤖",
-    accentBg: "bg-violet-50",
-    accentText: "text-violet-700",
-    longDescription:
-      "The AI Marketing Workflow module provides an end-to-end solution for automating your marketing efforts. It leverages advanced language models to generate blog posts, social media content, email campaigns, and ad copy. Built-in scheduling, A/B testing, and real-time analytics help you optimise every campaign for maximum ROI.",
-  },
+const categoryAccents: Record<string, { accentBg: string; accentText: string; icon: string }> = {
+  "AI Workflow": { accentBg: "bg-violet-50", accentText: "text-violet-700", icon: "🤖" },
+  "Sourcing": { accentBg: "bg-blue-50", accentText: "text-blue-700", icon: "🔍" },
+  "Marketing": { accentBg: "bg-indigo-50", accentText: "text-indigo-700", icon: "📊" },
+  "Analytics": { accentBg: "bg-emerald-50", accentText: "text-emerald-700", icon: "📈" },
+  "Integration": { accentBg: "bg-amber-50", accentText: "text-amber-700", icon: "⚙️" },
 };
+
+const defaultAccent = { accentBg: "bg-slate-50", accentText: "text-slate-700", icon: "📦" };
 
 const statusStyles: Record<ModuleStatus, string> = {
   Active: "bg-emerald-50 text-emerald-700 border border-emerald-200",
@@ -46,25 +32,45 @@ const statusStyles: Record<ModuleStatus, string> = {
 export default function ModuleDetailPage() {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const slug = params.slug;
 
-  const mod: ModuleDetail =
-    moduleLookup[slug] ??
-    ({
-      id: "unknown",
-      slug,
-      title: slug
-        .split("-")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" "),
-      description: "Module details are being configured.",
-      status: "Coming Soon" as ModuleStatus,
-      icon: "📦",
-      accentBg: "bg-slate-50",
-      accentText: "text-slate-700",
-      longDescription:
-        "This module is currently being set up. Check back soon for full access.",
-    } satisfies ModuleDetail);
+  const modules = useQuery(
+    api.projects.listModules,
+    user?.id ? { clientId: user.id as Id<"users"> } : "skip"
+  );
+
+  const mod = modules?.find((m) => m.slug === slug);
+
+  if (modules === undefined) {
+    return (
+      <ProtectedRoute>
+        <AppLayout>
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+          </div>
+        </AppLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (!mod) {
+    return (
+      <ProtectedRoute>
+        <AppLayout>
+          <div className="flex flex-col items-center justify-center py-20">
+            <p className="text-lg font-medium text-[#0F172A]">Module not found</p>
+            <Link href="/modules" className="mt-2 text-sm text-[#6366F1] hover:underline">
+              Back to Modules
+            </Link>
+          </div>
+        </AppLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  const accent = categoryAccents[mod.category] || defaultAccent;
+  const status: ModuleStatus = mod.enabled ? "Active" : "Coming Soon";
 
   return (
     <ProtectedRoute>
@@ -87,9 +93,9 @@ export default function ModuleDetailPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-start gap-4">
                 <div
-                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${mod.accentBg} text-3xl`}
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${accent.accentBg} text-3xl`}
                 >
-                  {mod.icon}
+                  {accent.icon}
                 </div>
                 <div>
                   <div className="flex items-center gap-3">
@@ -97,9 +103,9 @@ export default function ModuleDetailPage() {
                       {mod.title}
                     </h1>
                     <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[mod.status]}`}
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[status]}`}
                     >
-                      {mod.status}
+                      {status}
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-[#64748B]">
@@ -121,7 +127,7 @@ export default function ModuleDetailPage() {
             {/* Long Description */}
             <div className="mt-6 rounded-lg bg-[#F8FAFC] p-4">
               <p className="text-sm leading-relaxed text-[#334155]">
-                {mod.longDescription}
+                {mod.description}
               </p>
             </div>
           </div>
@@ -136,7 +142,7 @@ export default function ModuleDetailPage() {
                 </span>
               </div>
               <span className="text-xs text-[#94A3B8]">
-                {mod.status === "Coming Soon"
+                {status === "Coming Soon"
                   ? "Not available yet"
                   : "Embedded view"}
               </span>
@@ -144,9 +150,9 @@ export default function ModuleDetailPage() {
             <div className="flex h-[480px] items-center justify-center bg-[#F8FAFC]">
               <div className="flex flex-col items-center gap-3 text-center">
                 <div
-                  className={`flex h-16 w-16 items-center justify-center rounded-2xl ${mod.accentBg} text-3xl`}
+                  className={`flex h-16 w-16 items-center justify-center rounded-2xl ${accent.accentBg} text-3xl`}
                 >
-                  {mod.icon}
+                  {accent.icon}
                 </div>
                 <p className="text-sm font-medium text-[#64748B]">
                   Module iframe will load here

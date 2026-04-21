@@ -10,27 +10,53 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { User, Bell, Palette, Globe, Save, Check } from "lucide-react";
+import { User, Bell, Palette, Globe, Save, Check, Loader2 } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
+import { useTheme } from "@/lib/theme";
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [saved, setSaved] = useState(false);
-  const [name, setName] = useState(user?.name || "Etia");
-  const [email] = useState(user?.email || "etia@example.com");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [notifications, setNotifications] = useState({
     invoiceEmail: true,
     messageEmail: true,
     projectUpdate: false,
   });
-  const [darkMode, setDarkMode] = useState(false);
+
+  const profile = useQuery(
+    api.projects.getUserById,
+    user?.id ? { id: user.id as Id<"users"> } : "skip"
+  );
+
+  const [name, setName] = useState(profile?.name ?? user?.name ?? "");
+  const email = profile?.email ?? user?.email ?? "";
+
+  // Sync name when profile loads
+  if (profile && name !== profile.name && !saved) {
+    setName(profile.name);
+  }
+
+  if (profile === undefined && user?.id) {
+    return (
+      <ProtectedRoute>
+        <AppLayout>
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+          </div>
+        </AppLayout>
+      </ProtectedRoute>
+    );
+  }
 
   const handleSave = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  const isDark = theme === "dark";
 
   return (
     <ProtectedRoute>
@@ -86,8 +112,6 @@ export default function SettingsPage() {
                 <Input
                   id="current-password"
                   type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
                   className="border-[#E2E8F0]"
                 />
               </div>
@@ -96,8 +120,6 @@ export default function SettingsPage() {
                 <Input
                   id="new-password"
                   type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
                   className="border-[#E2E8F0]"
                 />
               </div>
@@ -106,8 +128,6 @@ export default function SettingsPage() {
                 <Input
                   id="confirm-password"
                   type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="border-[#E2E8F0]"
                 />
               </div>
@@ -176,14 +196,14 @@ export default function SettingsPage() {
                   <p className="text-xs text-[#64748B]">Switch between light and dark theme</p>
                 </div>
                 <button
-                  onClick={() => setDarkMode(!darkMode)}
+                  onClick={toggleTheme}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    darkMode ? "bg-[#6366F1]" : "bg-[#E2E8F0]"
+                    isDark ? "bg-[#6366F1]" : "bg-[#E2E8F0]"
                   }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
-                      darkMode ? "translate-x-6" : "translate-x-1"
+                      isDark ? "translate-x-6" : "translate-x-1"
                     }`}
                   />
                 </button>
