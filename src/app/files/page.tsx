@@ -15,122 +15,12 @@ import {
   LayoutGrid,
   List,
   HardDrive,
-  SlidersHorizontal,
+  Loader2,
 } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import type { FileItem, FileType } from "@/types";
-
-const mockFiles: FileItem[] = [
-  {
-    id: "f1",
-    name: "homepage-hero-v3.png",
-    type: "image",
-    size: 4_200_000,
-    url: "/files/mock",
-    thumbnail: "",
-    uploadedAt: "2026-04-18T10:30:00Z",
-    uploadedBy: "Sarah Chen",
-    projectSlug: "website-redesign",
-    mimeType: "image/png",
-  },
-  {
-    id: "f2",
-    name: "brand-guidelines-2026.pdf",
-    type: "document",
-    size: 8_500_000,
-    url: "/files/mock",
-    uploadedAt: "2026-04-15T14:20:00Z",
-    uploadedBy: "Mike Torres",
-    projectSlug: "brand-identity",
-    mimeType: "application/pdf",
-  },
-  {
-    id: "f3",
-    name: "product-demo-final.mp4",
-    type: "video",
-    size: 125_000_000,
-    url: "/files/mock",
-    uploadedAt: "2026-04-12T09:00:00Z",
-    uploadedBy: "Sarah Chen",
-    projectSlug: "ai-marketing-workflow",
-    mimeType: "video/mp4",
-  },
-  {
-    id: "f4",
-    name: "logo-dark.svg",
-    type: "image",
-    size: 48_000,
-    url: "/files/mock",
-    thumbnail: "",
-    uploadedAt: "2026-04-10T16:45:00Z",
-    uploadedBy: "Alex Kim",
-    projectSlug: "brand-identity",
-    mimeType: "image/svg+xml",
-  },
-  {
-    id: "f5",
-    name: "q1-report.xlsx",
-    type: "document",
-    size: 1_200_000,
-    url: "/files/mock",
-    uploadedAt: "2026-04-08T11:15:00Z",
-    uploadedBy: "Mike Torres",
-    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  },
-  {
-    id: "f6",
-    name: "ui-wireframes.fig",
-    type: "design",
-    size: 6_800_000,
-    url: "/files/mock",
-    uploadedAt: "2026-04-05T13:30:00Z",
-    uploadedBy: "Sarah Chen",
-    projectSlug: "website-redesign",
-    mimeType: "application/x-figma",
-  },
-  {
-    id: "f7",
-    name: "supplier-catalog.zip",
-    type: "archive",
-    size: 34_000_000,
-    url: "/files/mock",
-    uploadedAt: "2026-04-03T08:00:00Z",
-    uploadedBy: "Alex Kim",
-    projectSlug: "product-sourcing",
-    mimeType: "application/zip",
-  },
-  {
-    id: "f8",
-    name: "team-standup-recording.mp4",
-    type: "video",
-    size: 52_000_000,
-    url: "/files/mock",
-    uploadedAt: "2026-04-01T17:00:00Z",
-    uploadedBy: "Mike Torres",
-    mimeType: "video/mp4",
-  },
-  {
-    id: "f9",
-    name: "contract-amendment.docx",
-    type: "document",
-    size: 340_000,
-    url: "/files/mock",
-    uploadedAt: "2026-03-28T10:00:00Z",
-    uploadedBy: "Alex Kim",
-    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  },
-  {
-    id: "f10",
-    name: "og-social-image.jpg",
-    type: "image",
-    size: 2_100_000,
-    url: "/files/mock",
-    thumbnail: "",
-    uploadedAt: "2026-03-25T15:20:00Z",
-    uploadedBy: "Sarah Chen",
-    projectSlug: "website-redesign",
-    mimeType: "image/jpeg",
-  },
-];
 
 const fileTabs: { label: string; value: string; filter?: FileType }[] = [
   { label: "All Files", value: "all" },
@@ -153,7 +43,32 @@ export default function FilesPage() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [files, setFiles] = useState<FileItem[]>(mockFiles);
+  const [localFiles, setLocalFiles] = useState<FileItem[]>([]);
+
+  const isAdmin = user?.role === "admin";
+  const clientId = !isAdmin ? (user?.id as Id<"users">) : undefined;
+
+  const convexFiles = useQuery(
+    api.projects.listFiles,
+    clientId ? { clientId } : (isAdmin ? {} : "skip")
+  );
+
+  // Merge Convex files with locally uploaded files
+  const allFiles: FileItem[] = [
+    ...(convexFiles?.map((f) => ({
+      id: f._id,
+      name: f.name,
+      type: f.type as FileType,
+      size: f.size,
+      url: "/files/mock",
+      thumbnail: undefined,
+      uploadedAt: new Date(f.createdAt).toISOString(),
+      uploadedBy: user?.name || "Unknown",
+      projectSlug: undefined,
+      mimeType: f.mimeType,
+    })) ?? []),
+    ...localFiles,
+  ];
 
   const handleUpload = (uploaded: File[]) => {
     const newFiles: FileItem[] = uploaded.map((f, i) => ({
@@ -175,10 +90,10 @@ export default function FilesPage() {
       uploadedBy: user?.name || "You",
       mimeType: f.type,
     }));
-    setFiles((prev) => [...newFiles, ...prev]);
+    setLocalFiles((prev) => [...newFiles, ...prev]);
   };
 
-  const filtered = files.filter((f) => {
+  const filtered = allFiles.filter((f) => {
     const matchesSearch = f.name.toLowerCase().includes(search.toLowerCase());
     if (activeTab === "all") return matchesSearch;
     if (activeTab === "other") {
@@ -188,6 +103,18 @@ export default function FilesPage() {
   });
 
   const usedPercent = Math.round((STORAGE_USED / STORAGE_TOTAL) * 100);
+
+  if (convexFiles === undefined) {
+    return (
+      <ProtectedRoute>
+        <AppLayout>
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+          </div>
+        </AppLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>

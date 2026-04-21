@@ -1,15 +1,33 @@
 import { v } from "convex/values";
 import { query as q, mutation as m } from "./_generated/server";
 
+// ─── Password Hashing ───────────────────────────────────────────
+
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  const inputHash = await hashPassword(password);
+  return inputHash === hash;
+}
+
 // ─── Users ──────────────────────────────────────────────────────
 
 export const loginUser = q({
-  args: { email: v.string() },
-  handler: async (ctx, { email }) => {
+  args: { email: v.string(), password: v.string() },
+  handler: async (ctx, { email, password }) => {
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", email))
       .first();
+    if (!user) return null;
+    const valid = await verifyPassword(password, user.passwordHash);
+    if (!valid) return null;
     return user;
   },
 });
@@ -42,7 +60,7 @@ export const createClient = m({
   args: {
     name: v.string(),
     email: v.string(),
-    passwordHash: v.string(),
+    password: v.string(),
     company: v.optional(v.string()),
     phone: v.optional(v.string()),
   },
@@ -54,8 +72,12 @@ export const createClient = m({
       .first();
     if (existing) throw new Error("Email already registered");
 
+    const passwordHash = await hashPassword(args.password);
+    const { password: _, ...rest } = args;
+
     return await ctx.db.insert("users", {
-      ...args,
+      ...rest,
+      passwordHash,
       role: "client",
       status: "active",
       createdAt: Date.now(),
@@ -449,20 +471,22 @@ export const seed = m({
     if (existing) return "Already seeded";
 
     // Create admin
+    const adminPassHash = await hashPassword("Remybrica-1");
     const adminId = await ctx.db.insert("users", {
       name: "Etia",
       email: "etiawork@gmail.com",
-      passwordHash: "admin", // placeholder
+      passwordHash: adminPassHash,
       role: "admin",
       status: "active",
       createdAt: Date.now(),
     });
 
     // Create sample client
+    const clientPassHash = await hashPassword("demo123");
     const clientId = await ctx.db.insert("users", {
       name: "Sarah Johnson",
       email: "sarah@techcorp.com",
-      passwordHash: "client", // placeholder
+      passwordHash: clientPassHash,
       role: "client",
       company: "TechCorp International",
       phone: "+1 (555) 123-4567",
@@ -527,6 +551,97 @@ export const seed = m({
       createdAt: Date.now(),
     });
 
-    return "Seed complete! Admin: etiawork@gmail.com, Client: sarah@techcorp.com";
+    return "Seed complete! Admin: etiawork@gmail.com (Remybrica-1), Client: sarah@techcorp.com (demo123)";
+  },
+});
+
+export const resetAndSeed = m({
+  args: {},
+  handler: async (ctx) => {
+    // Delete all data from all tables
+    const tables = ["users", "projects", "invoices", "files", "threads", "messages", "deliverables", "modules", "activity"] as const;
+    for (const table of tables) {
+      const docs = await ctx.db.query(table).collect();
+      for (const doc of docs) {
+        await ctx.db.delete(doc._id);
+      }
+    }
+    // Re-seed
+    const adminPassHash = await hashPassword("Remybrica-1");
+    const adminId = await ctx.db.insert("users", {
+      name: "Etia",
+      email: "etiawork@gmail.com",
+      passwordHash: adminPassHash,
+      role: "admin",
+      status: "active",
+      createdAt: Date.now(),
+    });
+
+    const clientPassHash = await hashPassword("demo123");
+    const clientId = await ctx.db.insert("users", {
+      name: "Sarah Johnson",
+      email: "sarah@techcorp.com",
+      passwordHash: clientPassHash,
+      role: "client",
+      company: "TechCorp International",
+      phone: "+1 (555) 123-4567",
+      status: "active",
+      createdAt: Date.now(),
+    });
+
+    const projectId = await ctx.db.insert("projects", {
+      title: "Website Redesign",
+      slug: "website-redesign",
+      description: "Complete redesign of the corporate website",
+      brief: "Full redesign including homepage, about, services, and contact pages.",
+      status: "active",
+      progress: 75,
+      category: "Website",
+      clientId,
+      startDate: "2026-01-15",
+      deadline: "2026-05-15",
+      tags: ["design", "development"],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.insert("deliverables", { projectId, title: "Homepage mockup", completed: true, order: 1 });
+    await ctx.db.insert("deliverables", { projectId, title: "UI style guide", completed: true, order: 2 });
+    await ctx.db.insert("deliverables", { projectId, title: "Front-end development", completed: false, order: 3 });
+    await ctx.db.insert("deliverables", { projectId, title: "QA testing & launch", completed: false, order: 4 });
+
+    await ctx.db.insert("invoices", {
+      number: "INV-2026-001",
+      clientId,
+      projectId,
+      status: "sent",
+      issueDate: "2026-04-01",
+      dueDate: "2026-04-30",
+      items: [
+        { description: "Website Design", quantity: 1, unitPrice: 3000, total: 3000 },
+        { description: "Front-end Development", quantity: 1, unitPrice: 4000, total: 4000 },
+        { description: "QA Testing", quantity: 1, unitPrice: 1000, total: 1000 },
+      ],
+      subtotal: 8000,
+      taxRate: 10,
+      taxAmount: 800,
+      total: 8800,
+      currency: "USD",
+      notes: "Payment due within 30 days.",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.insert("modules", {
+      clientId,
+      title: "AI Marketing Workflow",
+      slug: "ai-marketing",
+      description: "AI-powered marketing automation",
+      category: "AI Workflow",
+      enabled: true,
+      createdAt: Date.now(),
+    });
+
+    return "Reset & seed complete! Admin: etiawork@gmail.com (Remybrica-1), Client: sarah@techcorp.com (demo123)";
   },
 });

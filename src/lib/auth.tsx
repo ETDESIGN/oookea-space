@@ -78,9 +78,9 @@ function AuthInner({ children }: { children: ReactNode }) {
     }
   }, [convexUser]);
 
-  const login = useCallback(async (email: string, _password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
-      const result = await convex!.query(api.projects.loginUser, { email });
+      const result = await convex!.query(api.projects.loginUser, { email, password });
       if (result) {
         const userData: User = {
           id: result._id,

@@ -1,18 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ProtectedRoute } from "@/lib/auth";
 import { useAuth } from "@/lib/auth";
 import { AppLayout } from "@/components/layout/app-layout";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
 } from "@/components/ui/avatar";
 import {
   Search,
@@ -22,201 +19,17 @@ import {
   MoreVertical,
   Mail,
   MailOpen,
+  Loader2,
 } from "lucide-react";
-import type { MessageThread, Message } from "@/types";
-
-// ─── Mock Data ──────────────────────────────────────────────────
-
-const mockThreads: MessageThread[] = [
-  {
-    id: "t1",
-    subject: "Website Redesign — Homepage Review",
-    participants: [
-      { name: "Sarah Chen", avatar: "" },
-      { name: "You" },
-    ],
-    lastMessage: "I've uploaded the revised mockups for the hero section. Can you take a look when you get a chance?",
-    lastMessageAt: "2026-04-21T18:30:00Z",
-    unread: true,
-    projectSlug: "website-redesign",
-  },
-  {
-    id: "t2",
-    subject: "Brand Guidelines — Final Approval",
-    participants: [
-      { name: "Mike Torres", avatar: "" },
-      { name: "You" },
-    ],
-    lastMessage: "The updated color palette looks great. Let's finalize the typography choices this week.",
-    lastMessageAt: "2026-04-21T14:15:00Z",
-    unread: true,
-    projectSlug: "brand-identity",
-  },
-  {
-    id: "t3",
-    subject: "AI Marketing Workflow — Integration Update",
-    participants: [
-      { name: "Lena Park", avatar: "" },
-      { name: "You" },
-    ],
-    lastMessage: "The OpenAI integration is complete. Moving on to the campaign scheduler module next.",
-    lastMessageAt: "2026-04-20T09:45:00Z",
-    unread: false,
-    projectSlug: "ai-marketing-workflow",
-  },
-  {
-    id: "t4",
-    subject: "Product Sourcing — Supplier Onboarding",
-    participants: [
-      { name: "James Wright", avatar: "" },
-      { name: "You" },
-    ],
-    lastMessage: "We've shortlisted 12 suppliers from the APAC region. Full report attached.",
-    lastMessageAt: "2026-04-19T16:20:00Z",
-    unread: false,
-    projectSlug: "product-sourcing",
-  },
-  {
-    id: "t5",
-    subject: "OpenClaw Setup — Agent Configuration",
-    participants: [
-      { name: "Sarah Chen", avatar: "" },
-      { name: "You" },
-    ],
-    lastMessage: "Agent is deployed to staging. Running integration tests now — will share results by EOD.",
-    lastMessageAt: "2026-04-18T11:00:00Z",
-    unread: false,
-    projectSlug: "openclaw-setup",
-  },
-];
-
-const mockMessages: Record<string, Message[]> = {
-  t1: [
-    {
-      id: "m1",
-      threadId: "t1",
-      body: "Hi! I've been working on the homepage redesign based on our last meeting. I have a few questions about the hero section layout.",
-      sender: "Sarah Chen",
-      senderAvatar: "",
-      timestamp: "2026-04-21T10:00:00Z",
-    },
-    {
-      id: "m2",
-      threadId: "t1",
-      body: "Of course! What do you need feedback on?",
-      sender: "You",
-      senderAvatar: "",
-      timestamp: "2026-04-21T10:15:00Z",
-    },
-    {
-      id: "m3",
-      threadId: "t1",
-      body: "Mainly the CTA placement and the background treatment. Should we go with a full-width video or a static gradient? I'm attaching two options.",
-      sender: "Sarah Chen",
-      senderAvatar: "",
-      timestamp: "2026-04-21T11:30:00Z",
-      attachments: [
-        { name: "hero-option-a.png", url: "/files/hero-a.png", size: 2400000 },
-        { name: "hero-option-b.png", url: "/files/hero-b.png", size: 1850000 },
-      ],
-    },
-    {
-      id: "m4",
-      threadId: "t1",
-      body: "I like option B — the gradient feels cleaner. Let's go with that direction.",
-      sender: "You",
-      senderAvatar: "",
-      timestamp: "2026-04-21T14:00:00Z",
-    },
-    {
-      id: "m5",
-      threadId: "t1",
-      body: "I've uploaded the revised mockups for the hero section. Can you take a look when you get a chance?",
-      sender: "Sarah Chen",
-      senderAvatar: "",
-      timestamp: "2026-04-21T18:30:00Z",
-      attachments: [
-        { name: "hero-revised-v2.fig", url: "/files/hero-v2.fig", size: 4200000 },
-      ],
-    },
-  ],
-  t2: [
-    {
-      id: "m6",
-      threadId: "t2",
-      body: "Hey! Here's the latest version of the brand guidelines. Colors are locked — just need sign-off on typography.",
-      sender: "Mike Torres",
-      senderAvatar: "",
-      timestamp: "2026-04-21T09:00:00Z",
-      attachments: [
-        { name: "brand-guidelines-v3.pdf", url: "/files/brand-v3.pdf", size: 8500000 },
-      ],
-    },
-    {
-      id: "m7",
-      threadId: "t2",
-      body: "The updated color palette looks great. Let's finalize the typography choices this week.",
-      sender: "Mike Torres",
-      senderAvatar: "",
-      timestamp: "2026-04-21T14:15:00Z",
-    },
-  ],
-  t3: [
-    {
-      id: "m8",
-      threadId: "t3",
-      body: "Quick update: the OpenAI API integration passed all unit tests. We're on track for the milestone.",
-      sender: "Lena Park",
-      senderAvatar: "",
-      timestamp: "2026-04-20T09:00:00Z",
-    },
-    {
-      id: "m9",
-      threadId: "t3",
-      body: "The OpenAI integration is complete. Moving on to the campaign scheduler module next.",
-      sender: "Lena Park",
-      senderAvatar: "",
-      timestamp: "2026-04-20T09:45:00Z",
-    },
-  ],
-  t4: [
-    {
-      id: "m10",
-      threadId: "t4",
-      body: "Here are the top 12 APAC suppliers based on your criteria. Full evaluation report is attached.",
-      sender: "James Wright",
-      senderAvatar: "",
-      timestamp: "2026-04-19T16:20:00Z",
-      attachments: [
-        { name: "supplier-report-apac.xlsx", url: "/files/suppliers.xlsx", size: 3200000 },
-      ],
-    },
-  ],
-  t5: [
-    {
-      id: "m11",
-      threadId: "t5",
-      body: "The OpenClaw agent is configured and deployed to the staging environment. Running a full integration test suite now.",
-      sender: "Sarah Chen",
-      senderAvatar: "",
-      timestamp: "2026-04-18T10:00:00Z",
-    },
-    {
-      id: "m12",
-      threadId: "t5",
-      body: "Agent is deployed to staging. Running integration tests now — will share results by EOD.",
-      sender: "Sarah Chen",
-      senderAvatar: "",
-      timestamp: "2026-04-18T11:00:00Z",
-    },
-  ],
-};
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 
 // ─── Helpers ────────────────────────────────────────────────────
 
-function formatRelativeTime(iso: string): string {
-  const date = new Date(iso);
-  const now = new Date("2026-04-21T20:00:00Z");
+function formatRelativeTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMins / 60);
@@ -228,18 +41,12 @@ function formatRelativeTime(iso: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function formatMessageTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-US", {
+function formatMessageTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
   });
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function getInitials(name: string): string {
@@ -258,21 +65,56 @@ export default function MessagesPage() {
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [replyText, setReplyText] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const filteredThreads = mockThreads.filter(
-    (t) =>
-      t.subject.toLowerCase().includes(search.toLowerCase()) ||
-      t.lastMessage.toLowerCase().includes(search.toLowerCase())
+  const isAdmin = user?.role === "admin";
+  const clientId = !isAdmin ? (user?.id as Id<"users">) : undefined;
+
+  const threads = useQuery(
+    api.projects.listThreads,
+    clientId ? { clientId } : {}
   );
 
-  const selectedThread = mockThreads.find((t) => t.id === selectedThreadId);
-  const messages = selectedThreadId ? mockMessages[selectedThreadId] ?? [] : [];
+  const selectedThreadMessages = useQuery(
+    api.projects.getThreadMessages,
+    selectedThreadId ? { threadId: selectedThreadId as Id<"threads"> } : "skip"
+  );
 
-  const handleSend = () => {
-    if (!replyText.trim()) return;
-    // In production, this would POST to an API
+  const sendMessage = useMutation(api.projects.sendMessage);
+
+  const selectedThread = threads?.find((t) => t._id === selectedThreadId);
+
+  const filteredThreads = threads?.filter(
+    (t) =>
+      t.subject.toLowerCase().includes(search.toLowerCase())
+  ) ?? [];
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [selectedThreadMessages]);
+
+  const handleSend = async () => {
+    if (!replyText.trim() || !selectedThreadId) return;
+    await sendMessage({
+      threadId: selectedThreadId as Id<"threads">,
+      body: replyText,
+      senderId: user?.id as Id<"users">,
+      senderRole: user?.role === "admin" ? "admin" : "client",
+    });
     setReplyText("");
   };
+
+  if (threads === undefined) {
+    return (
+      <ProtectedRoute>
+        <AppLayout>
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-[#6366F1]" />
+          </div>
+        </AppLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -318,23 +160,17 @@ export default function MessagesPage() {
                 ) : (
                   filteredThreads.map((thread, i) => (
                     <button
-                      key={thread.id}
-                      onClick={() => setSelectedThreadId(thread.id)}
+                      key={thread._id}
+                      onClick={() => setSelectedThreadId(thread._id)}
                       className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[#F8FAFC] ${
-                        selectedThreadId === thread.id ? "bg-[#F1F5F9]" : ""
+                        selectedThreadId === thread._id ? "bg-[#F1F5F9]" : ""
                       } ${i > 0 ? "border-t border-[#E2E8F0]" : ""}`}
                     >
                       {/* Unread dot */}
                       <div className="relative mt-1">
-                        {thread.unread && (
-                          <span className="absolute -left-1 -top-1 z-10 flex h-2.5 w-2.5">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#6366F1] opacity-75" />
-                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#6366F1]" />
-                          </span>
-                        )}
                         <Avatar size="default">
                           <AvatarFallback className="bg-[#6366F1]/10 text-[#6366F1] text-xs">
-                            {getInitials(thread.participants[0].name)}
+                            {getInitials(thread.subject.split("—")[0].trim())}
                           </AvatarFallback>
                         </Avatar>
                       </div>
@@ -342,14 +178,8 @@ export default function MessagesPage() {
                       {/* Content */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p
-                            className={`truncate text-sm ${
-                              thread.unread
-                                ? "font-semibold text-[#0F172A]"
-                                : "font-medium text-[#0F172A]"
-                            }`}
-                          >
-                            {thread.participants[0].name}
+                          <p className="truncate text-sm font-medium text-[#0F172A]">
+                            {thread.clientId === user?.id ? "Support" : thread.subject.split("—")[0].trim()}
                           </p>
                           <span className="shrink-0 text-[11px] text-[#94A3B8]">
                             {formatRelativeTime(thread.lastMessageAt)}
@@ -357,9 +187,6 @@ export default function MessagesPage() {
                         </div>
                         <p className="mt-0.5 truncate text-xs font-medium text-[#334155]">
                           {thread.subject}
-                        </p>
-                        <p className="mt-0.5 truncate text-xs text-[#64748B]">
-                          {thread.lastMessage}
                         </p>
                       </div>
                     </button>
@@ -388,15 +215,12 @@ export default function MessagesPage() {
                     </Button>
                     <Avatar size="sm">
                       <AvatarFallback className="bg-[#6366F1]/10 text-[#6366F1] text-[10px]">
-                        {getInitials(selectedThread.participants[0].name)}
+                        {getInitials(selectedThread.subject.split("—")[0].trim())}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-[#0F172A]">
                         {selectedThread.subject}
-                      </p>
-                      <p className="text-xs text-[#64748B]">
-                        {selectedThread.participants.map((p) => p.name).join(", ")}
                       </p>
                     </div>
                     <Button variant="ghost" size="icon-sm">
@@ -407,72 +231,56 @@ export default function MessagesPage() {
                   {/* Messages area */}
                   <div className="flex-1 overflow-y-auto px-5 py-4">
                     <div className="space-y-4">
-                      {messages.map((msg) => {
-                        const isMe = msg.sender === "You";
-                        return (
-                          <div
-                            key={msg.id}
-                            className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                          >
-                            <div className={`max-w-[75%] space-y-1.5`}>
-                              {/* Sender name + time */}
-                              <div
-                                className={`flex items-center gap-2 ${
-                                  isMe ? "justify-end" : ""
-                                }`}
-                              >
-                                {!isMe && (
-                                  <span className="text-xs font-medium text-[#0F172A]">
-                                    {msg.sender}
+                      {selectedThreadMessages === undefined ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin text-[#6366F1]" />
+                        </div>
+                      ) : (
+                        selectedThreadMessages.map((msg) => {
+                          const isMe = msg.senderId === user?.id;
+                          return (
+                            <div
+                              key={msg._id}
+                              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                            >
+                              <div className="max-w-[75%] space-y-1.5">
+                                {/* Sender name + time */}
+                                <div
+                                  className={`flex items-center gap-2 ${
+                                    isMe ? "justify-end" : ""
+                                  }`}
+                                >
+                                  {!isMe && (
+                                    <span className="text-xs font-medium text-[#0F172A]">
+                                      {msg.senderRole === "admin" ? "Admin" : "Client"}
+                                    </span>
+                                  )}
+                                  <span className="text-[11px] text-[#94A3B8]">
+                                    {formatMessageTime(msg.createdAt)}
                                   </span>
-                                )}
-                                <span className="text-[11px] text-[#94A3B8]">
-                                  {formatMessageTime(msg.timestamp)}
-                                </span>
-                                {isMe && (
-                                  <span className="text-xs font-medium text-[#6366F1]">
-                                    You
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Bubble */}
-                              <div
-                                className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                                  isMe
-                                    ? "rounded-br-md bg-[#6366F1] text-white"
-                                    : "rounded-bl-md bg-[#F1F5F9] text-[#0F172A]"
-                                }`}
-                              >
-                                {msg.body}
-                              </div>
-
-                              {/* Attachments */}
-                              {msg.attachments && msg.attachments.length > 0 && (
-                                <div className="flex flex-wrap gap-2">
-                                  {msg.attachments.map((att) => (
-                                    <a
-                                      key={att.name}
-                                      href={att.url}
-                                      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs transition-colors hover:bg-[#F8FAFC] ${
-                                        isMe
-                                          ? "border-[#818CF8] bg-[#6366F1]/10 text-[#6366F1]"
-                                          : "border-[#E2E8F0] text-[#334155]"
-                                      }`}
-                                    >
-                                      <Paperclip className="h-3 w-3" />
-                                      <span className="font-medium">{att.name}</span>
-                                      <span className="text-[#94A3B8]">
-                                        ({formatFileSize(att.size)})
-                                      </span>
-                                    </a>
-                                  ))}
+                                  {isMe && (
+                                    <span className="text-xs font-medium text-[#6366F1]">
+                                      You
+                                    </span>
+                                  )}
                                 </div>
-                              )}
+
+                                {/* Bubble */}
+                                <div
+                                  className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                                    isMe
+                                      ? "rounded-br-md bg-[#6366F1] text-white"
+                                      : "rounded-bl-md bg-[#F1F5F9] text-[#0F172A]"
+                                  }`}
+                                >
+                                  {msg.body}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      )}
+                      <div ref={messagesEndRef} />
                     </div>
                   </div>
 

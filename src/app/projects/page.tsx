@@ -9,116 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, LayoutGrid, List, Plus } from "lucide-react";
-import type { Project, ProjectStatus } from "@/types";
-
-const mockProjects: Project[] = [
-  {
-    id: "1",
-    slug: "website-redesign",
-    title: "Website Redesign",
-    description: "Complete redesign of the corporate website with modern UI/UX",
-    status: "active",
-    progress: 75,
-    thumbnail: "",
-    category: "Website",
-    startDate: "2026-01-15",
-    deadline: "2026-05-15",
-    client: "Acme Corp",
-    brief: "Full redesign of the corporate website including homepage, about, services, and contact pages.",
-    deliverables: [
-      { id: "d1", title: "Homepage mockup", completed: true },
-      { id: "d2", title: "UI style guide", completed: true },
-      { id: "d3", title: "Development", completed: false },
-      { id: "d4", title: "QA testing", completed: false },
-    ],
-    activity: [],
-    tags: ["design", "development"],
-  },
-  {
-    id: "2",
-    slug: "brand-identity",
-    title: "Brand Identity Package",
-    description: "Logo, color palette, typography system, and brand guidelines",
-    status: "completed",
-    progress: 100,
-    thumbnail: "",
-    category: "Branding",
-    startDate: "2025-11-01",
-    deadline: "2026-02-28",
-    client: "Acme Corp",
-    brief: "Complete brand identity including logo variations, color system, typography, and guidelines document.",
-    deliverables: [
-      { id: "d5", title: "Logo design", completed: true },
-      { id: "d6", title: "Brand guidelines PDF", completed: true },
-      { id: "d7", title: "Social media kit", completed: true },
-    ],
-    activity: [],
-    tags: ["branding"],
-  },
-  {
-    id: "3",
-    slug: "ai-marketing-workflow",
-    title: "AI Marketing Workflow",
-    description: "Custom AI-powered marketing automation and content generation system",
-    status: "active",
-    progress: 40,
-    thumbnail: "",
-    category: "AI Workflow",
-    startDate: "2026-03-01",
-    deadline: "2026-06-30",
-    client: "Acme Corp",
-    brief: "Implementation of AI-driven marketing workflows for automated content creation and campaign management.",
-    deliverables: [
-      { id: "d8", title: "Workflow architecture", completed: true },
-      { id: "d9", title: "AI model training", completed: false },
-      { id: "d10", title: "Integration testing", completed: false },
-    ],
-    activity: [],
-    tags: ["ai", "marketing"],
-  },
-  {
-    id: "4",
-    slug: "product-sourcing",
-    title: "Product Sourcing Platform",
-    description: "Supplier discovery and product sourcing dashboard",
-    status: "on-hold",
-    progress: 20,
-    thumbnail: "",
-    category: "Sourcing",
-    startDate: "2026-02-15",
-    deadline: "2026-07-01",
-    client: "Acme Corp",
-    brief: "Custom sourcing platform for discovering and evaluating suppliers globally.",
-    deliverables: [
-      { id: "d11", title: "Platform architecture", completed: true },
-      { id: "d12", title: "Supplier database", completed: false },
-      { id: "d13", title: "Search & filters", completed: false },
-    ],
-    activity: [],
-    tags: ["sourcing", "platform"],
-  },
-  {
-    id: "5",
-    slug: "openclaw-setup",
-    title: "OpenClaw AI Agent Setup",
-    description: "Custom AI agent configuration and deployment",
-    status: "active",
-    progress: 60,
-    thumbnail: "",
-    category: "AI Setup",
-    startDate: "2026-04-01",
-    deadline: "2026-05-30",
-    client: "Acme Corp",
-    brief: "Setup and configuration of OpenClaw AI agent for autonomous business operations.",
-    deliverables: [
-      { id: "d14", title: "Environment setup", completed: true },
-      { id: "d15", title: "Agent configuration", completed: true },
-      { id: "d16", title: "Testing & deployment", completed: false },
-    ],
-    activity: [],
-    tags: ["ai", "automation"],
-  },
-];
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
+import type { Project } from "@/types";
 
 const statusFilters: { label: string; value: string }[] = [
   { label: "All", value: "all" },
@@ -133,7 +27,12 @@ export default function ProjectsPage() {
   const [filter, setFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const filtered = mockProjects.filter((p) => {
+  const clientId = user?.role === "admin" ? undefined : (user?.id as Id<"users">);
+  const projects = useQuery(api.projects.listProjects, { clientId });
+
+  const projectList = projects ?? [];
+
+  const filtered = projectList.filter((p) => {
     const matchesSearch =
       p.title.toLowerCase().includes(search.toLowerCase()) ||
       p.category.toLowerCase().includes(search.toLowerCase());
@@ -196,8 +95,15 @@ export default function ProjectsPage() {
             </div>
           </div>
 
-          {/* Projects Grid */}
-          {filtered.length === 0 ? (
+          {/* Loading */}
+          {projects === undefined && (
+            <div className="flex items-center justify-center py-20">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E2E8F0] border-t-[#6366F1]" />
+            </div>
+          )}
+
+          {/* Projects Grid / List */}
+          {projects !== undefined && filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F1F5F9]">
                 <Search className="h-8 w-8 text-[#94A3B8]" />
@@ -205,17 +111,33 @@ export default function ProjectsPage() {
               <p className="text-lg font-medium text-[#0F172A]">No projects found</p>
               <p className="mt-1 text-sm text-[#64748B]">Try adjusting your search or filters.</p>
             </div>
-          ) : viewMode === "grid" ? (
+          ) : projects !== undefined && viewMode === "grid" ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((project) => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard key={project._id} project={{
+                  id: project._id,
+                  slug: project.slug,
+                  title: project.title,
+                  description: project.description,
+                  status: project.status as "active" | "completed" | "on-hold" | "draft",
+                  progress: project.progress,
+                  thumbnail: project.thumbnail,
+                  category: project.category,
+                  startDate: project.startDate,
+                  deadline: project.deadline,
+                  client: "",
+                  brief: project.brief ?? "",
+                  deliverables: [],
+                  activity: [],
+                  tags: project.tags ?? [],
+                }} />
               ))}
             </div>
-          ) : (
+          ) : projects !== undefined ? (
             <div className="rounded-xl border border-[#E2E8F0] bg-white">
               {filtered.map((project, i) => (
                 <a
-                  key={project.id}
+                  key={project._id}
                   href={`/projects/${project.slug}`}
                   className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-[#F8FAFC] ${i > 0 ? "border-t border-[#E2E8F0]" : ""}`}
                 >
@@ -241,7 +163,7 @@ export default function ProjectsPage() {
                 </a>
               ))}
             </div>
-          )}
+          ) : null}
         </div>
       </AppLayout>
     </ProtectedRoute>

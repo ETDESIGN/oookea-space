@@ -11,6 +11,8 @@ import {
   Settings,
   User,
   Command,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useTheme } from "@/lib/theme";
 import {
   CommandDialog,
   CommandEmpty,
@@ -48,6 +51,7 @@ const searchPages = [
 
 export function Header({ onMobileMenuToggle }: HeaderProps) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifCount] = useState(3);
 
@@ -62,7 +66,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#E2E8F0] bg-white/80 px-4 backdrop-blur-md lg:px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/80 px-4 backdrop-blur-md lg:px-6">
         {/* Left: Mobile menu + Search */}
         <div className="flex items-center gap-3">
           <Button
@@ -89,6 +93,16 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
         {/* Right: Notifications + Avatar */}
         <div className="flex items-center gap-2">
+          {/* Dark mode toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-[#64748B] hover:text-[#0F172A]"
+            onClick={toggleTheme}
+          >
+            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
+
           {/* Notifications */}
           <Button
             variant="ghost"

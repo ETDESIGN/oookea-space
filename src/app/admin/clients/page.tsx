@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useQuery, useMutation } from "convex/react";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,131 +39,15 @@ import {
   PowerOff,
   Building2,
   Mail,
-  HardDrive,
 } from "lucide-react";
-
-// ─── Types ──────────────────────────────────────────────────────
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  company: string;
-  phone: string;
-  projects: number;
-  storageUsed: number;
-  storageTotal: number;
-  status: "active" | "inactive";
-  joinedDate: string;
-}
-
-// ─── Mock Data ──────────────────────────────────────────────────
-
-const initialClients: Client[] = [
-  {
-    id: "1",
-    name: "Marie Dupont",
-    email: "marie@acmecorp.com",
-    company: "Acme Corp",
-    phone: "+1 (555) 101-2001",
-    projects: 3,
-    storageUsed: 340,
-    storageTotal: 500,
-    status: "active",
-    joinedDate: "2025-09-12",
-  },
-  {
-    id: "2",
-    name: "James Wilson",
-    email: "hello@globex.io",
-    company: "Globex Inc",
-    phone: "+1 (555) 202-3002",
-    projects: 2,
-    storageUsed: 180,
-    storageTotal: 500,
-    status: "active",
-    joinedDate: "2025-11-03",
-  },
-  {
-    id: "3",
-    name: "Lena Chen",
-    email: "team@soylent.dev",
-    company: "Soylent Labs",
-    phone: "+1 (555) 303-4003",
-    projects: 1,
-    storageUsed: 45,
-    storageTotal: 500,
-    status: "active",
-    joinedDate: "2026-01-18",
-  },
-  {
-    id: "4",
-    name: "Peter Gibbons",
-    email: "info@initech.co",
-    company: "Initech Systems",
-    phone: "+1 (555) 404-5004",
-    projects: 2,
-    storageUsed: 60,
-    storageTotal: 500,
-    status: "inactive",
-    joinedDate: "2025-06-22",
-  },
-  {
-    id: "5",
-    name: "Alice Morgan",
-    email: "admin@umbrella.net",
-    company: "Umbrella Corp",
-    phone: "+1 (555) 505-6005",
-    projects: 4,
-    storageUsed: 410,
-    storageTotal: 500,
-    status: "active",
-    joinedDate: "2025-04-10",
-  },
-  {
-    id: "6",
-    name: "Carlos Rivera",
-    email: "carlos@vertexai.com",
-    company: "Vertex AI",
-    phone: "+1 (555) 606-7006",
-    projects: 1,
-    storageUsed: 20,
-    storageTotal: 500,
-    status: "active",
-    joinedDate: "2026-03-05",
-  },
-  {
-    id: "7",
-    name: "Sarah Kim",
-    email: "sarah@novahealth.org",
-    company: "Nova Health",
-    phone: "+1 (555) 707-8007",
-    projects: 0,
-    storageUsed: 0,
-    storageTotal: 500,
-    status: "inactive",
-    joinedDate: "2025-12-01",
-  },
-  {
-    id: "8",
-    name: "Tom Baker",
-    email: "tom@bluecore.io",
-    company: "Bluecore Digital",
-    phone: "+1 (555) 808-9008",
-    projects: 2,
-    storageUsed: 125,
-    storageTotal: 500,
-    status: "active",
-    joinedDate: "2026-02-14",
-  },
-];
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
 
 // ─── Component ──────────────────────────────────────────────────
 
 export default function ClientsManagementPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [clients, setClients] = useState<Client[]>(initialClients);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -172,6 +57,11 @@ export default function ClientsManagementPage() {
     password: "",
     company: "",
   });
+
+  const clients = useQuery(api.projects.listClients, {});
+  const projects = useQuery(api.projects.listProjects, {});
+  const createClient = useMutation(api.projects.createClient);
+  const updateClient = useMutation(api.projects.updateClient);
 
   useEffect(() => {
     if (user && user.role !== "admin") {
@@ -191,45 +81,46 @@ export default function ClientsManagementPage() {
     );
   }
 
-  const filteredClients = clients.filter((c) => {
+  const isLoading = clients === undefined;
+
+  // Build project count map
+  const projectCountMap = new Map<string, number>();
+  if (projects) {
+    for (const p of projects) {
+      const cid = p.clientId;
+      projectCountMap.set(cid, (projectCountMap.get(cid) || 0) + 1);
+    }
+  }
+
+  const filteredClients = (clients ?? []).filter((c) => {
     const matchesSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.email.toLowerCase().includes(search.toLowerCase()) ||
-      c.company.toLowerCase().includes(search.toLowerCase());
+      (c.company ?? "").toLowerCase().includes(search.toLowerCase());
     const matchesFilter =
       filter === "all" || c.status === filter;
     return matchesSearch && matchesFilter;
   });
 
-  const activeCount = clients.filter((c) => c.status === "active").length;
-  const inactiveCount = clients.filter((c) => c.status === "inactive").length;
+  const activeCount = (clients ?? []).filter((c) => c.status === "active").length;
+  const inactiveCount = (clients ?? []).filter((c) => c.status === "inactive").length;
 
-  const toggleStatus = (id: string) => {
-    setClients((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? { ...c, status: c.status === "active" ? "inactive" : "active" }
-          : c
-      )
-    );
+  const toggleStatus = async (clientId: string, currentStatus: string) => {
+    const newStatus = currentStatus === "active" ? "inactive" : "active";
+    await updateClient({
+      id: clientId as Id<"users">,
+      status: newStatus as "active" | "inactive",
+    });
   };
 
-  const handleAddClient = () => {
+  const handleAddClient = async () => {
     if (!newClient.name || !newClient.email) return;
-    const id = String(clients.length + 1);
-    const client: Client = {
-      id,
+    await createClient({
       name: newClient.name,
       email: newClient.email,
-      company: newClient.company || "—",
-      phone: "—",
-      projects: 0,
-      storageUsed: 0,
-      storageTotal: 500,
-      status: "active",
-      joinedDate: new Date().toISOString().split("T")[0],
-    };
-    setClients((prev) => [...prev, client]);
+      password: newClient.password || "Welcome1!",
+      company: newClient.company || undefined,
+    });
     setNewClient({ name: "", email: "", password: "", company: "" });
     setDialogOpen(false);
   };
@@ -334,7 +225,7 @@ export default function ClientsManagementPage() {
                 </div>
                 <div>
                   <p className="text-sm text-[#64748B]">Total Clients</p>
-                  <p className="text-xl font-bold text-[#0F172A]">{clients.length}</p>
+                  <p className="text-xl font-bold text-[#0F172A]">{clients?.length ?? "—"}</p>
                 </div>
               </CardContent>
             </Card>
@@ -400,7 +291,11 @@ export default function ClientsManagementPage() {
           {/* Client Table */}
           <Card className="border-[#E2E8F0] bg-white shadow-sm">
             <CardContent className="p-0">
-              {filteredClients.length === 0 ? (
+              {isLoading ? (
+                <div className="flex justify-center py-16">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#6366F1] border-t-transparent" />
+                </div>
+              ) : filteredClients.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F1F5F9]">
                     <Search className="h-7 w-7 text-[#94A3B8]" />
@@ -420,18 +315,15 @@ export default function ClientsManagementPage() {
                       <TableHead className="hidden md:table-cell">Email</TableHead>
                       <TableHead className="hidden sm:table-cell">Company</TableHead>
                       <TableHead className="text-center">Projects</TableHead>
-                      <TableHead className="hidden lg:table-cell text-center">Storage</TableHead>
                       <TableHead className="text-center">Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredClients.map((client) => {
-                      const storagePct = Math.round(
-                        (client.storageUsed / client.storageTotal) * 100
-                      );
+                      const pCount = projectCountMap.get(client._id) ?? 0;
                       return (
-                        <TableRow key={client.id} className="group">
+                        <TableRow key={client._id} className="group">
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#6366F1]/10 text-sm font-semibold text-[#6366F1]">
@@ -455,24 +347,11 @@ export default function ClientsManagementPage() {
                           <TableCell className="hidden sm:table-cell">
                             <span className="flex items-center gap-1.5 text-[#64748B]">
                               <Building2 className="h-3.5 w-3.5" />
-                              {client.company}
+                              {client.company || "—"}
                             </span>
                           </TableCell>
                           <TableCell className="text-center font-medium text-[#0F172A]">
-                            {client.projects}
-                          </TableCell>
-                          <TableCell className="hidden lg:table-cell">
-                            <div className="flex items-center gap-2">
-                              <div className="h-1.5 w-16 rounded-full bg-[#E2E8F0]">
-                                <div
-                                  className="h-full rounded-full bg-[#6366F1] transition-all"
-                                  style={{ width: `${storagePct}%` }}
-                                />
-                              </div>
-                              <span className="text-xs text-[#64748B]">
-                                {client.storageUsed} MB
-                              </span>
-                            </div>
+                            {pCount}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge
@@ -487,7 +366,7 @@ export default function ClientsManagementPage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Link href={`/admin/clients/${client.id}`}>
+                              <Link href={`/admin/clients/${client._id}`}>
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -511,7 +390,7 @@ export default function ClientsManagementPage() {
                                     ? "text-[#94A3B8] hover:text-[#EF4444]"
                                     : "text-[#22C55E] hover:text-[#22C55E]"
                                 }`}
-                                onClick={() => toggleStatus(client.id)}
+                                onClick={() => toggleStatus(client._id, client.status)}
                                 title={
                                   client.status === "active"
                                     ? "Deactivate"
