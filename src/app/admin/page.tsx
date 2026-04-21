@@ -1,0 +1,326 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { AppLayout } from "@/components/layout/app-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Users,
+  FolderKanban,
+  DollarSign,
+  AlertCircle,
+  Plus,
+  FileText,
+  BarChart3,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
+import Link from "next/link";
+
+// ─── Mock Data ──────────────────────────────────────────────────
+
+const recentClients = [
+  { id: "1", name: "Acme Corp", email: "contact@acmecorp.com", projects: 3, status: "active" as const },
+  { id: "2", name: "Globex Inc", email: "hello@globex.io", projects: 2, status: "active" as const },
+  { id: "3", name: "Soylent Labs", email: "team@soylent.dev", projects: 1, status: "active" as const },
+  { id: "4", name: "Initech Systems", email: "info@initech.co", projects: 2, status: "inactive" as const },
+  { id: "5", name: "Umbrella Corp", email: "admin@umbrella.net", projects: 4, status: "active" as const },
+];
+
+const recentInvoices = [
+  { id: "1", number: "INV-2026-041", client: "Acme Corp", amount: 3500, status: "paid" as const, date: "2026-04-18" },
+  { id: "2", number: "INV-2026-040", client: "Globex Inc", amount: 2200, status: "sent" as const, date: "2026-04-15" },
+  { id: "3", number: "INV-2026-039", client: "Umbrella Corp", amount: 4800, status: "overdue" as const, date: "2026-04-01" },
+  { id: "4", number: "INV-2026-038", client: "Soylent Labs", amount: 1200, status: "paid" as const, date: "2026-03-28" },
+  { id: "5", number: "INV-2026-037", client: "Initech Systems", amount: 1800, status: "sent" as const, date: "2026-03-20" },
+];
+
+// ─── Component ──────────────────────────────────────────────────
+
+export default function AdminDashboardPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user && user.role !== "admin") {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
+
+  if (!user || user.role !== "admin") {
+    return (
+      <ProtectedRoute>
+        <AppLayout>
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#6366F1] border-t-transparent" />
+          </div>
+        </AppLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  const stats = [
+    {
+      title: "Total Clients",
+      value: "8",
+      icon: Users,
+      color: "bg-[#6366F1]/10 text-[#6366F1]",
+      trend: { value: 12, positive: true },
+    },
+    {
+      title: "Active Projects",
+      value: "12",
+      icon: FolderKanban,
+      color: "bg-[#22C55E]/10 text-[#22C55E]",
+      trend: { value: 8, positive: true },
+    },
+    {
+      title: "Revenue MTD",
+      value: "$24,500",
+      icon: DollarSign,
+      color: "bg-[#F59E0B]/10 text-[#F59E0B]",
+      trend: { value: 15, positive: true },
+    },
+    {
+      title: "Outstanding",
+      value: "$4,200",
+      icon: AlertCircle,
+      color: "bg-[#EF4444]/10 text-[#EF4444]",
+      trend: { value: 5, positive: false },
+    },
+  ];
+
+  const statusColor: Record<string, string> = {
+    active: "bg-[#22C55E]/10 text-[#22C55E]",
+    inactive: "bg-[#94A3B8]/10 text-[#94A3B8]",
+    paid: "bg-[#22C55E]/10 text-[#22C55E]",
+    sent: "bg-[#6366F1]/10 text-[#6366F1]",
+    overdue: "bg-[#EF4444]/10 text-[#EF4444]",
+  };
+
+  return (
+    <ProtectedRoute>
+      <AppLayout>
+        <div className="space-y-6">
+          {/* Welcome */}
+          <div>
+            <h1 className="text-2xl font-bold text-[#0F172A]">
+              Welcome back, Etia 👋
+            </h1>
+            <p className="mt-1 text-[#64748B]">
+              Here&apos;s an overview of your client portal activity.
+            </p>
+          </div>
+
+          {/* Stat Cards */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {stats.map((stat) => (
+              <Card key={stat.title} className="border-[#E2E8F0] bg-white shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-[#64748B]">{stat.title}</p>
+                      <p className="text-3xl font-bold tracking-tight text-[#0F172A]">
+                        {stat.value}
+                      </p>
+                      {stat.trend && (
+                        <p
+                          className={`text-xs font-medium ${
+                            stat.trend.positive ? "text-[#22C55E]" : "text-[#EF4444]"
+                          }`}
+                        >
+                          {stat.trend.positive ? (
+                            <ArrowUpRight className="inline h-3 w-3" />
+                          ) : (
+                            <ArrowDownRight className="inline h-3 w-3" />
+                          )}{" "}
+                          {Math.abs(stat.trend.value)}%{" "}
+                          <span className="text-[#94A3B8]">vs last month</span>
+                        </p>
+                      )}
+                    </div>
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${stat.color}`}>
+                      <stat.icon className="h-5 w-5" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Revenue Chart Placeholder + Quick Actions */}
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Revenue Chart Placeholder */}
+            <Card className="border-[#E2E8F0] bg-white shadow-sm lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-[#6366F1]" />
+                  Revenue Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex h-48 flex-col items-center justify-center rounded-lg border border-dashed border-[#E2E8F0] bg-[#F8FAFC]">
+                  <BarChart3 className="h-10 w-10 text-[#94A3B8]" />
+                  <p className="mt-2 text-sm font-medium text-[#64748B]">
+                    Revenue chart coming soon
+                  </p>
+                  <p className="text-xs text-[#94A3B8]">
+                    Monthly revenue breakdown will appear here
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+              <h3 className="mb-4 text-base font-semibold text-[#0F172A]">
+                Quick Actions
+              </h3>
+              <div className="grid grid-cols-1 gap-3">
+                <Link
+                  href="/admin/clients"
+                  className="flex items-center gap-3 rounded-lg bg-[#6366F1]/10 p-3 text-[#6366F1] transition-colors hover:bg-[#6366F1]/20"
+                >
+                  <Plus className="h-5 w-5 shrink-0" />
+                  <span className="text-sm font-medium">Add Client</span>
+                </Link>
+                <Link
+                  href="/admin/invoices"
+                  className="flex items-center gap-3 rounded-lg bg-[#22C55E]/10 p-3 text-[#22C55E] transition-colors hover:bg-[#22C55E]/20"
+                >
+                  <FileText className="h-5 w-5 shrink-0" />
+                  <span className="text-sm font-medium">Create Invoice</span>
+                </Link>
+                <Link
+                  href="/admin/projects"
+                  className="flex items-center gap-3 rounded-lg bg-[#F59E0B]/10 p-3 text-[#F59E0B] transition-colors hover:bg-[#F59E0B]/20"
+                >
+                  <FolderKanban className="h-5 w-5 shrink-0" />
+                  <span className="text-sm font-medium">Create Project</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Clients + Recent Invoices */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Recent Clients */}
+            <Card className="border-[#E2E8F0] bg-white shadow-sm">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-[#6366F1]" />
+                    Recent Clients
+                  </CardTitle>
+                  <Link href="/admin/clients">
+                    <Button variant="ghost" size="sm" className="text-[#6366F1]">
+                      View all
+                    </Button>
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead className="hidden sm:table-cell">Email</TableHead>
+                      <TableHead className="text-center">Projects</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentClients.map((client) => (
+                      <TableRow key={client.id} className="cursor-pointer">
+                        <TableCell>
+                          <Link href={`/admin/clients/${client.id}`} className="font-medium text-[#0F172A] hover:text-[#6366F1]">
+                            {client.name}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="hidden text-[#64748B] sm:table-cell">
+                          {client.email}
+                        </TableCell>
+                        <TableCell className="text-center text-[#0F172A]">
+                          {client.projects}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge
+                            className={`rounded-full border-0 ${statusColor[client.status]}`}
+                          >
+                            {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Recent Invoices */}
+            <Card className="border-[#E2E8F0] bg-white shadow-sm">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-[#6366F1]" />
+                    Recent Invoices
+                  </CardTitle>
+                  <Link href="/admin/invoices">
+                    <Button variant="ghost" size="sm" className="text-[#6366F1]">
+                      View all
+                    </Button>
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice</TableHead>
+                      <TableHead className="hidden sm:table-cell">Client</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentInvoices.map((inv) => (
+                      <TableRow key={inv.id}>
+                        <TableCell className="font-medium text-[#0F172A]">
+                          {inv.number}
+                        </TableCell>
+                        <TableCell className="hidden text-[#64748B] sm:table-cell">
+                          {inv.client}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-[#0F172A]">
+                          ${inv.amount.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge
+                            className={`rounded-full border-0 ${statusColor[inv.status]}`}
+                          >
+                            {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </AppLayout>
+    </ProtectedRoute>
+  );
+}

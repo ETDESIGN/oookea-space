@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -17,17 +17,31 @@ import {
   LogOut,
   X,
   Palette,
+  Users,
+  HardDrive,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
-const navItems = [
+const clientNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Projects", href: "/projects", icon: FolderKanban },
   { label: "Invoices", href: "/invoices", icon: FileText },
   { label: "File Vault", href: "/files", icon: FileIcon },
   { label: "Messages", href: "/messages", icon: MessageSquare },
   { label: "Modules", href: "/modules", icon: Blocks },
+];
+
+const adminNavItems = [
+  { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
+  { label: "Clients", href: "/admin/clients", icon: Users },
+  { label: "All Projects", href: "/admin/projects", icon: FolderKanban },
+  { label: "All Invoices", href: "/admin/invoices", icon: FileText },
+  { label: "File Manager", href: "/admin/uploads", icon: HardDrive },
+  { label: "Messages", href: "/admin/messages", icon: MessageSquare },
+  { label: "Back to Portal", href: "/dashboard", icon: ArrowLeft },
 ];
 
 const bottomItems = [
@@ -49,6 +63,7 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const initials = user?.name
     ? user.name
@@ -63,17 +78,24 @@ export function Sidebar({
     <div className="flex h-full flex-col bg-[#0F172A]">
       {/* Brand */}
       <div className="flex h-16 items-center justify-between px-4">
-        <Link href="/dashboard" className="flex items-center gap-3">
+        <Link href={isAdmin ? "/admin" : "/dashboard"} className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#6366F1]">
             <Palette className="h-5 w-5 text-white" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-lg font-bold text-white tracking-tight">
-                Oookea
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-white tracking-tight">
+                  Oookea
+                </span>
+                {isAdmin && (
+                  <Badge className="h-4 rounded bg-[#F59E0B] px-1.5 text-[9px] font-bold uppercase text-white border-0">
+                    Admin
+                  </Badge>
+                )}
+              </div>
               <span className="text-[10px] uppercase tracking-widest text-[#64748B]">
-                Digital Atelier
+                {isAdmin ? "Admin Portal" : "Digital Atelier"}
               </span>
             </div>
           )}
@@ -93,7 +115,7 @@ export function Sidebar({
 
       {/* Nav */}
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => {
+        {(isAdmin ? adminNavItems : clientNavItems).map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
             <Link
