@@ -122,7 +122,7 @@ export default function ClientDetailPage() {
 
           {isLoading ? (
             <div className="flex justify-center py-20">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#6366F1] border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             </div>
           ) : !client ? (
             <div className="flex flex-col items-center justify-center py-20">
@@ -159,7 +159,7 @@ export default function ClientDetailPage() {
                       </div>
                     </div>
 
-                    <Separator className="my-4 bg-[#E2E8F0]" />
+                    <Separator className="my-4 bg-border" />
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
@@ -195,7 +195,7 @@ export default function ClientDetailPage() {
                   <CardContent className="space-y-3">
                     {projects === undefined ? (
                       <div className="flex justify-center py-8">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#6366F1] border-t-transparent" />
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                       </div>
                     ) : projects.length === 0 ? (
                       <p className="py-8 text-center text-sm text-muted-foreground">No projects yet.</p>
@@ -229,7 +229,7 @@ export default function ClientDetailPage() {
                   <CardContent>
                     {invoices === undefined ? (
                       <div className="flex justify-center py-8">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#6366F1] border-t-transparent" />
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                       </div>
                     ) : invoices.length === 0 ? (
                       <p className="py-8 text-center text-sm text-muted-foreground">No invoices yet.</p>
@@ -279,7 +279,7 @@ export default function ClientDetailPage() {
                     </div>
                     {modules === undefined ? (
                       <div className="flex justify-center py-4">
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#6366F1] border-t-transparent" />
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                       </div>
                     ) : modules.length === 0 ? (
                       <p className="text-sm text-muted-foreground">No modules assigned.</p>
@@ -293,7 +293,7 @@ export default function ClientDetailPage() {
                               onCheckedChange={(checked) =>
                                 handleToggleModule(mod._id, !!checked)
                               }
-                              className="data-[state=checked]:bg-primary data-[state=checked]:border-[#6366F1]"
+                              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                             />
                           </div>
                         ))}

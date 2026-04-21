@@ -8,9 +8,9 @@ import type { Project, ProjectStatus } from "@/types";
 
 const statusConfig: Record<ProjectStatus, { label: string; color: string }> = {
   active: { label: "Active", color: "bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20" },
-  completed: { label: "Completed", color: "bg-primary/10 text-primary border-[#6366F1]/20" },
+  completed: { label: "Completed", color: "bg-primary/10 text-primary border-primary/20" },
   "on-hold": { label: "On Hold", color: "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20" },
-  draft: { label: "Draft", color: "bg-[#94A3B8]/10 text-muted-foreground border-[#94A3B8]/20" },
+  draft: { label: "Draft", color: "bg-[#94A3B8]/10 text-muted-foreground border-muted-foreground/20" },
 };
 
 interface ProjectCardProps {
@@ -24,7 +24,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     <Link href={`/projects/${project.slug}`}>
       <Card className="group cursor-pointer border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5">
         {/* Thumbnail */}
-        <div className="relative h-44 overflow-hidden rounded-t-xl bg-gradient-to-br from-[#6366F1]/20 via-[#8B5CF6]/10 to-[#EEF2FF]">
+        <div className="relative h-44 overflow-hidden rounded-t-xl bg-gradient-to-br from-primary/20 via-secondary/10 to-accent">
           {project.thumbnail ? (
             <img
               src={project.thumbnail}

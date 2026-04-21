@@ -97,7 +97,7 @@ export default function ProjectDetailPage() {
           </div>
 
           {/* Hero Banner */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#6366F1] via-[#8B5CF6] to-[#A78BFA] p-8 text-white">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-secondary to-[#A78BFA] p-8 text-white">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjA1Ij48cGF0aCBkPSJNMzYgMzRoLTJ2LTRoMnYtMmgtNHY2aDR2LTR6bS0xMiAwSDIydi00aDJ2LTJoLTR2Nmgydi00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
             <div className="relative">
               <div className="flex items-center gap-3 mb-4">
@@ -191,7 +191,7 @@ export default function ProjectDetailPage() {
                     </div>
                   )}
                   {/* New Comment */}
-                  <Separator className="my-4 bg-[#E2E8F0]" />
+                  <Separator className="my-4 bg-border" />
                   <div className="flex gap-3">
                     <Input
                       placeholder="Post an update…"
@@ -220,7 +220,7 @@ export default function ProjectDetailPage() {
                     <Progress value={project.progress} className="mt-3 h-2.5 bg-muted" />
                   </div>
 
-                  <Separator className="bg-[#E2E8F0]" />
+                  <Separator className="bg-border" />
 
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm">
@@ -252,7 +252,7 @@ export default function ProjectDetailPage() {
 
                   {(project.websiteUrl || project.thumbnail) && (
                     <>
-                      <Separator className="bg-[#E2E8F0]" />
+                      <Separator className="bg-border" />
                       <div className="flex flex-col gap-2">
                         {project.websiteUrl && (
                           <a href={project.websiteUrl} target="_blank" rel="noopener noreferrer">

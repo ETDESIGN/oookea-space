@@ -52,7 +52,7 @@ export default function AdminDashboardPage() {
       <ProtectedRoute>
         <AppLayout>
           <div className="flex h-64 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#6366F1] border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         </AppLayout>
       </ProtectedRoute>
@@ -216,7 +216,7 @@ export default function AdminDashboardPage() {
               <CardContent>
                 {isLoading ? (
                   <div className="flex justify-center py-8">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#6366F1] border-t-transparent" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   </div>
                 ) : recentClients.length === 0 ? (
                   <p className="py-8 text-center text-sm text-muted-foreground">No clients yet.</p>
@@ -273,7 +273,7 @@ export default function AdminDashboardPage() {
               <CardContent>
                 {isLoading ? (
                   <div className="flex justify-center py-8">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#6366F1] border-t-transparent" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   </div>
                 ) : recentInvoices.length === 0 ? (
                   <p className="py-8 text-center text-sm text-muted-foreground">No invoices yet.</p>

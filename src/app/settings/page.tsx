@@ -151,10 +151,10 @@ export default function SettingsPage() {
                 <Checkbox
                   checked={notifications.invoiceEmail}
                   onCheckedChange={(c) => setNotifications({ ...notifications, invoiceEmail: !!c })}
-                  className="data-[state=checked]:bg-primary data-[state=checked]:border-[#6366F1]"
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
               </div>
-              <Separator className="bg-[#E2E8F0]" />
+              <Separator className="bg-border" />
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground">Message emails</p>
@@ -163,10 +163,10 @@ export default function SettingsPage() {
                 <Checkbox
                   checked={notifications.messageEmail}
                   onCheckedChange={(c) => setNotifications({ ...notifications, messageEmail: !!c })}
-                  className="data-[state=checked]:bg-primary data-[state=checked]:border-[#6366F1]"
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
               </div>
-              <Separator className="bg-[#E2E8F0]" />
+              <Separator className="bg-border" />
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground">Project updates</p>
@@ -175,7 +175,7 @@ export default function SettingsPage() {
                 <Checkbox
                   checked={notifications.projectUpdate}
                   onCheckedChange={(c) => setNotifications({ ...notifications, projectUpdate: !!c })}
-                  className="data-[state=checked]:bg-primary data-[state=checked]:border-[#6366F1]"
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
               </div>
             </CardContent>
@@ -198,7 +198,7 @@ export default function SettingsPage() {
                 <button
                   onClick={toggleTheme}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    isDark ? "bg-primary" : "bg-[#E2E8F0]"
+                    isDark ? "bg-primary" : "bg-border"
                   }`}
                 >
                   <span

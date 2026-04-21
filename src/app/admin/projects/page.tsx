@@ -223,7 +223,7 @@ function AdminProjectCard({ project }: { project: { _id: Id<"projects">; title: 
   return (
     <Card className="group border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5">
       {/* Thumbnail */}
-      <div className="relative h-36 overflow-hidden rounded-t-xl bg-gradient-to-br from-[#6366F1]/20 via-[#8B5CF6]/10 to-[#EEF2FF]">
+      <div className="relative h-36 overflow-hidden rounded-t-xl bg-gradient-to-br from-primary/20 via-secondary/10 to-accent">
         <div className="flex h-full items-center justify-center">
           <span className="text-4xl opacity-30">
             {categoryIcons[project.category] || "⚙️"}
@@ -300,7 +300,7 @@ export default function AdminProjectsPage() {
       <ProtectedRoute>
         <AppLayout>
           <div className="flex h-64 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#6366F1] border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         </AppLayout>
       </ProtectedRoute>

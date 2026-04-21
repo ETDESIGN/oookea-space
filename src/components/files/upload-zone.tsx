@@ -32,7 +32,7 @@ export function UploadZone({ onUpload, className }: UploadZoneProps) {
       className={cn(
         "relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-all",
         isDragActive && !isDragReject
-          ? "border-[#6366F1] bg-primary/5"
+          ? "border-primary bg-primary/5"
           : isDragReject
             ? "border-red-400 bg-red-50"
             : "border-border bg-[#FAFAFA] hover:border-primary/40 hover:bg-primary/5",

@@ -220,7 +220,7 @@ export default function InvoiceDetailPage({
                   </div>
                 </div>
 
-                <Separator className="my-8 bg-[#E2E8F0]" />
+                <Separator className="my-8 bg-border" />
 
                 {/* Bill To */}
                 <div className="rounded-lg bg-background border border-border p-5">
@@ -238,7 +238,7 @@ export default function InvoiceDetailPage({
                   </div>
                 </div>
 
-                <Separator className="my-8 bg-[#E2E8F0]" />
+                <Separator className="my-8 bg-border" />
 
                 {/* Line Items */}
                 <div className="rounded-lg border border-border overflow-hidden">
@@ -298,7 +298,7 @@ export default function InvoiceDetailPage({
                         {formatCurrency(invoice.taxAmount)}
                       </span>
                     </div>
-                    <Separator className="bg-[#E2E8F0]" />
+                    <Separator className="bg-border" />
                     <div className="flex items-center justify-between">
                       <span className="text-base font-bold text-foreground">Grand Total</span>
                       <span className="text-xl font-bold text-primary">
@@ -311,7 +311,7 @@ export default function InvoiceDetailPage({
                 {/* Notes */}
                 {invoice.notes && (
                   <>
-                    <Separator className="my-8 bg-[#E2E8F0]" />
+                    <Separator className="my-8 bg-border" />
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                         Notes
@@ -324,7 +324,7 @@ export default function InvoiceDetailPage({
                 )}
 
                 {/* Footer */}
-                <Separator className="my-8 bg-[#E2E8F0]" />
+                <Separator className="my-8 bg-border" />
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
                     Thank you for your business!
