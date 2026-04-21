@@ -1,0 +1,29 @@
+"use client";
+
+import React, { useState } from "react";
+import { Sidebar } from "./sidebar";
+import { Header } from "./header";
+
+export function AppLayout({ children }: { children: React.ReactNode }) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Header onMobileMenuToggle={() => setMobileOpen(true)} />
+        <main className="flex-1 overflow-y-auto scrollbar-thin">
+          <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
