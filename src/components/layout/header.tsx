@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,7 +56,10 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
-  const [notifCount] = useState(3);
+  const isAdmin = user?.role === "admin";
+  const clientId = isAdmin ? undefined : (user?.id as Id<"users"> | undefined);
+  const threads = useQuery(api.projects.listThreads, clientId ? { clientId } : {});
+  const notifCount = threads?.length ?? 0;
 
   const initials = user?.name
     ? user.name

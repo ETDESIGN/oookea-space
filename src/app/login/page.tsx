@@ -117,6 +117,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 className="text-sm font-medium text-[#6366F1] hover:text-[#4F46E5]"
+                onClick={() => alert("Please contact your administrator at etiawork@gmail.com to reset your password.")}
               >
                 Forgot password?
               </button>

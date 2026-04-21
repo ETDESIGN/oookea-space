@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProtectedRoute } from "@/lib/auth";
 import { useAuth } from "@/lib/auth";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { User, Bell, Palette, Globe, Save, Check, Loader2 } from "lucide-react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { useTheme } from "@/lib/theme";
@@ -20,6 +20,10 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [company, setCompany] = useState("");
   const [notifications, setNotifications] = useState({
     invoiceEmail: true,
     messageEmail: true,
@@ -31,13 +35,16 @@ export default function SettingsPage() {
     user?.id ? { id: user.id as Id<"users"> } : "skip"
   );
 
-  const [name, setName] = useState(profile?.name ?? user?.name ?? "");
-  const email = profile?.email ?? user?.email ?? "";
+  const updateProfile = useMutation(api.projects.updateProfile);
 
-  // Sync name when profile loads
-  if (profile && name !== profile.name && !saved) {
-    setName(profile.name);
-  }
+  // Sync fields when profile loads
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name ?? "");
+      setPhone(profile.phone ?? "");
+      setCompany(profile.company ?? "");
+    }
+  }, [profile]);
 
   if (profile === undefined && user?.id) {
     return (
@@ -51,9 +58,23 @@ export default function SettingsPage() {
     );
   }
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    if (!user?.id) return;
+    setSaving(true);
+    try {
+      await updateProfile({
+        id: user.id as Id<"users">,
+        name,
+        phone: phone || undefined,
+        company: company || undefined,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      console.error("Failed to save profile:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const isDark = theme === "dark";
@@ -66,6 +87,14 @@ export default function SettingsPage() {
             <h1 className="text-2xl font-bold text-foreground">Settings</h1>
             <p className="mt-1 text-muted-foreground">Manage your account preferences.</p>
           </div>
+
+          {/* Success Banner */}
+          {saved && (
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+              <Check className="h-4 w-4" />
+              Profile updated successfully!
+            </div>
+          )}
 
           {/* Profile */}
           <Card className="border-border">
@@ -89,11 +118,31 @@ export default function SettingsPage() {
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  value={email}
+                  value={profile?.email ?? user?.email ?? ""}
                   disabled
                   className="border-border bg-background text-muted-foreground"
                 />
                 <p className="text-xs text-muted-foreground">Contact your account manager to change your email.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 (555) 000-0000"
+                  className="border-border"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company">Company</Label>
+                <Input
+                  id="company"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Your company name"
+                  className="border-border"
+                />
               </div>
             </CardContent>
           </Card>
@@ -235,9 +284,15 @@ export default function SettingsPage() {
           <div className="flex justify-end">
             <Button
               onClick={handleSave}
+              disabled={saving}
               className="bg-primary hover:bg-primary/90 px-8"
             >
-              {saved ? (
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving…
+                </>
+              ) : saved ? (
                 <>
                   <Check className="mr-2 h-4 w-4" />
                   Saved!

@@ -126,7 +126,7 @@ export default function ModuleDetailPage() {
 
             {/* Long Description */}
             <div className="mt-6 rounded-lg bg-background p-4">
-              <p className="text-sm leading-relaxed text-[#334155]">
+              <p className="text-sm leading-relaxed text-foreground">
                 {mod.description}
               </p>
             </div>
@@ -148,19 +148,29 @@ export default function ModuleDetailPage() {
               </span>
             </div>
             <div className="flex h-[480px] items-center justify-center bg-background">
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div
-                  className={`flex h-16 w-16 items-center justify-center rounded-2xl ${accent.accentBg} text-3xl`}
-                >
-                  {accent.icon}
+              {mod.embedUrl ? (
+                <iframe
+                  src={mod.embedUrl}
+                  className="h-full w-full rounded-b-xl border-0"
+                  title={mod.title}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <div
+                    className={`flex h-16 w-16 items-center justify-center rounded-2xl ${accent.accentBg} text-3xl`}
+                  >
+                    {accent.icon}
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    This module doesn&apos;t have an embedded interface yet
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Contact your administrator to set up the {mod.title} workspace.
+                  </p>
                 </div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Module iframe will load here
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  The {mod.title} interface will be embedded in this area.
-                </p>
-              </div>
+              )}
             </div>
           </div>
         </div>

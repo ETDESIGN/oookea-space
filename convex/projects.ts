@@ -85,6 +85,21 @@ export const createClient = m({
   },
 });
 
+export const updateProfile = m({
+  args: {
+    id: v.id("users"),
+    name: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    company: v.optional(v.string()),
+  },
+  handler: async (ctx, { id, ...updates }) => {
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, v]) => v !== undefined)
+    );
+    await ctx.db.patch(id, cleanUpdates);
+  },
+});
+
 export const updateClient = m({
   args: {
     id: v.id("users"),
