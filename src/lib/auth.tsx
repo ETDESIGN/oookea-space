@@ -6,7 +6,8 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || "";
+const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
 
 // ─── Types ──────────────────────────────────────────────────────
 interface User {
@@ -79,7 +80,7 @@ function AuthInner({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, _password: string) => {
     try {
-      const result = await convex.query(api.projects.loginUser, { email });
+      const result = await convex!.query(api.projects.loginUser, { email });
       if (result) {
         const userData: User = {
           id: result._id,
@@ -116,6 +117,14 @@ function AuthInner({ children }: { children: ReactNode }) {
 
 // ─── Outer Provider (Convex + Auth) ─────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {
+  if (!convex) {
+    return (
+      <AuthContext.Provider value={{ user: null, isLoading: false, login: async () => ({ success: false, error: "Backend not configured" }), logout: () => {} }}>
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+
   return (
     <ConvexProvider client={convex}>
       <AuthInner>{children}</AuthInner>
