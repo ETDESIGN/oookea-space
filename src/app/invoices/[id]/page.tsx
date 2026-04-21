@@ -1,10 +1,11 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useCallback } from "react";
 import { ProtectedRoute } from "@/lib/auth";
 import { useAuth } from "@/lib/auth";
 import { AppLayout } from "@/components/layout/app-layout";
 import { InvoiceStatusBadge } from "@/components/invoices/status-badge";
+import { InvoicePDFDocument } from "@/components/invoices/invoice-pdf";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +27,7 @@ import {
   Hash,
   Loader2,
 } from "lucide-react";
+import { pdf } from "@react-pdf/renderer";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
@@ -52,11 +54,55 @@ export default function InvoiceDetailPage({
 }) {
   const { user } = useAuth();
   const { id } = use(params);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   const invoice = useQuery(
     api.projects.getInvoice,
     id ? { id: id as Id<"invoices"> } : "skip"
   );
+
+  // Fetch client info for the invoice
+  const client = useQuery(
+    api.projects.getUserById,
+    invoice ? { id: invoice.clientId } : "skip"
+  );
+
+  const handleDownloadPDF = useCallback(async () => {
+    if (!invoice) return;
+    setGeneratingPDF(true);
+    try {
+      const doc = (
+        <InvoicePDFDocument
+          invoiceNumber={invoice.number}
+          issueDate={invoice.issueDate}
+          dueDate={invoice.dueDate}
+          status={invoice.status}
+          clientName={client?.name || user?.name || "Client"}
+          clientEmail={client?.email || user?.email || ""}
+          clientCompany={client?.company || user?.company}
+          items={invoice.items}
+          subtotal={invoice.subtotal}
+          taxRate={invoice.taxRate}
+          taxAmount={invoice.taxAmount}
+          total={invoice.total}
+          notes={invoice.notes}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${invoice.number}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+    } finally {
+      setGeneratingPDF(false);
+    }
+  }, [invoice, client, user]);
 
   if (invoice === undefined) {
     return (
@@ -113,9 +159,15 @@ export default function InvoiceDetailPage({
               <Button
                 size="sm"
                 className="gap-1.5 bg-[#6366F1] hover:bg-[#4F46E5] text-white"
+                onClick={handleDownloadPDF}
+                disabled={generatingPDF || !invoice}
               >
-                <Download className="h-4 w-4" />
-                Download PDF
+                {generatingPDF ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                {generatingPDF ? "Generating…" : "Download PDF"}
               </Button>
             </div>
           </div>

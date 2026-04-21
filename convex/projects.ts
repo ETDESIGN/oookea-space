@@ -272,6 +272,22 @@ export const updateInvoiceStatus = m({
   },
 });
 
+// ─── File Storage ───────────────────────────────────────────────
+
+export const generateUploadUrl = m({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const getFileUrl = q({
+  args: { storageId: v.string() },
+  handler: async (ctx, { storageId }) => {
+    return await ctx.storage.getUrl(storageId);
+  },
+});
+
 // ─── Files ──────────────────────────────────────────────────────
 
 export const listFiles = q({
