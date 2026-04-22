@@ -79,8 +79,9 @@ export function Sidebar({
       {/* Brand */}
       <div className="flex h-16 items-center justify-between px-4">
         <Link href={isAdmin ? "/admin" : "/dashboard"} className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#6366F1]">
-            <Palette className="h-5 w-5 text-white" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-icon-sm.png" alt="Oookea" className="h-9 w-9 rounded-lg" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">

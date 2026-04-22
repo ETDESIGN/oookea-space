@@ -41,8 +41,9 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-xl shadow-[#6366F1]/5">
           {/* Brand */}
           <div className="mb-8 flex flex-col items-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#6366F1] shadow-lg shadow-[#6366F1]/30">
-              <Palette className="h-7 w-7 text-white" />
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-[#6366F1]/30">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-full.png" alt="Oookea" className="h-14 w-14 rounded-2xl" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">
               Oookea
