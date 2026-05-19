@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { User, Bell, Palette, Globe, Save, Check, Loader2 } from "lucide-react";
+import { User, Bell, Palette, Save, Check, Loader2, AlertCircle } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
@@ -24,6 +24,14 @@ export default function SettingsPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
+  // Password change
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [pwSaved, setPwSaved] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+  // Notifications
   const [notifications, setNotifications] = useState({
     invoiceEmail: true,
     messageEmail: true,
@@ -36,13 +44,16 @@ export default function SettingsPage() {
   );
 
   const updateProfile = useMutation(api.projects.updateProfile);
+  const changePassword = useMutation(api.projects.changePassword);
 
-  // Sync fields when profile loads
   useEffect(() => {
     if (profile) {
       setName(profile.name ?? "");
       setPhone(profile.phone ?? "");
       setCompany(profile.company ?? "");
+      if ((profile as any).notifications) {
+        setNotifications((profile as any).notifications);
+      }
     }
   }, [profile]);
 
@@ -67,6 +78,7 @@ export default function SettingsPage() {
         name,
         phone: phone || undefined,
         company: company || undefined,
+        notifications,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -74,6 +86,24 @@ export default function SettingsPage() {
       console.error("Failed to save profile:", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPwError("");
+    if (!user?.id) return;
+    if (newPw !== confirmPw) { setPwError("Passwords don't match"); return; }
+    if (newPw.length < 6) { setPwError("Password must be at least 6 characters"); return; }
+    setPwSaving(true);
+    try {
+      await changePassword({ id: user.id as Id<"users">, currentPassword: currentPw, newPassword: newPw });
+      setCurrentPw(""); setNewPw(""); setConfirmPw("");
+      setPwSaved(true);
+      setTimeout(() => setPwSaved(false), 2500);
+    } catch (err: any) {
+      setPwError(err?.message || "Failed to change password");
+    } finally {
+      setPwSaving(false);
     }
   };
 
@@ -107,42 +137,20 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="border-border"
-                />
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="border-border" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  value={profile?.email ?? user?.email ?? ""}
-                  disabled
-                  className="border-border bg-background text-muted-foreground"
-                />
+                <Input id="email" value={profile?.email ?? user?.email ?? ""} disabled className="border-border bg-background text-muted-foreground" />
                 <p className="text-xs text-muted-foreground">Contact your account manager to change your email.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (555) 000-0000"
-                  className="border-border"
-                />
+                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 000-0000" className="border-border" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="company">Company</Label>
-                <Input
-                  id="company"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="Your company name"
-                  className="border-border"
-                />
+                <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Your company name" className="border-border" />
               </div>
             </CardContent>
           </Card>
@@ -156,29 +164,34 @@ export default function SettingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {pwError && (
+                <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {pwError}
+                </div>
+              )}
+              {pwSaved && (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                  <Check className="h-4 w-4" />
+                  Password updated successfully!
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="current-password">Current Password</Label>
-                <Input
-                  id="current-password"
-                  type="password"
-                  className="border-border"
-                />
+                <Input id="current-password" type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} className="border-border" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  className="border-border"
-                />
+                <Input id="new-password" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="border-border" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  className="border-border"
-                />
+                <Input id="confirm-password" type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} className="border-border" />
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={handleChangePassword} disabled={pwSaving || !currentPw || !newPw} className="bg-primary hover:bg-primary/90">
+                  {pwSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Changing…</> : "Change Password"}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -256,26 +269,6 @@ export default function SettingsPage() {
                     }`}
                   />
                 </button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Language */}
-          <Card className="border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Globe className="h-4 w-4 text-primary" />
-                Language
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label>Display Language</Label>
-                <select className="flex h-10 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
-                  <option>English</option>
-                  <option>Français</option>
-                  <option>中文</option>
-                </select>
               </div>
             </CardContent>
           </Card>

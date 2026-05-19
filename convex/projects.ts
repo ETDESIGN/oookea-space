@@ -3,17 +3,22 @@ import { query as q, mutation as m } from "./_generated/server";
 
 // ─── Password Hashing ───────────────────────────────────────────
 
-async function hashPassword(password: string): Promise<string> {
+async function hashPassword(password: string, salt?: string): Promise<string> {
+  if (!salt) {
+    salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
   const encoder = new TextEncoder();
-  const data = encoder.encode(password);
+  const data = encoder.encode(salt + password);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `${salt}:${hash}`;
 }
 
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const inputHash = await hashPassword(password);
-  return inputHash === hash;
+async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  const [salt] = stored.split(":");
+  const inputHash = await hashPassword(password, salt);
+  return inputHash === stored;
 }
 
 // ─── Users ──────────────────────────────────────────────────────
@@ -91,12 +96,34 @@ export const updateProfile = m({
     name: v.optional(v.string()),
     phone: v.optional(v.string()),
     company: v.optional(v.string()),
+    notifications: v.optional(v.object({
+      invoiceEmail: v.boolean(),
+      messageEmail: v.boolean(),
+      projectUpdate: v.boolean(),
+    })),
   },
   handler: async (ctx, { id, ...updates }) => {
     const cleanUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
     );
     await ctx.db.patch(id, cleanUpdates);
+  },
+});
+
+export const changePassword = m({
+  args: {
+    id: v.id("users"),
+    currentPassword: v.string(),
+    newPassword: v.string(),
+  },
+  handler: async (ctx, { id, currentPassword, newPassword }) => {
+    const user = await ctx.db.get(id);
+    if (!user) throw new Error("User not found");
+    const valid = await verifyPassword(currentPassword, user.passwordHash);
+    if (!valid) throw new Error("Current password is incorrect");
+    if (newPassword.length < 6) throw new Error("New password must be at least 6 characters");
+    const passwordHash = await hashPassword(newPassword);
+    await ctx.db.patch(id, { passwordHash });
   },
 });
 

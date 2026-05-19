@@ -15,7 +15,7 @@
 
 ## Management CLI
 ```bash
-cd /tmp/oookea-space
+cd /home/e/oookea-space
 ./manage.sh clients list          # List clients
 ./manage.sh clients create "Name" "email" "password"
 ./manage.sh projects list         # List projects
@@ -26,7 +26,7 @@ cd /tmp/oookea-space
 
 ## Convex CLI (direct)
 ```bash
-cd /tmp/oookea-space
+cd /home/e/oookea-space
 npx convex run projects:listClients
 npx convex run projects:createClient '{"name":"...","email":"...","password":"..."}'
 npx convex run projects:resetAndSeed

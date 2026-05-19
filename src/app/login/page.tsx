@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showForgotPw, setShowForgotPw] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,9 +42,8 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-xl shadow-[#6366F1]/5">
           {/* Brand */}
           <div className="mb-8 flex flex-col items-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-[#6366F1]/30">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-full.png" alt="Oookea" className="h-14 w-14 rounded-2xl" />
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#6366F1] shadow-lg shadow-[#6366F1]/30">
+              <span className="text-2xl font-black text-white">O</span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">
               Oookea
@@ -118,11 +118,17 @@ export default function LoginPage() {
               <button
                 type="button"
                 className="text-sm font-medium text-[#6366F1] hover:text-[#4F46E5]"
-                onClick={() => alert("Please contact your administrator at etiawork@gmail.com to reset your password.")}
+                onClick={() => setShowForgotPw(!showForgotPw)}
               >
                 Forgot password?
               </button>
             </div>
+
+            {showForgotPw && (
+              <div className="rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-3 text-sm text-[#1E40AF]">
+                Please contact your administrator at <a href="mailto:etiawork@gmail.com" className="font-medium underline">etiawork@gmail.com</a> to reset your password.
+              </div>
+            )}
 
             <Button
               type="submit"

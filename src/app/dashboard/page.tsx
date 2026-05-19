@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { QuickActions } from "@/components/dashboard/quick-actions";
-import { FolderKanban, FileText, MessageSquare, HardDrive } from "lucide-react";
+import { FolderKanban, FileText, MessageSquare } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
@@ -68,7 +68,6 @@ export default function DashboardPage() {
               value={activeProjects}
               icon={FolderKanban}
               color="bg-primary/10 text-primary"
-              trend={{ value: 12, positive: true }}
             />
             <StatCard
               title="Pending Invoices"
@@ -82,14 +81,12 @@ export default function DashboardPage() {
               value={threadCount}
               icon={MessageSquare}
               color="bg-[#8B5CF6]/10 text-[#8B5CF6]"
-              trend={{ value: 3, positive: false }}
             />
             <StatCard
-              title="Storage Used"
-              value="68%"
-              icon={HardDrive}
-              color="bg-[#22C55E]/10 text-[#22C55E]"
-              description="6.8 GB of 10 GB"
+              title="Threads"
+              value={threadCount}
+              icon={MessageSquare}
+              color="bg-[#8B5CF6]/10 text-[#8B5CF6]"
             />
           </div>
 
