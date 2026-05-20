@@ -20,6 +20,7 @@ import {
   Users,
   HardDrive,
   ArrowLeft,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -27,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 
 const clientNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Deliverables", href: "/deliverables", icon: Package },
   { label: "Projects", href: "/projects", icon: FolderKanban },
   { label: "Invoices", href: "/invoices", icon: FileText },
   { label: "File Vault", href: "/files", icon: FileIcon },

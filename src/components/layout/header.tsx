@@ -45,6 +45,7 @@ interface HeaderProps {
 
 const searchPages = [
   { label: "Dashboard", href: "/dashboard" },
+  { label: "Deliverables", href: "/deliverables" },
   { label: "Projects", href: "/projects" },
   { label: "Invoices", href: "/invoices" },
   { label: "File Vault", href: "/files" },
