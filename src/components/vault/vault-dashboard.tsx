@@ -427,8 +427,8 @@ export function VaultDashboard({ config }: { config?: VaultConfig }) {
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <div className="flex items-end justify-between">
                   <div>
-                    <h2 className="text-lg font-semibold text-white">Marketing Dashboard</h2>
-                    <p className="text-sm text-white/70">Campaign Performance & Metrics</p>
+                    <h2 className="text-lg font-semibold text-white">Marketing & Agentic Workflow</h2>
+                    <p className="text-sm text-white/70">Research · Campaigns · Email · Prospects</p>
                   </div>
                   <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30 backdrop-blur-sm">
                     Analytics
@@ -461,9 +461,9 @@ export function VaultDashboard({ config }: { config?: VaultConfig }) {
       )}
       {activeModal === "marketing" && (
         <WebAppModal
-          title="Marketing Dashboard"
-          subtitle="Real-time analytics and campaign performance tracking."
-          description="Monitor KPIs, engagement metrics, and conversion rates across all active channels. This centralized view pulls data from various platforms to provide actionable insights for your marketing strategy."
+          title="Marketing Dashboard & Agentic Workflow"
+          subtitle="AI-powered outbound sales engine with autonomous research, campaigns, and prospect tracking."
+          description="More than a dashboard — this is a full agentic workflow that automates your entire outbound pipeline. The AI agent autonomously researches target companies via web search, scrapes and qualifies leads, launches multi-step email campaigns, tracks opens/clicks/replies, and generates creative assets. Currently tracking 60+ companies across multiple campaigns with a 72.7% average open rate. The system works 24/7 — you queue a research task, the agent handles the rest."
           url={marketingUrl}
           previewImage="/vault/marketing-preview.jpg"
           accentColor="text-teal-400"
