@@ -557,6 +557,7 @@ export const addModule = m({
     description: v.string(),
     category: v.string(),
     embedUrl: v.optional(v.string()),
+    config: v.optional(v.any()),
     enabled: v.boolean(),
   },
   handler: async (ctx, args) => {

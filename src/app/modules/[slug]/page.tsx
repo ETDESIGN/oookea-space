@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
+import { VaultDashboard } from "@/components/vault/vault-dashboard";
 
 type ModuleStatus = "Active" | "Beta" | "Coming Soon";
 
@@ -19,6 +20,7 @@ const categoryAccents: Record<string, { accentBg: string; accentText: string; ic
   "Marketing": { accentBg: "bg-indigo-50", accentText: "text-indigo-700", icon: "📊" },
   "Analytics": { accentBg: "bg-emerald-50", accentText: "text-emerald-700", icon: "📈" },
   "Integration": { accentBg: "bg-amber-50", accentText: "text-amber-700", icon: "⚙️" },
+  "Deliverables": { accentBg: "bg-rose-50", accentText: "text-rose-700", icon: "📦" },
 };
 
 const defaultAccent = { accentBg: "bg-slate-50", accentText: "text-slate-700", icon: "📦" };
@@ -72,6 +74,9 @@ export default function ModuleDetailPage() {
   const accent = categoryAccents[mod.category] || defaultAccent;
   const status: ModuleStatus = mod.enabled ? "Active" : "Coming Soon";
 
+  // Special rendering for vault-type modules
+  const isVaultModule = mod.slug === "inerys-vault" || mod.config?.type === "vault";
+
   return (
     <ProtectedRoute>
       <AppLayout>
@@ -88,91 +93,97 @@ export default function ModuleDetailPage() {
             <span className="font-medium text-foreground">{mod.title}</span>
           </nav>
 
-          {/* Module Info Card */}
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex items-start gap-4">
-                <div
-                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${accent.accentBg} text-3xl`}
-                >
-                  {accent.icon}
-                </div>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-xl font-bold text-foreground">
-                      {mod.title}
-                    </h1>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[status]}`}
+          {/* Vault Module — full custom dashboard */}
+          {isVaultModule ? (
+            <VaultDashboard config={mod.config as any} />
+          ) : (
+            <>
+              {/* Standard Module Info Card */}
+              <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${accent.accentBg} text-3xl`}
                     >
-                      {status}
-                    </span>
+                      {accent.icon}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <h1 className="text-xl font-bold text-foreground">
+                          {mod.title}
+                        </h1>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[status]}`}
+                        >
+                          {status}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {mod.description}
+                      </p>
+                    </div>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
+
+                  <Button
+                    variant="outline"
+                    className="shrink-0 border-border"
+                    onClick={() => router.push("/modules")}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Modules
+                  </Button>
+                </div>
+
+                <div className="mt-6 rounded-lg bg-background p-4">
+                  <p className="text-sm leading-relaxed text-foreground">
                     {mod.description}
                   </p>
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                className="shrink-0 border-border"
-                onClick={() => router.push("/modules")}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Modules
-              </Button>
-            </div>
-
-            {/* Long Description */}
-            <div className="mt-6 rounded-lg bg-background p-4">
-              <p className="text-sm leading-relaxed text-foreground">
-                {mod.description}
-              </p>
-            </div>
-          </div>
-
-          {/* Module iframe Placeholder */}
-          <div className="rounded-xl border border-border bg-card shadow-sm">
-            <div className="flex items-center justify-between border-b border-border px-6 py-3">
-              <div className="flex items-center gap-2">
-                <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">
-                  Module Workspace
-                </span>
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {status === "Coming Soon"
-                  ? "Not available yet"
-                  : "Embedded view"}
-              </span>
-            </div>
-            <div className="flex h-[480px] items-center justify-center bg-background">
-              {mod.embedUrl ? (
-                <iframe
-                  src={mod.embedUrl}
-                  className="h-full w-full rounded-b-xl border-0"
-                  title={mod.title}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-3 text-center">
-                  <div
-                    className={`flex h-16 w-16 items-center justify-center rounded-2xl ${accent.accentBg} text-3xl`}
-                  >
-                    {accent.icon}
+              {/* Standard Module iframe */}
+              <div className="rounded-xl border border-border bg-card shadow-sm">
+                <div className="flex items-center justify-between border-b border-border px-6 py-3">
+                  <div className="flex items-center gap-2">
+                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
+                      Module Workspace
+                    </span>
                   </div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    This module doesn&apos;t have an embedded interface yet
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Contact your administrator to set up the {mod.title} workspace.
-                  </p>
+                  <span className="text-xs text-muted-foreground">
+                    {status === "Coming Soon"
+                      ? "Not available yet"
+                      : "Embedded view"}
+                  </span>
                 </div>
-              )}
-            </div>
-          </div>
+                <div className="flex h-[480px] items-center justify-center bg-background">
+                  {mod.embedUrl ? (
+                    <iframe
+                      src={mod.embedUrl}
+                      className="h-full w-full rounded-b-xl border-0"
+                      title={mod.title}
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <div
+                        className={`flex h-16 w-16 items-center justify-center rounded-2xl ${accent.accentBg} text-3xl`}
+                      >
+                        {accent.icon}
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        This module doesn&apos;t have an embedded interface yet
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Contact your administrator to set up the {mod.title} workspace.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </AppLayout>
     </ProtectedRoute>

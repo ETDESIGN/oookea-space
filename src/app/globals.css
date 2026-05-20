@@ -164,6 +164,28 @@
   }
 }
 
+/* ─── Vault Dashboard Styles ─── */
+.vault-card {
+  background: var(--popover);
+  border: 1px solid var(--border);
+}
+.vault-card-hero {
+  background-color: var(--muted);
+}
+.vault-hero-red { background: linear-gradient(135deg, rgba(220,38,38,0.15), transparent); }
+.vault-hero-blue { background: linear-gradient(135deg, rgba(37,99,235,0.15), transparent); }
+.vault-hero-purple { background: linear-gradient(135deg, rgba(147,51,234,0.15), transparent); }
+.vault-hero-teal { background: linear-gradient(135deg, rgba(20,184,166,0.15), transparent); }
+.vault-text { color: var(--foreground); }
+.vault-text-muted { color: var(--muted-foreground); }
+.vault-close-btn {
+  background: rgba(0,0,0,0.3);
+  color: white;
+}
+.vault-close-btn:hover {
+  background: rgba(0,0,0,0.6);
+}
+
 /* Oookea custom utilities */
 @layer utilities {
   .scrollbar-thin {
