@@ -94,15 +94,24 @@ function VideoLibraryModal({ videos, onClose }: { videos: VaultVideo[]; onClose:
             <X className="h-5 w-5" />
           </button>
 
-          {/* Hero */}
-          <div className="h-40 md:h-52 relative flex items-center justify-center vault-card-hero vault-hero-red">
-            <Video className="h-16 w-16 text-white/30" />
+          {/* Hero with first video thumbnail */}
+          <div className="h-40 md:h-52 relative overflow-hidden">
+            <img
+              src={`https://img.youtube.com/vi/${videos[0]?.id}/maxresdefault.jpg`}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute bottom-4 left-6">
+              <Video className="h-8 w-8 text-red-500 mb-2" />
+              <h2 className="text-xl md:text-2xl font-bold text-white">Video Library</h2>
+              <p className="text-sm text-white/70">{videos.length} brand videos</p>
+            </div>
           </div>
 
           <div className="p-6 md:p-10">
-            <h2 className="text-xl md:text-2xl font-bold vault-text mb-2">Video Library</h2>
             <p className="text-sm md:text-base vault-text-muted mb-6">
-              High-fidelity video content produced for your brand campaigns.
+              Click any video to watch. Full screen playback with controls.
             </p>
 
             {/* Thumbnail Grid */}
@@ -111,7 +120,7 @@ function VideoLibraryModal({ videos, onClose }: { videos: VaultVideo[]; onClose:
                 <button
                   key={video.id}
                   onClick={() => setActiveVideo(video.id)}
-                  className="group relative aspect-video rounded-lg overflow-hidden bg-black/20 hover:ring-2 hover:ring-red-500/60 transition-all"
+                  className="group relative aspect-video rounded-lg overflow-hidden hover:ring-2 hover:ring-red-500/60 transition-all"
                 >
                   <img
                     src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
@@ -157,15 +166,21 @@ function PhotoLibraryModal({ url, onClose }: { url?: string; onClose: () => void
           <X className="h-5 w-5" />
         </button>
 
-        <div className="h-40 md:h-52 relative flex items-center justify-center vault-card-hero vault-hero-blue">
-          <ImageIcon className="h-16 w-16 text-white/30" />
+        <div className="h-40 md:h-52 relative overflow-hidden">
+          <img
+            src="/vault/youtube-preview.jpg"
+            alt="Photo Library"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          <div className="absolute bottom-4 left-6">
+            <ImageIcon className="h-8 w-8 text-blue-400 mb-2" />
+            <h2 className="text-xl md:text-2xl font-bold text-white">Photo Library</h2>
+            <p className="text-sm text-white/70">Shared Album Collection</p>
+          </div>
         </div>
 
         <div className="p-6 md:p-10">
-          <h2 className="text-xl md:text-2xl font-bold vault-text mb-2">Photo Library</h2>
-          <p className="text-sm md:text-base vault-text-muted mb-6">
-            Curated high-resolution photography for all brand touchpoints.
-          </p>
           <p className="text-sm vault-text-muted mb-8 max-w-2xl">
             Browse and download approved lifestyle, product, and event photography. Assets are organized by campaign and tagged for easy searchability across your teams.
           </p>
@@ -189,13 +204,14 @@ function PhotoLibraryModal({ url, onClose }: { url?: string; onClose: () => void
   );
 }
 
-/** Generic web app modal (catalogue / dashboard) */
+/** Generic web app modal */
 function WebAppModal({
   title,
   subtitle,
   description,
   url,
-  accent,
+  previewImage,
+  accentColor,
   icon: Icon,
   onClose,
 }: {
@@ -203,7 +219,8 @@ function WebAppModal({
   subtitle: string;
   description: string;
   url: string;
-  accent: string;
+  previewImage: string;
+  accentColor: string;
   icon: React.ElementType;
   onClose: () => void;
 }) {
@@ -223,22 +240,27 @@ function WebAppModal({
           <X className="h-5 w-5" />
         </button>
 
-        <div className={`h-40 md:h-52 relative flex items-center justify-center vault-card-hero ${accent}`}>
-          <Icon className="h-16 w-16 text-white/30" />
+        <div className="h-40 md:h-52 relative overflow-hidden">
+          <img
+            src={previewImage}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+          <div className="absolute bottom-4 left-6">
+            <Icon className={`h-8 w-8 mb-2 ${accentColor}`} />
+            <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
+            <p className="text-sm text-white/70">{subtitle}</p>
+          </div>
         </div>
 
         <div className="p-6 md:p-10">
-          <h2 className="text-xl md:text-2xl font-bold vault-text mb-2">{title}</h2>
-          <p className="text-sm md:text-base vault-text-muted mb-6">{subtitle}</p>
           <p className="text-sm vault-text-muted mb-8 max-w-2xl">{description}</p>
-
           <a
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`inline-flex items-center gap-2 text-white text-sm font-medium px-6 py-3 rounded-lg transition-colors ${
-              accent === "vault-hero-purple" ? "bg-purple-600 hover:bg-purple-700" : "bg-teal-600 hover:bg-teal-700"
-            }`}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-6 py-3 rounded-lg transition-colors"
           >
             <ExternalLink className="h-4 w-4" />
             Launch {title}
@@ -272,11 +294,14 @@ export function VaultDashboard({ config }: { config?: VaultConfig }) {
       <div className={isDark ? "vault-dark" : "vault-light"}>
         {/* Header */}
         <div className="mb-8 md:mb-12">
+          <p className={`text-xs uppercase tracking-widest font-medium mb-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+            INERYS
+          </p>
           <h1 className={`text-2xl md:text-4xl font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
-            Vault Dashboard
+            Your Latest Project
           </h1>
           <p className={`mt-2 text-sm md:text-lg max-w-2xl ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-            Access all digital deliverables, brand assets, and marketing analytics curated for INERYS.
+            Access all digital deliverables, brand assets, and marketing analytics curated for you.
           </p>
         </div>
 
@@ -291,18 +316,32 @@ export function VaultDashboard({ config }: { config?: VaultConfig }) {
                 : "bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300"
               }`}
           >
-            <div className="h-36 md:h-52 bg-gradient-to-br from-red-950/60 to-transparent relative flex items-center justify-center overflow-hidden">
-              <div className="absolute inset-0 bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-              <Play className="h-12 w-12 text-white/70 z-10 group-hover:scale-110 transition-transform duration-300" />
-            </div>
-            <div className="p-5">
-              <div className="flex justify-between items-start mb-1">
-                <h2 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Video Library</h2>
-                <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/20">
-                  YouTube
-                </span>
+            <div className="h-40 md:h-56 relative overflow-hidden">
+              <img
+                src={`https://img.youtube.com/vi/${videos[0]?.id}/maxresdefault.jpg`}
+                alt="Video Library"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              {/* Play overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-14 h-14 rounded-full bg-red-600/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Play className="h-7 w-7 text-white ml-1" fill="white" />
+                </div>
               </div>
-              <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>{videos.length} brand videos</p>
+              {/* Bottom info */}
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">Video Library</h2>
+                    <p className="text-sm text-white/70">{videos.length} brand videos</p>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-red-500/20 text-red-300 border border-red-500/30 backdrop-blur-sm">
+                    YouTube
+                  </span>
+                </div>
+              </div>
             </div>
           </button>
 
@@ -315,18 +354,25 @@ export function VaultDashboard({ config }: { config?: VaultConfig }) {
                 : "bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300"
               }`}
           >
-            <div className="h-36 md:h-52 bg-gradient-to-br from-blue-950/60 to-transparent relative flex items-center justify-center overflow-hidden">
-              <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-              <ImageIcon className="h-12 w-12 text-white/70 z-10 group-hover:scale-110 transition-transform duration-300" />
-            </div>
-            <div className="p-5">
-              <div className="flex justify-between items-start mb-1">
-                <h2 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Photo Library</h2>
-                <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                  Google Photos
-                </span>
+            <div className="h-40 md:h-56 relative overflow-hidden">
+              <img
+                src="/vault/youtube-preview.jpg"
+                alt="Photo Library"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">Photo Library</h2>
+                    <p className="text-sm text-white/70">Shared Album</p>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 backdrop-blur-sm">
+                    Google Photos
+                  </span>
+                </div>
               </div>
-              <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>Shared Album</p>
             </div>
           </button>
 
@@ -339,18 +385,25 @@ export function VaultDashboard({ config }: { config?: VaultConfig }) {
                 : "bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300"
               }`}
           >
-            <div className="h-36 md:h-52 bg-gradient-to-br from-purple-950/60 to-transparent relative flex items-center justify-center overflow-hidden">
-              <div className="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-              <BookOpen className="h-12 w-12 text-white/70 z-10 group-hover:scale-110 transition-transform duration-300" />
-            </div>
-            <div className="p-5">
-              <div className="flex justify-between items-start mb-1">
-                <h2 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Nomenclature</h2>
-                <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                  Web App
-                </span>
+            <div className="h-40 md:h-56 relative overflow-hidden">
+              <img
+                src="/vault/catalogue-preview.jpg"
+                alt="Nomenclature Catalogue"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">Nomenclature</h2>
+                    <p className="text-sm text-white/70">Online Catalogue</p>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-sm">
+                    Web App
+                  </span>
+                </div>
               </div>
-              <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>Online Catalogue</p>
             </div>
           </button>
 
@@ -363,18 +416,25 @@ export function VaultDashboard({ config }: { config?: VaultConfig }) {
                 : "bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300"
               }`}
           >
-            <div className="h-36 md:h-52 bg-gradient-to-br from-teal-950/60 to-transparent relative flex items-center justify-center overflow-hidden">
-              <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl" />
-              <BarChart3 className="h-12 w-12 text-white/70 z-10 group-hover:scale-110 transition-transform duration-300" />
-            </div>
-            <div className="p-5">
-              <div className="flex justify-between items-start mb-1">
-                <h2 className={`text-lg font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Marketing Dashboard</h2>
-                <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20">
-                  Analytics
-                </span>
+            <div className="h-40 md:h-56 relative overflow-hidden">
+              <img
+                src="/vault/marketing-preview.jpg"
+                alt="Marketing Dashboard"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">Marketing Dashboard</h2>
+                    <p className="text-sm text-white/70">Campaign Performance & Metrics</p>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30 backdrop-blur-sm">
+                    Analytics
+                  </span>
+                </div>
               </div>
-              <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>Campaign Performance & Metrics</p>
             </div>
           </button>
         </div>
@@ -393,7 +453,8 @@ export function VaultDashboard({ config }: { config?: VaultConfig }) {
           subtitle="Your comprehensive digital product taxonomy and specs."
           description="Access the live, up-to-date database of product names, technical specifications, and internal identifiers. This web app ensures consistency across all technical documentation and marketing materials."
           url={catalogueUrl}
-          accent="vault-hero-purple"
+          previewImage="/vault/catalogue-preview.jpg"
+          accentColor="text-purple-400"
           icon={BookOpen}
           onClose={closeModal}
         />
@@ -404,7 +465,8 @@ export function VaultDashboard({ config }: { config?: VaultConfig }) {
           subtitle="Real-time analytics and campaign performance tracking."
           description="Monitor KPIs, engagement metrics, and conversion rates across all active channels. This centralized view pulls data from various platforms to provide actionable insights for your marketing strategy."
           url={marketingUrl}
-          accent="vault-hero-teal"
+          previewImage="/vault/marketing-preview.jpg"
+          accentColor="text-teal-400"
           icon={BarChart3}
           onClose={closeModal}
         />

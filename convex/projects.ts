@@ -549,6 +549,13 @@ export const toggleModule = m({
   },
 });
 
+export const updateModuleConfig = m({
+  args: { id: v.id("modules"), config: v.any() },
+  handler: async (ctx, { id, config }) => {
+    await ctx.db.patch(id, { config });
+  },
+});
+
 export const addModule = m({
   args: {
     clientId: v.id("users"),
