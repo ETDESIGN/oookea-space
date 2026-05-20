@@ -144,6 +144,89 @@ export const updateClient = m({
   },
 });
 
+export const resetClientPassword = m({
+  args: { id: v.id("users"), newPassword: v.string() },
+  handler: async (ctx, { id, newPassword }) => {
+    const user = await ctx.db.get(id);
+    if (!user) throw new Error("User not found");
+    if (newPassword.length < 6) throw new Error("Password must be at least 6 characters");
+    const passwordHash = await hashPassword(newPassword);
+    await ctx.db.patch(id, { passwordHash });
+  },
+});
+
+export const deleteClient = m({
+  args: { id: v.id("users") },
+  handler: async (ctx, { id }) => {
+    const user = await ctx.db.get(id);
+    if (!user) throw new Error("User not found");
+    if (user.role === "admin") throw new Error("Cannot delete admin user");
+
+    // Delete related data in dependency order
+
+    // 1. Get all projects for this client
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_client", (q) => q.eq("clientId", id))
+      .collect();
+
+    // 2. Delete deliverables for each project
+    for (const project of projects) {
+      const deliverables = await ctx.db
+        .query("deliverables")
+        .withIndex("by_project", (q) => q.eq("projectId", project._id))
+        .collect();
+      for (const d of deliverables) await ctx.db.delete(d._id);
+    }
+
+    // 3. Delete invoices
+    const invoices = await ctx.db
+      .query("invoices")
+      .withIndex("by_client", (q) => q.eq("clientId", id))
+      .collect();
+    for (const inv of invoices) await ctx.db.delete(inv._id);
+
+    // 4. Delete files
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_client", (q) => q.eq("clientId", id))
+      .collect();
+    for (const f of files) await ctx.db.delete(f._id);
+
+    // 5. Delete thread messages, then threads
+    const threads = await ctx.db
+      .query("threads")
+      .withIndex("by_client", (q) => q.eq("clientId", id))
+      .collect();
+    for (const thread of threads) {
+      const messages = await ctx.db
+        .query("messages")
+        .withIndex("by_thread", (q) => q.eq("threadId", thread._id))
+        .collect();
+      for (const msg of messages) await ctx.db.delete(msg._id);
+      await ctx.db.delete(thread._id);
+    }
+
+    // 6. Delete modules
+    const modules = await ctx.db
+      .query("modules")
+      .withIndex("by_client", (q) => q.eq("clientId", id))
+      .collect();
+    for (const mod of modules) await ctx.db.delete(mod._id);
+
+    // 7. Delete activity
+    const allActivity = await ctx.db.query("activity").collect();
+    const clientActivity = allActivity.filter((a) => a.clientId === id);
+    for (const a of clientActivity) await ctx.db.delete(a._id);
+
+    // 8. Delete projects
+    for (const project of projects) await ctx.db.delete(project._id);
+
+    // 9. Finally delete the user
+    await ctx.db.delete(id);
+  },
+});
+
 // ─── Projects ───────────────────────────────────────────────────
 
 export const listProjects = q({

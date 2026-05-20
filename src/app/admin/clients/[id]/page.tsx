@@ -20,8 +20,19 @@ import {
   HardDrive,
   Blocks,
   ToggleLeft,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { api } from "../../../../../convex/_generated/api";
 import { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -63,8 +74,13 @@ export default function ClientDetailPage() {
   );
   const updateClient = useMutation(api.projects.updateClient);
   const toggleModule = useMutation(api.projects.toggleModule);
+  const resetClientPassword = useMutation(api.projects.resetClientPassword);
+  const deleteClientMutation = useMutation(api.projects.deleteClient);
 
   const [clientActive, setClientActive] = useState(true);
+  const [resetPwDialogOpen, setResetPwDialogOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Sync clientActive with fetched data
   const prevClientStatus = client?.status;
@@ -101,6 +117,19 @@ export default function ClientDetailPage() {
 
   const handleToggleModule = async (moduleId: string, enabled: boolean) => {
     await toggleModule({ id: moduleId as Id<"modules">, enabled });
+  };
+
+  const handleResetPassword = async () => {
+    if (!client || !newPassword || newPassword.length < 6) return;
+    await resetClientPassword({ id: client._id as Id<"users">, newPassword });
+    setResetPwDialogOpen(false);
+    setNewPassword("");
+  };
+
+  const handleDeleteClient = async () => {
+    if (!client) return;
+    await deleteClientMutation({ id: client._id as Id<"users"> });
+    window.location.href = "/admin/clients";
   };
 
   // Use actual client status from data
@@ -314,15 +343,81 @@ export default function ClientDetailPage() {
                       <FileText className="mr-2 h-4 w-4" />
                       Create Invoice
                     </Button>
-                    <Button variant="outline" className="w-full justify-start border-border">
+                    <Button variant="outline" className="w-full justify-start border-border" onClick={() => setResetPwDialogOpen(true)}>
                       <KeyRound className="mr-2 h-4 w-4" />
                       Reset Password
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start border-border text-destructive hover:text-destructive" onClick={() => setDeleteDialogOpen(true)}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Client
                     </Button>
                   </CardContent>
                 </Card>
               </div>
             </div>
           )}
+
+          {/* Reset Password Dialog */}
+          <Dialog open={resetPwDialogOpen} onOpenChange={setResetPwDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-foreground">Reset Password</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-muted-foreground">
+                  Set a new password for <span className="font-medium text-foreground">{client?.name}</span>
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="detail-reset-password">New Password</Label>
+                  <Input
+                    id="detail-reset-password"
+                    type="password"
+                    placeholder="Minimum 6 characters"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="border-border"
+                  />
+                </div>
+              </div>
+              <DialogFooter className="gap-2">
+                <DialogClose className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-background">
+                  Cancel
+                </DialogClose>
+                <Button
+                  className="bg-primary hover:bg-primary/90 text-white"
+                  onClick={handleResetPassword}
+                  disabled={!newPassword || newPassword.length < 6}
+                >
+                  Reset Password
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Client Dialog */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-foreground">Delete Client</DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete <span className="font-medium text-foreground">{client?.name}</span>? This will permanently remove the client and all their projects, invoices, files, messages, and modules. This action cannot be undone.
+                </p>
+              </div>
+              <DialogFooter className="gap-2">
+                <DialogClose className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-background">
+                  Cancel
+                </DialogClose>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteClient}
+                >
+                  Delete Client
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </AppLayout>
     </ProtectedRoute>

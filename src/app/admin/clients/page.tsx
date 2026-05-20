@@ -39,6 +39,8 @@ import {
   PowerOff,
   Building2,
   Mail,
+  Trash2,
+  KeyRound,
 } from "lucide-react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
@@ -57,11 +59,20 @@ export default function ClientsManagementPage() {
     password: "",
     company: "",
   });
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editClient, setEditClient] = useState<{ id: string; name: string; email: string; company: string; phone: string } | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [resetPwDialogOpen, setResetPwDialogOpen] = useState(false);
+  const [resetPwTarget, setResetPwTarget] = useState<{ id: string; name: string } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   const clients = useQuery(api.projects.listClients, {});
   const projects = useQuery(api.projects.listProjects, {});
   const createClient = useMutation(api.projects.createClient);
   const updateClient = useMutation(api.projects.updateClient);
+  const deleteClientMutation = useMutation(api.projects.deleteClient);
+  const resetClientPassword = useMutation(api.projects.resetClientPassword);
 
   useEffect(() => {
     if (user && user.role !== "admin") {
@@ -123,6 +134,45 @@ export default function ClientsManagementPage() {
     });
     setNewClient({ name: "", email: "", password: "", company: "" });
     setDialogOpen(false);
+  };
+
+  const handleEditClient = async () => {
+    if (!editClient || !editClient.name || !editClient.email) return;
+    await updateClient({
+      id: editClient.id as Id<"users">,
+      name: editClient.name,
+      email: editClient.email,
+      company: editClient.company || undefined,
+      phone: editClient.phone || undefined,
+    });
+    setEditDialogOpen(false);
+    setEditClient(null);
+  };
+
+  const handleDeleteClient = async () => {
+    if (!deleteTarget) return;
+    await deleteClientMutation({ id: deleteTarget.id as Id<"users"> });
+    setDeleteDialogOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetPwTarget || !newPassword || newPassword.length < 6) return;
+    await resetClientPassword({ id: resetPwTarget.id as Id<"users">, newPassword });
+    setResetPwDialogOpen(false);
+    setResetPwTarget(null);
+    setNewPassword("");
+  };
+
+  const openEditDialog = (client: { _id: string; name: string; email: string; company?: string; phone?: string }) => {
+    setEditClient({
+      id: client._id,
+      name: client.name,
+      email: client.email,
+      company: client.company ?? "",
+      phone: client.phone ?? "",
+    });
+    setEditDialogOpen(true);
   };
 
   return (
@@ -379,8 +429,27 @@ export default function ClientsManagementPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                onClick={() => openEditDialog(client)}
                               >
                                 <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                onClick={() => { setResetPwTarget({ id: client._id, name: client.name }); setResetPwDialogOpen(true); }}
+                                title="Reset Password"
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={() => { setDeleteTarget({ id: client._id, name: client.name }); setDeleteDialogOpen(true); }}
+                                title="Delete Client"
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost"
@@ -413,6 +482,129 @@ export default function ClientsManagementPage() {
               )}
             </CardContent>
           </Card>
+          {/* Edit Client Dialog */}
+          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-foreground">Edit Client</DialogTitle>
+              </DialogHeader>
+              {editClient && (
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-name">Full Name</Label>
+                    <Input
+                      id="edit-name"
+                      value={editClient.name}
+                      onChange={(e) => setEditClient((p) => p ? { ...p, name: e.target.value } : p)}
+                      className="border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-email">Email</Label>
+                    <Input
+                      id="edit-email"
+                      type="email"
+                      value={editClient.email}
+                      onChange={(e) => setEditClient((p) => p ? { ...p, email: e.target.value } : p)}
+                      className="border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-company">Company</Label>
+                    <Input
+                      id="edit-company"
+                      value={editClient.company}
+                      onChange={(e) => setEditClient((p) => p ? { ...p, company: e.target.value } : p)}
+                      className="border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-phone">Phone</Label>
+                    <Input
+                      id="edit-phone"
+                      value={editClient.phone}
+                      onChange={(e) => setEditClient((p) => p ? { ...p, phone: e.target.value } : p)}
+                      className="border-border"
+                    />
+                  </div>
+                </div>
+              )}
+              <DialogFooter className="gap-2">
+                <DialogClose className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-background">
+                  Cancel
+                </DialogClose>
+                <Button
+                  className="bg-primary hover:bg-primary/90 text-white"
+                  onClick={handleEditClient}
+                  disabled={!editClient?.name || !editClient?.email}
+                >
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Reset Password Dialog */}
+          <Dialog open={resetPwDialogOpen} onOpenChange={setResetPwDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-foreground">Reset Password</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-muted-foreground">
+                  Set a new password for <span className="font-medium text-foreground">{resetPwTarget?.name}</span>
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="reset-password">New Password</Label>
+                  <Input
+                    id="reset-password"
+                    type="password"
+                    placeholder="Minimum 6 characters"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="border-border"
+                  />
+                </div>
+              </div>
+              <DialogFooter className="gap-2">
+                <DialogClose className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-background">
+                  Cancel
+                </DialogClose>
+                <Button
+                  className="bg-primary hover:bg-primary/90 text-white"
+                  onClick={handleResetPassword}
+                  disabled={!newPassword || newPassword.length < 6}
+                >
+                  Reset Password
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Client Dialog */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-foreground">Delete Client</DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete <span className="font-medium text-foreground">{deleteTarget?.name}</span>? This will permanently remove the client and all their projects, invoices, files, messages, and modules. This action cannot be undone.
+                </p>
+              </div>
+              <DialogFooter className="gap-2">
+                <DialogClose className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-background">
+                  Cancel
+                </DialogClose>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteClient}
+                >
+                  Delete Client
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </AppLayout>
     </ProtectedRoute>
