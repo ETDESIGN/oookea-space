@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { QuickActions } from "@/components/dashboard/quick-actions";
-import { FolderKanban, FileText, MessageSquare } from "lucide-react";
+import { FolderKanban, FileText, CheckCircle2 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
@@ -31,8 +31,6 @@ export default function DashboardPage() {
   const activeProjects = projects?.filter((p) => p.status === "active").length ?? 0;
   const pendingInvoices = invoices?.filter((i) => i.status === "sent" || i.status === "overdue") ?? [];
   const outstandingTotal = pendingInvoices.reduce((sum, inv) => sum + inv.total, 0);
-  const threadCount = threads?.length ?? 0;
-
   const firstName = user?.name?.split(" ")[0] || "there";
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
@@ -77,16 +75,10 @@ export default function DashboardPage() {
               description={`$${outstandingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })} outstanding`}
             />
             <StatCard
-              title="Threads"
-              value={threadCount}
-              icon={MessageSquare}
-              color="bg-[#8B5CF6]/10 text-[#8B5CF6]"
-            />
-            <StatCard
-              title="Threads"
-              value={threadCount}
-              icon={MessageSquare}
-              color="bg-[#8B5CF6]/10 text-[#8B5CF6]"
+              title="Completed Projects"
+              value={projects?.filter((p) => p.status === "completed").length ?? 0}
+              icon={CheckCircle2}
+              color="bg-[#22C55E]/10 text-[#22C55E]"
             />
           </div>
 

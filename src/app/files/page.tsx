@@ -17,7 +17,7 @@ import {
   HardDrive,
   Loader2,
 } from "lucide-react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import type { FileItem, FileType } from "@/types";
@@ -30,20 +30,21 @@ const fileTabs: { label: string; value: string; filter?: FileType }[] = [
   { label: "Other", value: "other", filter: "other" },
 ];
 
+const STORAGE_TOTAL_PLAN = 500 * 1_048_576; // 500 MB plan
+
 function formatStorage(bytes: number): string {
   if (bytes >= 1_073_741_824) return (bytes / 1_073_741_824).toFixed(1) + " GB";
+  if (bytes < 1_048_576) return Math.max(1, Math.round(bytes / 1024)) + " KB";
   return (bytes / 1_048_576).toFixed(0) + " MB";
 }
-
-const STORAGE_USED = 250 * 1_048_576; // 250 MB
-const STORAGE_TOTAL = 500 * 1_048_576; // 500 MB
 
 export default function FilesPage() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [localFiles, setLocalFiles] = useState<FileItem[]>([]);
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const [uploadError, setUploadError] = useState("");
 
   const isAdmin = user?.role === "admin";
   const clientId = !isAdmin ? (user?.id as Id<"users">) : undefined;
@@ -53,6 +54,61 @@ export default function FilesPage() {
     clientId ? { clientId } : (isAdmin ? {} : "skip")
   );
 
+  const generateUploadUrl = useMutation(api.projects.generateUploadUrl);
+  const createFileRecord = useMutation(api.projects.createFile);
+  const logActivity = useMutation(api.projects.logActivity);
+
+  // Real upload to Convex storage: get upload URL -> POST file -> create DB record
+  const handleUpload = async (uploaded: File[]) => {
+    for (const f of uploaded) {
+      try {
+        setUploadingCount((n) => n + 1);
+        const postUrl = await generateUploadUrl();
+        const result = await fetch(postUrl, {
+          method: "POST",
+          headers: { "Content-Type": f.type || "application/octet-stream" },
+          body: f,
+        });
+        const json = await result.json();
+        if (!result.ok || !json.storageId) {
+          throw new Error(json.errorMessage || "Upload failed");
+        }
+        await createFileRecord({
+          name: f.name,
+          clientId: (isAdmin ? user!.id : clientId!) as Id<"users">,
+          type: classifyFile(f),
+          size: f.size,
+          mimeType: f.type || "application/octet-stream",
+          storageId: json.storageId as string,
+          uploadedBy: user!.id as Id<"users">,
+        });
+        await logActivity({
+          clientId: (isAdmin ? user!.id : clientId!) as Id<"users"> | undefined,
+          type: "upload",
+          message: `${user?.name ?? "Someone"} uploaded "${f.name}"`,
+          userId: user!.id as Id<"users">,
+        }).catch(() => {});
+      } catch (err) {
+        console.error("Upload failed:", err);
+        setUploadError(err instanceof Error ? err.message : "Upload failed");
+      } finally {
+        setUploadingCount((n) => n - 1);
+      }
+    }
+  };
+
+  function classifyFile(f: File): FileType {
+    return f.type.startsWith("image/")
+      ? "image"
+      : f.type.startsWith("video/")
+        ? "video"
+        : f.type.includes("pdf") || f.type.includes("document") || f.type.includes("sheet")
+          ? "document"
+          : f.type.includes("zip") || f.type.includes("archive")
+            ? "archive"
+            : "other";
+  }
+
   // Merge Convex files with locally uploaded files
   const allFiles: FileItem[] = [
     ...(convexFiles?.map((f) => ({
@@ -60,38 +116,14 @@ export default function FilesPage() {
       name: f.name,
       type: f.type as FileType,
       size: f.size,
-      url: "/files/mock",
+      url: f.storageId ? `/api/file/${f.storageId}` : "/files/mock",
       thumbnail: undefined,
       uploadedAt: new Date(f.createdAt).toISOString(),
       uploadedBy: user?.name || "Unknown",
       projectSlug: undefined,
       mimeType: f.mimeType,
     })) ?? []),
-    ...localFiles,
   ];
-
-  const handleUpload = (uploaded: File[]) => {
-    const newFiles: FileItem[] = uploaded.map((f, i) => ({
-      id: `upload-${Date.now()}-${i}`,
-      name: f.name,
-      type: f.type.startsWith("image/")
-        ? "image" as FileType
-        : f.type.startsWith("video/")
-          ? "video" as FileType
-          : f.type.includes("pdf") || f.type.includes("document") || f.type.includes("sheet")
-            ? "document" as FileType
-            : f.type.includes("zip") || f.type.includes("archive")
-              ? "archive" as FileType
-              : "other" as FileType,
-      size: f.size,
-      url: URL.createObjectURL(f),
-      thumbnail: f.type.startsWith("image/") ? URL.createObjectURL(f) : undefined,
-      uploadedAt: new Date().toISOString(),
-      uploadedBy: user?.name || "You",
-      mimeType: f.type,
-    }));
-    setLocalFiles((prev) => [...newFiles, ...prev]);
-  };
 
   const filtered = allFiles.filter((f) => {
     const matchesSearch = f.name.toLowerCase().includes(search.toLowerCase());
@@ -102,7 +134,10 @@ export default function FilesPage() {
     return matchesSearch && f.type === activeTab;
   });
 
-  const usedPercent = Math.round((STORAGE_USED / STORAGE_TOTAL) * 100);
+  // Real storage usage from Convex file records
+  const totalBytes = (convexFiles ?? []).reduce((sum, f) => sum + (f.size || 0), 0);
+  const STORAGE_TOTAL = 500 * 1_048_576; // 500 MB plan
+  const usedPercent = Math.min(100, Math.round((totalBytes / STORAGE_TOTAL) * 100));
 
   if (convexFiles === undefined) {
     return (
@@ -138,7 +173,7 @@ export default function FilesPage() {
                 <div>
                   <p className="text-sm font-medium text-foreground">Storage</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatStorage(STORAGE_USED)} of {formatStorage(STORAGE_TOTAL)} used
+                    {formatStorage(totalBytes)} of {formatStorage(STORAGE_TOTAL_PLAN)} used
                   </p>
                 </div>
               </div>
@@ -146,6 +181,19 @@ export default function FilesPage() {
             </div>
             <Progress value={usedPercent} className="mt-3 h-2.5 bg-muted" />
           </div>
+
+          {/* Upload status */}
+          {uploadingCount > 0 && (
+            <div className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              Uploading {uploadingCount} file{uploadingCount > 1 ? "s" : ""}…
+            </div>
+          )}
+          {uploadError && (
+            <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+              Upload failed: {uploadError}
+            </div>
+          )}
 
           {/* Upload Zone */}
           <UploadZone onUpload={handleUpload} />

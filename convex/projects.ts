@@ -16,14 +16,22 @@ async function hashPassword(password: string, salt?: string): Promise<string> {
 }
 
 async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  // stored is "salt:hash" — re-hash with the SAME salt, never a fresh random one
   const [salt] = stored.split(":");
+  if (!salt) return false;
   const inputHash = await hashPassword(password, salt);
   return inputHash === stored;
 }
 
+// Legacy format = bare sha256 hex (no colon). On successful login we transparently
+// upgrade the stored hash to salted format — one-time migration per user, no bulk job needed.
+function isLegacyHash(stored: string): boolean {
+  return !stored.includes(":") && /^[0-9a-f]{64}$/.test(stored);
+}
+
 // ─── Users ──────────────────────────────────────────────────────
 
-export const loginUser = q({
+export const loginUser = m({
   args: { email: v.string(), password: v.string() },
   handler: async (ctx, { email, password }) => {
     const user = await ctx.db
@@ -31,8 +39,33 @@ export const loginUser = q({
       .withIndex("by_email", (q) => q.eq("email", email))
       .first();
     if (!user) return null;
-    const valid = await verifyPassword(password, user.passwordHash);
+
+    // Accept both salted ("salt:hash") and legacy unsalted (bare sha256) hashes.
+    // Legacy hashes are upgraded to salted on successful login.
+    let valid = false;
+    const stored = user.passwordHash;
+    if (isLegacyHash(stored)) {
+      const encoder = new TextEncoder();
+      const digest = await crypto.subtle.digest(
+        "SHA-256",
+        encoder.encode(password)
+      );
+      const hex = Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+      valid = hex === stored;
+      if (valid) {
+        // Transparent one-time upgrade to salted format
+        await ctx.db.patch(user._id, {
+          passwordHash: await hashPassword(password),
+        });
+      }
+    } else {
+      valid = await verifyPassword(password, stored);
+    }
     if (!valid) return null;
+    // Deactivated accounts cannot sign in
+    if (user.status !== "active") return null;
     return user;
   },
 });

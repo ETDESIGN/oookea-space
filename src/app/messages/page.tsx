@@ -81,6 +81,12 @@ export default function MessagesPage() {
   );
 
   const sendMessage = useMutation(api.projects.sendMessage);
+  const logActivity = useMutation(api.projects.logActivity);
+  const createThread = useMutation(api.projects.createThread);
+  const [showNewThread, setShowNewThread] = useState(false);
+  const [newSubject, setNewSubject] = useState("");
+  const [newBody, setNewBody] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const selectedThread = threads?.find((t) => t._id === selectedThreadId);
 
@@ -101,7 +107,42 @@ export default function MessagesPage() {
       senderId: user?.id as Id<"users">,
       senderRole: user?.role === "admin" ? "admin" : "client",
     });
+    // Keep the dashboard activity feed alive
+    await logActivity({
+      clientId: selectedThread?.clientId,
+      projectId: selectedThread?.projectId,
+      type: "comment",
+      message: `${selectedThread?.subject ?? "Message"}: new message from ${user?.name ?? "user"}`,
+      userId: user?.id as Id<"users"> | undefined,
+    }).catch(() => {});
     setReplyText("");
+  };
+
+  const handleCreateThread = async () => {
+    if (!newSubject.trim() || !user?.id) return;
+    setCreating(true);
+    try {
+      // For clients, their own ID is the thread owner; admins pick a client later in admin views
+      const ownerId = user.role === "admin" ? (user.id as Id<"users">) : (user.id as Id<"users">);
+      const threadId = await createThread({
+        subject: newSubject.trim(),
+        clientId: ownerId,
+      });
+      if (newBody.trim()) {
+        await sendMessage({
+          threadId: threadId as Id<"threads">,
+          body: newBody.trim(),
+          senderId: user.id as Id<"users">,
+          senderRole: user.role === "admin" ? "admin" : "client",
+        });
+      }
+      setSelectedThreadId(threadId as string);
+      setShowNewThread(false);
+      setNewSubject("");
+      setNewBody("");
+    } finally {
+      setCreating(false);
+    }
   };
 
   if (threads === undefined) {
@@ -121,12 +162,54 @@ export default function MessagesPage() {
       <AppLayout>
         <div className="space-y-6">
           {/* Header */}
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Messages</h1>
-            <p className="mt-1 text-muted-foreground">
-              Communicate with your team on project updates and deliverables.
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Messages</h1>
+              <p className="mt-1 text-muted-foreground">
+                Communicate with your team on project updates and deliverables.
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowNewThread((v) => !v)}
+              className="shrink-0 bg-primary text-white hover:bg-primary/90"
+            >
+              <Send className="mr-2 h-4 w-4" />
+              New message
+            </Button>
           </div>
+
+          {/* New thread form */}
+          {showNewThread && (
+            <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+              <Input
+                placeholder="Subject"
+                value={newSubject}
+                onChange={(e) => setNewSubject(e.target.value)}
+                className="bg-background"
+              />
+              <Textarea
+                placeholder="Write your message…"
+                value={newBody}
+                onChange={(e) => setNewBody(e.target.value)}
+                rows={3}
+                className="bg-background"
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowNewThread(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={!newSubject.trim() || creating}
+                  onClick={handleCreateThread}
+                  className="bg-primary text-white hover:bg-primary/90"
+                >
+                  {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                  Send
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Two-panel layout */}
           <div className="flex h-[calc(100vh-220px)] overflow-hidden rounded-xl border border-border bg-card">

@@ -14,7 +14,7 @@ const actions = [
     color: "bg-primary/10 text-primary hover:bg-primary/20",
   },
   {
-    label: "Pay Invoice",
+    label: "View Invoices",
     href: "/invoices",
     icon: FileText,
     color: "bg-[#22C55E]/10 text-[#22C55E] hover:bg-[#22C55E]/20",

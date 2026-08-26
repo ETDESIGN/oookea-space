@@ -80,7 +80,8 @@ function AuthInner({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
-      const result = await convex!.query(api.projects.loginUser, { email, password });
+      // loginUser is a mutation (it upgrades legacy password hashes on login)
+      const result = await convex!.mutation(api.projects.loginUser, { email, password });
       if (result) {
         const userData: User = {
           id: result._id,
