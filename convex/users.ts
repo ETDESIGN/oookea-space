@@ -241,6 +241,35 @@ export const setClientBrand = m({
   },
 });
 
+
+// ─── Pre-login gallery (safe) ────────────────────────────────────
+// Public: given an email, return up to 5 of THAT client's image file URLs
+// for the login gallery. No names, no metadata beyond image URLs.
+export const getGalleryForEmail = q({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .first();
+    if (!user) return null;
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_client", (q) => q.eq("clientId", user._id))
+      .filter((q) => q.eq(q.field("type"), "image"))
+      .order("desc")
+      .take(5);
+    const urls: string[] = [];
+    for (const f of files) {
+      if (f.storageId) {
+        const url = await ctx.storage.getUrl(f.storageId);
+        if (url) urls.push(url);
+      }
+    }
+    return urls;
+  },
+});
+
 export const listClients = q({
   args: { token: v.string() },
   handler: async (ctx, { token }) => {

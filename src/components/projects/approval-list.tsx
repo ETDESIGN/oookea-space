@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PinBoard } from "@/components/projects/pin-board";
 
 /**
  * ApprovalList — client-facing deliverable approvals.
@@ -31,6 +33,8 @@ type Deliverable = {
   approvedAt?: number;
   approvalNote?: string;
   approverName?: string;
+  artUrl?: string;
+  version?: number;
 };
 
 const STATUS_CONFIG = {
@@ -47,6 +51,8 @@ export function ApprovalList({ deliverables }: { deliverables: Deliverable[] }) 
 
   const decide = useMutation(api.projects.decideDeliverable);
   const token = typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : "";
+
+  const [stamp, setStamp] = useState<string | null>(null);
 
   const submit = async (
     id: string,
@@ -67,6 +73,10 @@ export function ApprovalList({ deliverables }: { deliverables: Deliverable[] }) 
       });
       setNoteFor(null);
       setNote("");
+      if (decision === "approved") {
+        setStamp(id);
+        setTimeout(() => setStamp(null), 2200);
+      }
     } finally {
       setBusy(null);
     }
@@ -81,8 +91,11 @@ export function ApprovalList({ deliverables }: { deliverables: Deliverable[] }) 
         const isBusy = busy === d._id;
 
         return (
-          <div
+          <motion.div
             key={d._id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
             className={cn(
               "rounded-xl border p-4 transition-colors",
               status === "approved" ? "border-[#22C55E]/30 bg-[#22C55E]/5" :
@@ -91,6 +104,22 @@ export function ApprovalList({ deliverables }: { deliverables: Deliverable[] }) 
               "border-border bg-card"
             )}
           >
+            {/* Professional APPROVED stamp */}
+            <AnimatePresence>
+              {stamp === d._id && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 1.6, rotate: -18 }}
+                  animate={{ opacity: 1, scale: 1, rotate: -12 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 18 }}
+                  className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+                >
+                  <span className="rounded-md border-[3px] border-[#22C55E]/80 px-4 py-1.5 text-lg font-black uppercase tracking-[0.2em] text-[#22C55E]/90 backdrop-blur-[1px]">
+                    Approved
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 <Icon className={cn("mt-0.5 h-5 w-5 shrink-0", cfg.color)} />
@@ -117,6 +146,12 @@ export function ApprovalList({ deliverables }: { deliverables: Deliverable[] }) 
                       “{d.approvalNote}”
                     </p>
                   )}
+                  {d.version != null && d.version > 1 && (
+                    <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
+                      v{d.version}
+                    </p>
+                  )}
+                  {d.artUrl && <PinBoard deliverableId={d._id} artUrl={d.artUrl} />}
                 </div>
               </div>
 
@@ -186,7 +221,7 @@ export function ApprovalList({ deliverables }: { deliverables: Deliverable[] }) 
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         );
       })}
     </div>

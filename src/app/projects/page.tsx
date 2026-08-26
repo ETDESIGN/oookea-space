@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ProtectedRoute } from "@/lib/auth";
 import { useAuth } from "@/lib/auth";
+import { DeadlineChip } from "@/components/projects/deadline-chip";
 import { AppLayout } from "@/components/layout/app-layout";
 import { ProjectCard } from "@/components/projects/project-card";
 import { Button } from "@/components/ui/button";

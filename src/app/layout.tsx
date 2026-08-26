@@ -2,13 +2,20 @@ import type { Metadata, Viewport } from "next";
 
 // All pages use Convex hooks — prevent static prerendering
 export const dynamic = "force-dynamic";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
+import { ToastProvider } from "@/components/ui/toast";
 import { ThemeProvider } from "@/lib/theme";
 
 const inter = Inter({
   variable: "--font-sans",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const grotesk = Space_Grotesk({
+  variable: "--font-grotesk",
   subsets: ["latin"],
   display: "swap",
 });
@@ -35,10 +42,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} ${grotesk.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <ToastProvider><AuthProvider>{children}</AuthProvider></ToastProvider>
         </ThemeProvider>
         <script
           dangerouslySetInnerHTML={{

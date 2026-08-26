@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { AppLayout } from "@/components/layout/app-layout";
+import { ReviewLinkManager } from "@/components/admin/review-link-manager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -280,6 +281,11 @@ function AdminProjectCard({ project }: { project: { _id: Id<"projects">; title: 
             <span>Due {formatDate(project.deadline)}</span>
           </div>
         )}
+
+        {/* Review links */}
+        <div className="mt-3 border-t border-border pt-3">
+          <ReviewLinkManager projectId={project._id} projectName={project.title} />
+        </div>
       </CardContent>
     </Card>
   );

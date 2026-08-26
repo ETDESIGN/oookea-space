@@ -164,6 +164,8 @@ export default function ProjectDetailPage() {
                         approvalStatus: d.approvalStatus,
                         approvedAt: d.approvedAt,
                         approvalNote: d.approvalNote,
+                        artUrl: d.artUrl,
+                        version: d.version,
                       }))}
                     />
                   )}

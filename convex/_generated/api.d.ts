@@ -9,14 +9,18 @@
  */
 
 import type * as _shared from "../_shared.js";
+import type * as actionQueue from "../actionQueue.js";
 import type * as analytics from "../analytics.js";
 import type * as approvals from "../approvals.js";
 import type * as auth from "../auth.js";
+import type * as booking from "../booking.js";
+import type * as caseStudies from "../caseStudies.js";
 import type * as files from "../files.js";
 import type * as invoices from "../invoices.js";
 import type * as messages from "../messages.js";
 import type * as misc from "../misc.js";
 import type * as notifications from "../notifications.js";
+import type * as pins from "../pins.js";
 import type * as projects from "../projects.js";
 import type * as projects_impl from "../projects_impl.js";
 import type * as reviewLinks from "../reviewLinks.js";
@@ -30,14 +34,18 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   _shared: typeof _shared;
+  actionQueue: typeof actionQueue;
   analytics: typeof analytics;
   approvals: typeof approvals;
   auth: typeof auth;
+  booking: typeof booking;
+  caseStudies: typeof caseStudies;
   files: typeof files;
   invoices: typeof invoices;
   messages: typeof messages;
   misc: typeof misc;
   notifications: typeof notifications;
+  pins: typeof pins;
   projects: typeof projects;
   projects_impl: typeof projects_impl;
   reviewLinks: typeof reviewLinks;

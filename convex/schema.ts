@@ -65,6 +65,10 @@ export default defineSchema({
     approvedBy: v.optional(v.id("users")),
     approvedAt: v.optional(v.number()),
     approvalNote: v.optional(v.string()),
+    // Optional visual/context artifact for this deliverable
+    artUrl: v.optional(v.string()),        // image URL for pin-to-comment
+    artName: v.optional(v.string()),
+    version: v.optional(v.number()),       // increments on each revision
   }).index("by_project", ["projectId"]),
 
   // ─── Invoices ─────────────────────────────────────────────────
@@ -207,6 +211,32 @@ export default defineSchema({
     body: v.string(),
     createdAt: v.number(),
   }).index("by_link", ["linkToken", "createdAt"]),
+
+  // ─── Deliverable pins (visual annotations) ─────────────────────
+  deliverablePins: defineTable({
+    deliverableId: v.id("deliverables"),
+    x: v.number(),                     // 0..1 relative position
+    y: v.number(),
+    authorId: v.id("users"),
+    authorName: v.string(),
+    body: v.string(),
+    resolved: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_deliverable", ["deliverableId"]),
+
+  // ─── Case Studies (published completed work) ───────────────────
+  caseStudies: defineTable({
+    projectId: v.id("projects"),
+    title: v.string(),
+    summary: v.optional(v.string()),
+    story: v.optional(v.string()),
+    coverUrl: v.optional(v.string()),   // storage URL of the cover
+    year: v.number(),
+    tags: v.optional(v.array(v.string())),
+    createdAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_year", ["year"]),
 
   // ─── Notifications ────────────────────────────────────────────
   notifications: defineTable({

@@ -42,9 +42,10 @@ function formatDate(dateStr: string): string {
 interface FileCardProps {
   file: FileItem;
   viewMode?: "grid" | "list";
+  onOpen?: (file: FileItem) => void;
 }
 
-export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
+export function FileCard({ file, viewMode = "grid", onOpen }: FileCardProps) {
   const config = fileTypeConfig[file.type] || fileTypeConfig.other;
   const Icon = config.icon;
   // Real preview: any Convex-backed image gets a live thumbnail from its URL
@@ -53,7 +54,10 @@ export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
 
   if (viewMode === "list") {
     return (
-      <div className="flex items-center gap-4 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30 hover:shadow-sm">
+      <div
+        className="flex cursor-pointer items-center gap-4 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30 hover:shadow-sm"
+        onClick={() => onOpen?.(file)}
+      >
         <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg", config.bg)}>
           {previewUrl ? (
             <img
@@ -76,7 +80,7 @@ export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
           variant="ghost"
           size="sm"
           className="shrink-0 text-muted-foreground hover:text-primary"
-          onClick={() => window.open(file.url, "_blank")}
+          onClick={(e) => { e.stopPropagation(); window.open(file.url, "_blank"); }}
         >
           <Download className="h-4 w-4" />
         </Button>
@@ -85,7 +89,10 @@ export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
   }
 
   return (
-    <Card className="group border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5">
+    <Card
+      className="group cursor-zoom-in border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5"
+      onClick={() => onOpen?.(file)}
+    >
       {/* Thumbnail Area */}
       <div className="relative flex h-36 items-center justify-center overflow-hidden rounded-t-xl bg-background">
         {previewUrl ? (
@@ -113,7 +120,7 @@ export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
-            onClick={() => window.open(file.url, "_blank")}
+            onClick={(e) => { e.stopPropagation(); window.open(file.url, "_blank"); }}
           >
             <Download className="h-4 w-4" />
           </Button>

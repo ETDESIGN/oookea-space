@@ -5,6 +5,8 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { QuickActions } from "@/components/dashboard/quick-actions";
+import { ActionQueue } from "@/components/dashboard/action-queue";
+import { Onboarding } from "@/components/studio/onboarding";
 import { FolderKanban, FileText, CheckCircle2 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -49,6 +51,7 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
+      <Onboarding />
       <AppLayout>
         <div className="space-y-6">
           <div>
@@ -81,6 +84,8 @@ export default function DashboardPage() {
               color="bg-[#22C55E]/10 text-[#22C55E]"
             />
           </div>
+
+          <ActionQueue />
 
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2">

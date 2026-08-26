@@ -108,36 +108,36 @@
 }
 
 .dark {
-  --background: #0F172A;
-  --foreground: #F8FAFC;
-  --card: #1E293B;
-  --card-foreground: #F8FAFC;
-  --popover: #1E293B;
-  --popover-foreground: #F8FAFC;
+  --background: #0A0A0B;
+  --foreground: #F4F4F5;
+  --card: #131315;
+  --card-foreground: #F4F4F5;
+  --popover: #131315;
+  --popover-foreground: #F4F4F5;
   --primary: #818CF8;
-  --primary-foreground: #0F172A;
+  --primary-foreground: #0A0A0B;
   --secondary: #A78BFA;
-  --secondary-foreground: #0F172A;
-  --muted: #1E293B;
-  --muted-foreground: #94A3B8;
-  --accent: #1E293B;
+  --secondary-foreground: #0A0A0B;
+  --muted: #1B1B1F;
+  --muted-foreground: #9CA3AF;
+  --accent: #1B1B1F;
   --accent-foreground: #818CF8;
   --destructive: #F87171;
-  --border: #334155;
-  --input: #334155;
+  --border: #26262B;
+  --input: #26262B;
   --ring: #818CF8;
   --chart-1: #818CF8;
   --chart-2: #A78BFA;
   --chart-3: #4ADE80;
   --chart-4: #FBBF24;
   --chart-5: #F87171;
-  --sidebar: #0F172A;
-  --sidebar-foreground: #E2E8F0;
+  --sidebar: #0D0D0F;
+  --sidebar-foreground: #E4E4E7;
   --sidebar-primary: #818CF8;
-  --sidebar-primary-foreground: #0F172A;
-  --sidebar-accent: #1E293B;
-  --sidebar-accent-foreground: #E2E8F0;
-  --sidebar-border: #334155;
+  --sidebar-primary-foreground: #0A0A0B;
+  --sidebar-accent: #1B1B1F;
+  --sidebar-accent-foreground: #E4E4E7;
+  --sidebar-border: #26262B;
   --sidebar-ring: #818CF8;
   --oookea-primary: #818CF8;
   --oookea-primary-hover: #6366F1;
@@ -202,4 +202,57 @@
     background-color: #CBD5E1;
     border-radius: 3px;
   }
+}
+
+
+/* ── Studio type pairing ─────────────────────────────────────── */
+:root {
+  --font-display: var(--font-grotesk), var(--font-sans), sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* ── Studio noir texture + glow ─────────────────────────────── */
+.studio-noise {
+  position: relative;
+}
+.studio-noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.glass-card {
+  background: color-mix(in srgb, var(--card) 72%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* 1px gradient border for hero cards */
+.border-glow {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 40%, transparent), transparent 45%, color-mix(in srgb, var(--secondary) 25%, transparent)) border-box;
+}
+
+/* Primary glow shadow */
+.glow-primary {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent),
+              0 8px 40px -8px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+/* Branded skeleton pulse (the "O" loader uses this) */
+@keyframes oookea-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1); }
+}
+.animate-brand-pulse {
+  animation: oookea-pulse 1.6s ease-in-out infinite;
 }

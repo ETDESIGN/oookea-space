@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { AppLayout } from "@/components/layout/app-layout";
 import { FileCard } from "@/components/files/file-card";
 import { UploadZone } from "@/components/files/upload-zone";
+import { Lightbox, LightboxItem } from "@/components/files/lightbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -44,6 +45,7 @@ export default function FilesPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [uploadingCount, setUploadingCount] = useState(0);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState("");
 
   const isAdmin = user?.role === "admin";
@@ -135,6 +137,15 @@ export default function FilesPage() {
     }
     return matchesSearch && f.type === activeTab;
   });
+
+  // Viewable items for the lightbox
+  const lightboxItems: LightboxItem[] = filtered
+    .filter((f) => ["image", "design", "video", "document"].includes(f.type))
+    .map((f) => ({ name: f.name, url: f.url, type: f.type }));
+  const openLightbox = (file: FileItem) => {
+    const i = lightboxItems.findIndex((li) => li.name === file.name);
+    setLightboxIdx(i >= 0 ? i : 0);
+  };
 
   // Real storage usage from Convex file records
   const totalBytes = (convexFiles ?? []).reduce((sum, f) => sum + (f.size || 0), 0);
@@ -255,17 +266,23 @@ export default function FilesPage() {
           ) : viewMode === "grid" ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((file) => (
-                <FileCard key={file.id} file={file} viewMode="grid" />
+                <FileCard key={file.id} file={file} viewMode="grid" onOpen={(f) => openLightbox(f)} />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
               {filtered.map((file) => (
-                <FileCard key={file.id} file={file} viewMode="list" />
+                <FileCard key={file.id} file={file} viewMode="list" onOpen={(f) => openLightbox(f)} />
               ))}
             </div>
           )}
         </div>
+        <Lightbox
+          items={lightboxItems}
+          index={lightboxIdx}
+          onClose={() => setLightboxIdx(null)}
+          onIndexChange={setLightboxIdx}
+        />
       </AppLayout>
     </ProtectedRoute>
   );

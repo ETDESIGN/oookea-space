@@ -75,6 +75,16 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const markAllRead = useMutation(api.notifications.markAllRead);
   const notifCount = unread ?? 0;
 
+  // Federated ⌘K data
+  const searchProjects = useQuery(
+    api.projects.listProjects,
+    sessionToken ? { token: sessionToken } : "skip"
+  ) as any[] | undefined;
+  const searchInvoices = useQuery(
+    api.projects.listInvoices,
+    sessionToken ? { token: sessionToken } : "skip"
+  ) as any[] | undefined;
+
   const initials = user?.name
     ? user.name
         .split(" ")
@@ -227,17 +237,50 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         </div>
       </header>
 
-      {/* Command Search Dialog */}
+      {/* Federated ⌘K */}
       <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <CommandInput placeholder="Search pages, projects…" />
+        <CommandInput placeholder="Search projects, invoices, pages…" />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Projects">
+            {(searchProjects ?? []).slice(0, 6).map((proj: any) => (
+              <CommandItem
+                key={proj._id}
+                value={`project ${proj.title} ${proj.category}`}
+                onSelect={() => {
+                  router.push(`/projects/${proj.slug}`);
+                  setSearchOpen(false);
+                }}
+              >
+                <span className="mr-2 text-xs">📁</span>
+                <span className="flex-1 truncate">{proj.title}</span>
+                <span className="text-[10px] text-muted-foreground">{proj.progress}%</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+          <CommandGroup heading="Invoices">
+            {(searchInvoices ?? []).slice(0, 5).map((inv: any) => (
+              <CommandItem
+                key={inv._id}
+                value={`invoice ${inv.number}`}
+                onSelect={() => {
+                  router.push(`/invoices/${inv._id}`);
+                  setSearchOpen(false);
+                }}
+              >
+                <span className="mr-2 text-xs">🧾</span>
+                <span className="flex-1">{inv.number}</span>
+                <span className="text-[10px] uppercase text-muted-foreground">{inv.status}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
           <CommandGroup heading="Pages">
             {searchPages.map((page) => (
               <CommandItem
                 key={page.href}
+                value={`page ${page.label}`}
                 onSelect={() => {
-                  window.location.href = page.href;
+                  router.push(page.href);
                   setSearchOpen(false);
                 }}
               >
