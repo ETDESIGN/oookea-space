@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ProtectedRoute } from "@/lib/auth";
 import { AppLayout } from "@/components/layout/app-layout";
+import { ApprovalList } from "@/components/projects/approval-list";
+import { ProjectTimeline } from "@/components/projects/timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -106,6 +108,23 @@ export default function ProjectDetailPage() {
               </div>
               <h1 className="text-3xl font-bold">{project.title}</h1>
               <p className="mt-2 text-white/80 max-w-2xl">{project.description}</p>
+
+              {/* Timeline track — phases + progress */}
+              {deliverables && deliverables.length > 0 && (
+                <div className="mt-6 rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+                  <ProjectTimeline
+                    phases={deliverables.map((d: any) => ({
+                      _id: d._id,
+                      title: d.title,
+                      order: d.order,
+                      completed: d.completed,
+                      approvalStatus: d.approvalStatus,
+                    }))}
+                    startDate={project.startDate}
+                    deadline={project.deadline}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -123,12 +142,12 @@ export default function ProjectDetailPage() {
                 </Card>
               )}
 
-              {/* Deliverables */}
+              {/* Deliverables — approval workflow */}
               <Card className="border-border">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-semibold text-foreground">Deliverables</h3>
-                    <span className="text-sm text-muted-foreground">{completedCount}/{totalCount} complete</span>
+                    <span className="text-sm text-muted-foreground">{completedCount}/{totalCount} approved</span>
                   </div>
                   {deliverables === undefined ? (
                     <div className="flex items-center justify-center py-8">
@@ -137,24 +156,16 @@ export default function ProjectDetailPage() {
                   ) : deliverables.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">No deliverables yet.</p>
                   ) : (
-                    <div className="space-y-3">
-                      {deliverables.map((d) => (
-                        <button
-                          key={d._id}
-                          onClick={() => toggleDeliverable({ token: localStorage.getItem("oookea_session") || "", id: d._id, completed: !d.completed })}
-                          className="flex w-full items-center gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:bg-background"
-                        >
-                          {d.completed ? (
-                            <CheckCircle2 className="h-5 w-5 text-[#22C55E] shrink-0" />
-                          ) : (
-                            <Circle className="h-5 w-5 text-[#CBD5E1] shrink-0" />
-                          )}
-                          <span className={`text-sm ${d.completed ? "text-foreground" : "text-muted-foreground"}`}>
-                            {d.title}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    <ApprovalList
+                      deliverables={deliverables.map((d: any) => ({
+                        _id: d._id,
+                        title: d.title,
+                        completed: d.completed,
+                        approvalStatus: d.approvalStatus,
+                        approvedAt: d.approvedAt,
+                        approvalNote: d.approvalNote,
+                      }))}
+                    />
                   )}
                 </CardContent>
               </Card>

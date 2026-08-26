@@ -20,6 +20,8 @@ import {
   Mail,
   MailOpen,
   Loader2,
+  Sparkles,
+  XCircle,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -87,6 +89,9 @@ export default function MessagesPage() {
   const [newSubject, setNewSubject] = useState("");
   const [newBody, setNewBody] = useState("");
   const [creating, setCreating] = useState(false);
+  // AI summary
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const selectedThread = threads?.find((t) => t._id === selectedThreadId);
 
@@ -303,10 +308,66 @@ export default function MessagesPage() {
                         {selectedThread.subject}
                       </p>
                     </div>
+                    {/* AI catch-up */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mr-1 h-8 gap-1.5 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+                      disabled={aiLoading || !selectedThreadMessages?.length}
+                      onClick={async () => {
+                        setAiLoading(true);
+                        setAiSummary(null);
+                        try {
+                          const res = await fetch("/api/ai/summarize", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              token: localStorage.getItem("oookea_session") || "",
+                              threadId: selectedThreadId,
+                            }),
+                          });
+                          const data = await res.json();
+                          setAiSummary(data.summary || data.error || "No summary available.");
+                        } catch {
+                          setAiSummary("Could not generate a summary right now.");
+                        } finally {
+                          setAiLoading(false);
+                        }
+                      }}
+                    >
+                      {aiLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5" />
+                      )}
+                      Catch me up
+                    </Button>
                     <Button variant="ghost" size="icon-sm">
                       <MoreVertical className="h-4 w-4 text-muted-foreground" />
                     </Button>
                   </div>
+
+                  {/* AI summary panel */}
+                  {aiSummary && (
+                    <div className="border-b border-primary/20 bg-primary/5 px-5 py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                            <Sparkles className="h-3.5 w-3.5" /> AI Summary
+                          </p>
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                            {aiSummary}
+                          </p>
+                        </div>
+                        <button
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => setAiSummary(null)}
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Messages area */}
                   <div className="flex-1 overflow-y-auto px-5 py-4">

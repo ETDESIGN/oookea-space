@@ -45,7 +45,7 @@ async function pbkdf2(password: string, salt: string): Promise<string> {
 }
 
 /** Hash a password with the current (v2) format. */
-async function hashPassword(password: string): Promise<string> {
+export async function hashPassword(password: string): Promise<string> {
   const salt = randomSalt();
   const hash = await pbkdf2(password, salt);
   return `pbkdf2$${PBKDF2_ITERATIONS}$${salt}$${hash}`;
@@ -55,7 +55,7 @@ async function hashPassword(password: string): Promise<string> {
  * Verify a password against any historical format.
  * Returns { ok, needsUpgrade } so callers can transparently re-hash.
  */
-async function verifyPassword(
+export async function verifyPassword(
   password: string,
   stored: string
 ): Promise<{ ok: boolean; needsUpgrade: boolean }> {
@@ -148,6 +148,8 @@ export const loginUser = m({
       expiresAt: now + SESSION_TTL_MS,
       createdAt: now,
     });
+    // Track for client health
+    await ctx.db.patch(user._id, { lastLoginAt: now });
 
     return { ...user, sessionToken: token };
   },
@@ -197,6 +199,45 @@ export const getUserById = q({
     // Never leak password hashes to the client
     const { passwordHash: _ph, ...safe } = target as Record<string, unknown>;
     return safe;
+  },
+});
+
+
+// ─── Pre-login brand lookup ─────────────────────────────────────
+// Public: given an email, return ONLY the co-brand display fields.
+// Used by the login screen to render the client lockup. Reveals
+// nothing sensitive (no existence oracle beyond branding).
+export const getBrandForEmail = q({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .first();
+    if (!user) return null;
+    return {
+      name: user.company ?? user.name,
+      brandLogo: user.brandLogo ?? null,
+      brandColor: user.brandColor ?? null,
+    };
+  },
+});
+
+// Admin: set a client's brand assets
+export const setClientBrand = m({
+  args: {
+    token: v.string(),
+    clientId: v.id("users"),
+    brandLogo: v.optional(v.string()),
+    brandColor: v.optional(v.string()),
+  },
+  handler: async (ctx, { token, clientId, brandLogo, brandColor }) => {
+    await requireAdmin(ctx, token);
+    const patch: Record<string, string | undefined> = {};
+    if (brandLogo !== undefined) patch.brandLogo = brandLogo;
+    if (brandColor !== undefined) patch.brandColor = brandColor;
+    await ctx.db.patch(clientId, patch);
+    return true;
   },
 });
 

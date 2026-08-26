@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 // All pages use Convex hooks — prevent static prerendering
 export const dynamic = "force-dynamic";
@@ -16,7 +16,17 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Oookea — Digital Atelier",
   description: "Your creative project management portal",
-  icons: { icon: "/favicon.ico" },
+  icons: { icon: "/favicon.ico", apple: "/icon.svg" },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Oookea Space",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6366F1",
 };
 
 export default function RootLayout({
@@ -30,6 +40,11 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); }`,
+          }}
+        />
       </body>
     </html>
   );

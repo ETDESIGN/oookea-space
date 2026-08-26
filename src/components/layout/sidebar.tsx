@@ -5,8 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
+import { SidebarBrand } from "@/components/layout/sidebar-brand";
 import {
   LayoutDashboard,
+  TrendingUp,
   FolderKanban,
   FileText,
   FileIcon,
@@ -38,6 +40,7 @@ const clientNavItems = [
 
 const adminNavItems = [
   { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
+  { label: "Analytics", href: "/admin/analytics", icon: TrendingUp },
   { label: "Clients", href: "/admin/clients", icon: Users },
   { label: "All Projects", href: "/admin/projects", icon: FolderKanban },
   { label: "All Invoices", href: "/admin/invoices", icon: FileText },
@@ -78,29 +81,10 @@ export function Sidebar({
 
   const sidebarContent = (
     <div className="flex h-full flex-col bg-[#0F172A]">
-      {/* Brand */}
+      {/* Brand — co-branded lockup (client × OookeA) */}
       <div className="flex h-16 items-center justify-between px-4">
         <Link href={isAdmin ? "/admin" : "/dashboard"} className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#6366F1]">
-            <span className="text-lg font-black text-white">O</span>
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-white tracking-tight">
-                  Oookea
-                </span>
-                {isAdmin && (
-                  <Badge className="h-4 rounded bg-[#F59E0B] px-1.5 text-[9px] font-bold uppercase text-white border-0">
-                    Admin
-                  </Badge>
-                )}
-              </div>
-              <span className="text-[10px] uppercase tracking-widest text-[#64748B]">
-                {isAdmin ? "Admin Portal" : "Digital Atelier"}
-              </span>
-            </div>
-          )}
+          <SidebarBrand isAdmin={!!isAdmin} collapsed={collapsed} />
         </Link>
         {/* Mobile close */}
         <Button

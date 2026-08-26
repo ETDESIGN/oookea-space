@@ -9,6 +9,8 @@
  */
 
 import type * as _shared from "../_shared.js";
+import type * as analytics from "../analytics.js";
+import type * as approvals from "../approvals.js";
 import type * as auth from "../auth.js";
 import type * as files from "../files.js";
 import type * as invoices from "../invoices.js";
@@ -17,6 +19,7 @@ import type * as misc from "../misc.js";
 import type * as notifications from "../notifications.js";
 import type * as projects from "../projects.js";
 import type * as projects_impl from "../projects_impl.js";
+import type * as reviewLinks from "../reviewLinks.js";
 import type * as users from "../users.js";
 
 import type {
@@ -27,6 +30,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   _shared: typeof _shared;
+  analytics: typeof analytics;
+  approvals: typeof approvals;
   auth: typeof auth;
   files: typeof files;
   invoices: typeof invoices;
@@ -35,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   projects: typeof projects;
   projects_impl: typeof projects_impl;
+  reviewLinks: typeof reviewLinks;
   users: typeof users;
 }>;
 

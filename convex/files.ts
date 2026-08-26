@@ -5,8 +5,9 @@ import { requireUser, requireAdmin, scopeClientId } from "./auth";
 // ─── File Storage ───────────────────────────────────────────────
 
 export const generateUploadUrl = m({
-  args: {},
-  handler: async (ctx) => {
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    await requireUser(ctx, token);
     return await ctx.storage.generateUploadUrl();
   },
 });

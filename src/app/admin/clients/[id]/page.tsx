@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { BrandManager } from "@/components/admin/brand-manager";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -328,6 +329,18 @@ export default function ClientDetailPage() {
                         ))}
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+
+                {/* Co-branding */}
+                <Card className="border-border">
+                  <CardContent className="p-6">
+                    <h3 className="mb-1 text-base font-semibold text-foreground">Co-branding</h3>
+                    <p className="mb-4 text-sm text-muted-foreground">
+                      The client&apos;s logo appears next to the Oookea mark in their portal
+                      (client × Oookea) and on the login screen.
+                    </p>
+                    <BrandManager clientId={clientId} />
                   </CardContent>
                 </Card>
 

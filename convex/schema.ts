@@ -12,6 +12,11 @@ export default defineSchema({
     phone: v.optional(v.string()),
     avatar: v.optional(v.string()),
     status: v.union(v.literal("active"), v.literal("inactive")),
+    // Co-branding
+    brandLogo: v.optional(v.string()),   // storage URL of client logo
+    brandColor: v.optional(v.string()),  // accent hex e.g. "#1E40AF"
+    // Client health tracking
+    lastLoginAt: v.optional(v.number()),
     createdAt: v.number(),
   }).index("by_email", ["email"]),
 
@@ -48,6 +53,18 @@ export default defineSchema({
     title: v.string(),
     completed: v.boolean(),
     order: v.number(),
+    // Approval workflow
+    approvalStatus: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("approved"),
+        v.literal("rejected"),
+        v.literal("changes_requested")
+      )
+    ),
+    approvedBy: v.optional(v.id("users")),
+    approvedAt: v.optional(v.number()),
+    approvalNote: v.optional(v.string()),
   }).index("by_project", ["projectId"]),
 
   // ─── Invoices ─────────────────────────────────────────────────
@@ -161,6 +178,35 @@ export default defineSchema({
   })
     .index("by_token", ["token"])
     .index("by_user", ["userId"]),
+
+  // ─── Users extra fields (co-branding) live on the users table:
+  // brandLogo (storage URL), brandColor (hex) — set by admin.
+
+  // ─── Shareable Review Links ────────────────────────────────────
+  // Password-protected public links to a deliverable/project for
+  // stakeholders without accounts.
+  reviewLinks: defineTable({
+    token: v.string(),                     // random public token
+    projectId: v.id("projects"),
+    deliverableId: v.optional(v.id("deliverables")),
+    title: v.string(),
+    passwordHash: v.string(),             // PBKDF2, same as users
+    createdById: v.id("users"),           // admin who created it
+    expiresAt: v.number(),
+    views: v.number(),
+    lastViewedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_token", ["token"])
+    .index("by_project", ["projectId"]),
+
+  // ─── Review link comments (public, name-tagged) ───────────────
+  reviewComments: defineTable({
+    linkToken: v.string(),
+    authorName: v.string(),
+    body: v.string(),
+    createdAt: v.number(),
+  }).index("by_link", ["linkToken", "createdAt"]),
 
   // ─── Notifications ────────────────────────────────────────────
   notifications: defineTable({

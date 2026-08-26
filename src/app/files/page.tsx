@@ -63,7 +63,9 @@ export default function FilesPage() {
     for (const f of uploaded) {
       try {
         setUploadingCount((n) => n + 1);
-        const postUrl = await generateUploadUrl();
+        const postUrl = await generateUploadUrl({
+          token: localStorage.getItem("oookea_session") || "",
+        });
         const result = await fetch(postUrl, {
           method: "POST",
           headers: { "Content-Type": f.type || "application/octet-stream" },

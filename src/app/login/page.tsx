@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Palette, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,6 +19,12 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showForgotPw, setShowForgotPw] = useState(false);
+
+  // Live brand lookup as the user types a known email
+  const typedBrand = useQuery(
+    api.projects.getBrandForEmail,
+    email.includes("@") ? { email } : "skip"
+  ) as { name: string | null; brandLogo: string | null; brandColor: string | null } | null | undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,17 +53,41 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Login Card */}
         <div className="rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-xl shadow-[#6366F1]/5">
-          {/* Brand */}
-          <div className="mb-8 flex flex-col items-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#6366F1] shadow-lg shadow-[#6366F1]/30">
-              <span className="text-2xl font-black text-white">O</span>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">
-              Oookea
-            </h1>
-            <p className="mt-1 text-sm font-medium text-[#64748B] tracking-wide uppercase">
-              Digital Atelier
-            </p>
+          {/* Brand — co-branded lockup (updates live as the email is typed) */}
+          <div className="mb-8 flex flex-col items-center gap-3">
+            {typedBrand ? (
+              <div className="flex flex-col items-center gap-3">
+                {typedBrand.brandLogo ? (
+                  <img src={typedBrand.brandLogo} alt={typedBrand.name ?? ""} className="h-9 w-auto max-w-[150px] object-contain" />
+                ) : (
+                  <span className="text-lg font-semibold uppercase tracking-[0.14em] text-[#0F172A]" style={typedBrand.brandColor ? { color: typedBrand.brandColor } : undefined}>
+                    {typedBrand.name}
+                  </span>
+                )}
+                <span className="text-xs font-light text-zinc-400">×</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366F1] to-[#4F46E5] shadow-[0_2px_12px_-2px_rgba(99,102,241,0.5)]">
+                    <span className="text-sm font-black text-white">O</span>
+                  </div>
+                  <div className="flex flex-col leading-none">
+                    <span className="text-sm font-bold tracking-tight text-[#0F172A]">Oookea</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-[0.22em] text-zinc-400">Digital Atelier</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6366F1] to-[#4F46E5] shadow-lg shadow-[#6366F1]/30">
+                  <span className="text-2xl font-black text-white">O</span>
+                </div>
+                <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">
+                  Oookea
+                </h1>
+                <p className="mt-1 text-sm font-medium text-[#64748B] tracking-wide uppercase">
+                  Digital Atelier
+                </p>
+              </>
+            )}
           </div>
 
           {/* Error */}
