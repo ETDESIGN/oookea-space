@@ -17,15 +17,15 @@ export default function DashboardPage() {
 
   const projects = useQuery(
     api.projects.listProjects,
-    clientId ? { clientId } : {}
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" }
   );
   const invoices = useQuery(
     api.projects.listInvoices,
-    clientId ? { clientId } : {}
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" }
   );
   const threads = useQuery(
     api.projects.listThreads,
-    clientId ? { clientId } : {}
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" }
   );
 
   const activeProjects = projects?.filter((p) => p.status === "active").length ?? 0;

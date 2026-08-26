@@ -51,7 +51,7 @@ export default function FilesPage() {
 
   const convexFiles = useQuery(
     api.projects.listFiles,
-    clientId ? { clientId } : (isAdmin ? {} : "skip")
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : (isAdmin ? { token: localStorage.getItem("oookea_session") || "" } : "skip")
   );
 
   const generateUploadUrl = useMutation(api.projects.generateUploadUrl);
@@ -73,7 +73,7 @@ export default function FilesPage() {
         if (!result.ok || !json.storageId) {
           throw new Error(json.errorMessage || "Upload failed");
         }
-        await createFileRecord({
+        await createFileRecord({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), 
           name: f.name,
           clientId: (isAdmin ? user!.id : clientId!) as Id<"users">,
           type: classifyFile(f),
@@ -83,10 +83,10 @@ export default function FilesPage() {
           uploadedBy: user!.id as Id<"users">,
         });
         await logActivity({
+          token: localStorage.getItem("oookea_session") || "",
           clientId: (isAdmin ? user!.id : clientId!) as Id<"users"> | undefined,
           type: "upload",
           message: `${user?.name ?? "Someone"} uploaded "${f.name}"`,
-          userId: user!.id as Id<"users">,
         }).catch(() => {});
       } catch (err) {
         console.error("Upload failed:", err);

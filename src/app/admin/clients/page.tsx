@@ -67,8 +67,8 @@ export default function ClientsManagementPage() {
   const [resetPwTarget, setResetPwTarget] = useState<{ id: string; name: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
 
-  const clients = useQuery(api.projects.listClients, {});
-  const projects = useQuery(api.projects.listProjects, {});
+  const clients = useQuery(api.projects.listClients, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
+  const projects = useQuery(api.projects.listProjects, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
   const createClient = useMutation(api.projects.createClient);
   const updateClient = useMutation(api.projects.updateClient);
   const deleteClientMutation = useMutation(api.projects.deleteClient);
@@ -118,7 +118,7 @@ export default function ClientsManagementPage() {
 
   const toggleStatus = async (clientId: string, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
-    await updateClient({
+    await updateClient({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), 
       id: clientId as Id<"users">,
       status: newStatus as "active" | "inactive",
     });
@@ -138,7 +138,7 @@ export default function ClientsManagementPage() {
 
   const handleEditClient = async () => {
     if (!editClient || !editClient.name || !editClient.email) return;
-    await updateClient({
+    await updateClient({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), 
       id: editClient.id as Id<"users">,
       name: editClient.name,
       email: editClient.email,
@@ -151,14 +151,14 @@ export default function ClientsManagementPage() {
 
   const handleDeleteClient = async () => {
     if (!deleteTarget) return;
-    await deleteClientMutation({ id: deleteTarget.id as Id<"users"> });
+    await deleteClientMutation({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: deleteTarget.id as Id<"users"> });
     setDeleteDialogOpen(false);
     setDeleteTarget(null);
   };
 
   const handleResetPassword = async () => {
     if (!resetPwTarget || !newPassword || newPassword.length < 6) return;
-    await resetClientPassword({ id: resetPwTarget.id as Id<"users">, newPassword });
+    await resetClientPassword({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: resetPwTarget.id as Id<"users">, newPassword });
     setResetPwDialogOpen(false);
     setResetPwTarget(null);
     setNewPassword("");

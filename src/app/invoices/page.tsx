@@ -52,7 +52,7 @@ export default function InvoicesPage() {
   const clientId = user?.role === "admin" ? undefined : (user?.id as Id<"users">);
   const invoices = useQuery(
     api.projects.listInvoices,
-    clientId ? { clientId } : {}
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" }
   );
 
   const invoiceList = invoices ?? [];

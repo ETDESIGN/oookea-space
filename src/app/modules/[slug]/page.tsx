@@ -39,7 +39,7 @@ export default function ModuleDetailPage() {
 
   const modules = useQuery(
     api.projects.listModules,
-    user?.id ? { clientId: user.id as Id<"users"> } : "skip"
+    user?.id ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId: user.id as Id<"users"> } : "skip"
   );
 
   const mod = modules?.find((m) => m.slug === slug);

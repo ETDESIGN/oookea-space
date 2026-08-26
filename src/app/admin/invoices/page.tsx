@@ -58,8 +58,8 @@ export default function AdminInvoicesPage() {
     { id: crypto.randomUUID(), description: "", quantity: 1, unitPrice: 0 },
   ]);
 
-  const invoices = useQuery(api.projects.listInvoices, {});
-  const clients = useQuery(api.projects.listClients, {});
+  const invoices = useQuery(api.projects.listInvoices, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
+  const clients = useQuery(api.projects.listClients, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
   const createInvoice = useMutation(api.projects.createInvoice);
   const updateStatus = useMutation(api.projects.updateInvoiceStatus);
 
@@ -103,7 +103,7 @@ export default function AdminInvoicesPage() {
 
   const handleCreate = async () => {
     if (!newClient || !newDueDate) return;
-    await createInvoice({
+    await createInvoice({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), 
       number: `INV-2026-${String(Date.now()).slice(-3)}`,
       clientId: newClient as Id<"users">,
       issueDate: new Date().toISOString().split("T")[0],
@@ -224,7 +224,7 @@ export default function AdminInvoicesPage() {
                             <Eye className="h-3.5 w-3.5" /> View
                           </Button>
                           {invoice.status !== "paid" && (
-                            <Button variant="ghost" size="sm" className="h-8 gap-1 text-[#22C55E] hover:bg-[#22C55E]/5" onClick={() => updateStatus({ id: invoice._id, status: "paid" })}>
+                            <Button variant="ghost" size="sm" className="h-8 gap-1 text-[#22C55E] hover:bg-[#22C55E]/5" onClick={() => updateStatus({ token: localStorage.getItem("oookea_session") || "", id: invoice._id, status: "paid" })}>
                               <CheckCircle2 className="h-3.5 w-3.5" /> Paid
                             </Button>
                           )}

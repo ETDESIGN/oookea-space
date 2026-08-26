@@ -61,7 +61,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const isAdmin = user?.role === "admin";
   const clientId = isAdmin ? undefined : (user?.id as Id<"users"> | undefined);
-  const threads = useQuery(api.projects.listThreads, clientId ? { clientId } : {});
+  const threads = useQuery(api.projects.listThreads, clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" });
   const notifCount = threads?.length ?? 0;
 
   const initials = user?.name

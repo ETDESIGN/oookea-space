@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 import { query as q, mutation as m } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+import { SESSION_TTL_MS, requireUser, requireAdmin, scopeClientId } from "./auth";
 
 // ─── Password Hashing ───────────────────────────────────────────
 
@@ -66,7 +68,48 @@ export const loginUser = m({
     if (!valid) return null;
     // Deactivated accounts cannot sign in
     if (user.status !== "active") return null;
-    return user;
+
+    // Create a server-side session token (30-day TTL)
+    const tokenBytes = new Uint8Array(32);
+    crypto.getRandomValues(tokenBytes);
+    const token = Array.from(tokenBytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    const now = Date.now();
+    await ctx.db.insert("sessions", {
+      userId: user._id,
+      token,
+      expiresAt: now + SESSION_TTL_MS,
+      createdAt: now,
+    });
+
+    return { ...user, sessionToken: token };
+  },
+});
+
+export const logoutUser = m({
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", token))
+      .first();
+    if (session) await ctx.db.delete(session._id);
+    return true;
+  },
+});
+
+// Housekeeping: purge this user's expired sessions
+export const purgeExpiredSessions = m({
+  args: {},
+  handler: async (ctx) => {
+    const expired = await ctx.db
+      .query("sessions")
+      .withIndex("by_token")
+      .filter((q) => q.lt(q.field("expiresAt"), Date.now()))
+      .collect();
+    for (const s of expired) await ctx.db.delete(s._id);
+    return expired.length;
   },
 });
 
@@ -78,19 +121,29 @@ export const getCurrentUser = q({
 });
 
 export const getUserById = q({
-  args: { id: v.id("users") },
-  handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+  args: { token: v.string(), id: v.id("users") },
+  handler: async (ctx, { token, id }) => {
+    const user = await requireUser(ctx, token);
+    // Users may read their own record; admins may read anyone's.
+    if (user.role !== "admin" && user._id !== id) return null;
+    const target = await ctx.db.get(id);
+    if (!target) return null;
+    // Never leak password hashes to the client
+    const { passwordHash: _ph, ...safe } = target as Record<string, unknown>;
+    return safe;
   },
 });
 
 export const listClients = q({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    await requireAdmin(ctx, token);
+    const clients = await ctx.db
       .query("users")
       .filter((q) => q.eq(q.field("role"), "client"))
       .collect();
+    // Strip password hashes
+    return clients.map(({ passwordHash: _ph, ...safe }) => safe);
   },
 });
 
@@ -125,6 +178,7 @@ export const createClient = m({
 
 export const updateProfile = m({
   args: {
+    token: v.string(),
     id: v.id("users"),
     name: v.optional(v.string()),
     phone: v.optional(v.string()),
@@ -135,7 +189,10 @@ export const updateProfile = m({
       projectUpdate: v.boolean(),
     })),
   },
-  handler: async (ctx, { id, ...updates }) => {
+  handler: async (ctx, { token, id, ...updates }) => {
+    const user = await requireUser(ctx, token);
+    // Users may only update their own profile (admins included)
+    if (user._id !== id) throw new Error("FORBIDDEN");
     const cleanUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
     );
@@ -145,14 +202,17 @@ export const updateProfile = m({
 
 export const changePassword = m({
   args: {
+    token: v.string(),
     id: v.id("users"),
     currentPassword: v.string(),
     newPassword: v.string(),
   },
-  handler: async (ctx, { id, currentPassword, newPassword }) => {
-    const user = await ctx.db.get(id);
-    if (!user) throw new Error("User not found");
-    const valid = await verifyPassword(currentPassword, user.passwordHash);
+  handler: async (ctx, { token, id, currentPassword, newPassword }) => {
+    const user = await requireUser(ctx, token);
+    if (user._id !== id) throw new Error("FORBIDDEN");
+    const target = await ctx.db.get(id);
+    if (!target) throw new Error("User not found");
+    const valid = await verifyPassword(currentPassword, target.passwordHash);
     if (!valid) throw new Error("Current password is incorrect");
     if (newPassword.length < 6) throw new Error("New password must be at least 6 characters");
     const passwordHash = await hashPassword(newPassword);
@@ -162,6 +222,7 @@ export const changePassword = m({
 
 export const updateClient = m({
   args: {
+    token: v.string(),
     id: v.id("users"),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
@@ -169,7 +230,8 @@ export const updateClient = m({
     phone: v.optional(v.string()),
     status: v.optional(v.union(v.literal("active"), v.literal("inactive"))),
   },
-  handler: async (ctx, { id, ...updates }) => {
+  handler: async (ctx, { token, id, ...updates }) => {
+    await requireAdmin(ctx, token);
     const cleanUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
     );
@@ -178,8 +240,9 @@ export const updateClient = m({
 });
 
 export const resetClientPassword = m({
-  args: { id: v.id("users"), newPassword: v.string() },
-  handler: async (ctx, { id, newPassword }) => {
+  args: { token: v.string(), id: v.id("users"), newPassword: v.string() },
+  handler: async (ctx, { token, id, newPassword }) => {
+    await requireAdmin(ctx, token);
     const user = await ctx.db.get(id);
     if (!user) throw new Error("User not found");
     if (newPassword.length < 6) throw new Error("Password must be at least 6 characters");
@@ -189,8 +252,9 @@ export const resetClientPassword = m({
 });
 
 export const deleteClient = m({
-  args: { id: v.id("users") },
-  handler: async (ctx, { id }) => {
+  args: { token: v.string(), id: v.id("users") },
+  handler: async (ctx, { token, id }) => {
+    await requireAdmin(ctx, token);
     const user = await ctx.db.get(id);
     if (!user) throw new Error("User not found");
     if (user.role === "admin") throw new Error("Cannot delete admin user");
@@ -263,12 +327,14 @@ export const deleteClient = m({
 // ─── Projects ───────────────────────────────────────────────────
 
 export const listProjects = q({
-  args: { clientId: v.optional(v.id("users")) },
-  handler: async (ctx, { clientId }) => {
-    if (clientId) {
+  args: { token: v.string(), clientId: v.optional(v.id("users")) },
+  handler: async (ctx, { token, clientId }) => {
+    const user = await requireUser(ctx, token);
+    const scope = scopeClientId(user, clientId);
+    if (scope.clientId) {
       return await ctx.db
         .query("projects")
-        .withIndex("by_client", (q) => q.eq("clientId", clientId))
+        .withIndex("by_client", (q) => q.eq("clientId", scope.clientId!))
         .order("desc")
         .collect();
     }
@@ -277,17 +343,23 @@ export const listProjects = q({
 });
 
 export const getProject = q({
-  args: { slug: v.string() },
-  handler: async (ctx, { slug }) => {
-    return await ctx.db
+  args: { token: v.string(), slug: v.string() },
+  handler: async (ctx, { token, slug }) => {
+    const user = await requireUser(ctx, token);
+    const project = await ctx.db
       .query("projects")
       .withIndex("by_slug", (q) => q.eq("slug", slug))
       .first();
+    if (!project) return null;
+    // Clients may only read their own projects
+    if (user.role !== "admin" && project.clientId !== user._id) return null;
+    return project;
   },
 });
 
 export const createProject = m({
   args: {
+    token: v.string(),
     title: v.string(),
     slug: v.string(),
     description: v.string(),
@@ -299,7 +371,9 @@ export const createProject = m({
     tags: v.optional(v.array(v.string())),
     websiteUrl: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args_) => {
+    await requireAdmin(ctx, args_.token);
+    const { token: _t, ...args } = args_;
     const now = Date.now();
     return await ctx.db.insert("projects", {
       ...args,
@@ -313,6 +387,7 @@ export const createProject = m({
 
 export const updateProject = m({
   args: {
+    token: v.string(),
     id: v.id("projects"),
     title: v.optional(v.string()),
     status: v.optional(v.union(v.literal("active"), v.literal("completed"), v.literal("on-hold"), v.literal("draft"))),
@@ -321,7 +396,8 @@ export const updateProject = m({
     deadline: v.optional(v.string()),
     thumbnail: v.optional(v.string()),
   },
-  handler: async (ctx, { id, ...updates }) => {
+  handler: async (ctx, { token, id, ...updates }) => {
+    await requireAdmin(ctx, token);
     const cleanUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, v]) => v !== undefined)
     );
@@ -332,8 +408,12 @@ export const updateProject = m({
 // ─── Deliverables ───────────────────────────────────────────────
 
 export const listDeliverables = q({
-  args: { projectId: v.id("projects") },
-  handler: async (ctx, { projectId }) => {
+  args: { token: v.string(), projectId: v.id("projects") },
+  handler: async (ctx, { token, projectId }) => {
+    const user = await requireUser(ctx, token);
+    const project = await ctx.db.get(projectId);
+    if (!project) return [];
+    if (user.role !== "admin" && project.clientId !== user._id) return [];
     return await ctx.db
       .query("deliverables")
       .withIndex("by_project", (q) => q.eq("projectId", projectId))
@@ -343,8 +423,9 @@ export const listDeliverables = q({
 });
 
 export const addDeliverable = m({
-  args: { projectId: v.id("projects"), title: v.string(), order: v.number() },
-  handler: async (ctx, args) => {
+  args: { token: v.string(), projectId: v.id("projects"), title: v.string(), order: v.number() },
+  handler: async (ctx, { token, ...args }) => {
+    await requireAdmin(ctx, token);
     return await ctx.db.insert("deliverables", {
       ...args,
       completed: false,
@@ -352,9 +433,11 @@ export const addDeliverable = m({
   },
 });
 
+// Only admins toggle deliverable completion — it's the studio's progress tracker
 export const toggleDeliverable = m({
-  args: { id: v.id("deliverables"), completed: v.boolean() },
-  handler: async (ctx, { id, completed }) => {
+  args: { token: v.string(), id: v.id("deliverables"), completed: v.boolean() },
+  handler: async (ctx, { token, id, completed }) => {
+    await requireAdmin(ctx, token);
     await ctx.db.patch(id, { completed });
   },
 });
@@ -363,18 +446,23 @@ export const toggleDeliverable = m({
 
 export const listInvoices = q({
   args: {
+    token: v.string(),
     clientId: v.optional(v.id("users")),
     status: v.optional(v.union(v.literal("draft"), v.literal("sent"), v.literal("paid"), v.literal("overdue"), v.literal("cancelled"))),
   },
-  handler: async (ctx, { clientId, status }) => {
-    let q = ctx.db.query("invoices").order("desc");
-    if (clientId) {
-      q = ctx.db
+  handler: async (ctx, { token, clientId, status }) => {
+    const user = await requireUser(ctx, token);
+    const scope = scopeClientId(user, clientId);
+    let results;
+    if (scope.clientId) {
+      results = await ctx.db
         .query("invoices")
-        .withIndex("by_client", (q) => q.eq("clientId", clientId))
-        .order("desc");
+        .withIndex("by_client", (q) => q.eq("clientId", scope.clientId!))
+        .order("desc")
+        .collect();
+    } else {
+      results = await ctx.db.query("invoices").order("desc").collect();
     }
-    let results = await q.collect();
     if (status) {
       results = results.filter((inv) => inv.status === status);
     }
@@ -383,14 +471,19 @@ export const listInvoices = q({
 });
 
 export const getInvoice = q({
-  args: { id: v.id("invoices") },
-  handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+  args: { token: v.string(), id: v.id("invoices") },
+  handler: async (ctx, { token, id }) => {
+    const user = await requireUser(ctx, token);
+    const invoice = await ctx.db.get(id);
+    if (!invoice) return null;
+    if (user.role !== "admin" && invoice.clientId !== user._id) return null;
+    return invoice;
   },
 });
 
 export const createInvoice = m({
   args: {
+    token: v.string(),
     number: v.string(),
     clientId: v.id("users"),
     projectId: v.optional(v.id("projects")),
@@ -411,7 +504,9 @@ export const createInvoice = m({
     currency: v.optional(v.string()),
     notes: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args_) => {
+    await requireAdmin(ctx, args_.token);
+    const { token: _t, ...args } = args_;
     const now = Date.now();
     return await ctx.db.insert("invoices", {
       ...args,
@@ -424,8 +519,9 @@ export const createInvoice = m({
 });
 
 export const updateInvoiceStatus = m({
-  args: { id: v.id("invoices"), status: v.union(v.literal("draft"), v.literal("sent"), v.literal("paid"), v.literal("overdue"), v.literal("cancelled")) },
-  handler: async (ctx, { id, status }) => {
+  args: { token: v.string(), id: v.id("invoices"), status: v.union(v.literal("draft"), v.literal("sent"), v.literal("paid"), v.literal("overdue"), v.literal("cancelled")) },
+  handler: async (ctx, { token, id, status }) => {
+    await requireAdmin(ctx, token);
     await ctx.db.patch(id, { status, updatedAt: Date.now() });
   },
 });
@@ -450,14 +546,17 @@ export const getFileUrl = q({
 
 export const listFiles = q({
   args: {
+    token: v.string(),
     clientId: v.optional(v.id("users")),
     projectId: v.optional(v.id("projects")),
   },
-  handler: async (ctx, { clientId, projectId }) => {
-    if (clientId) {
+  handler: async (ctx, { token, clientId, projectId }) => {
+    const user = await requireUser(ctx, token);
+    const scope = scopeClientId(user, clientId);
+    if (scope.clientId) {
       return await ctx.db
         .query("files")
-        .withIndex("by_client", (q) => q.eq("clientId", clientId))
+        .withIndex("by_client", (q) => q.eq("clientId", scope.clientId!))
         .order("desc")
         .collect();
     }
@@ -472,8 +571,10 @@ export const listFiles = q({
   },
 });
 
+// Clients may only register files under their own account; admins any client.
 export const createFile = m({
   args: {
+    token: v.string(),
     name: v.string(),
     clientId: v.id("users"),
     projectId: v.optional(v.id("projects")),
@@ -484,14 +585,31 @@ export const createFile = m({
     description: v.optional(v.string()),
     uploadedBy: v.id("users"),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { token, ...args }) => {
+    const user = await requireUser(ctx, token);
+    if (user.role !== "admin" && args.clientId !== user._id) {
+      throw new Error("FORBIDDEN");
+    }
     return await ctx.db.insert("files", { ...args, createdAt: Date.now() });
   },
 });
 
+// Only the owning client or an admin may delete a file record
 export const deleteFile = m({
-  args: { id: v.id("files") },
-  handler: async (ctx, { id }) => {
+  args: { token: v.string(), id: v.id("files") },
+  handler: async (ctx, { token, id }) => {
+    const user = await requireUser(ctx, token);
+    const file = await ctx.db.get(id);
+    if (!file) return;
+    if (user.role !== "admin" && file.clientId !== user._id) throw new Error("FORBIDDEN");
+    // Best-effort: remove the stored blob too
+    if (file.storageId) {
+      try {
+        await ctx.storage.delete(file.storageId as Id<"_storage">);
+      } catch {
+        // blob already gone — ignore
+      }
+    }
     await ctx.db.delete(id);
   },
 });
@@ -499,12 +617,14 @@ export const deleteFile = m({
 // ─── Messages ───────────────────────────────────────────────────
 
 export const listThreads = q({
-  args: { clientId: v.optional(v.id("users")) },
-  handler: async (ctx, { clientId }) => {
-    if (clientId) {
+  args: { token: v.string(), clientId: v.optional(v.id("users")) },
+  handler: async (ctx, { token, clientId }) => {
+    const user = await requireUser(ctx, token);
+    const scope = scopeClientId(user, clientId);
+    if (scope.clientId) {
       return await ctx.db
         .query("threads")
-        .withIndex("by_client", (q) => q.eq("clientId", clientId))
+        .withIndex("by_client", (q) => q.eq("clientId", scope.clientId!))
         .order("desc")
         .collect();
     }
@@ -517,8 +637,12 @@ export const listThreads = q({
 });
 
 export const getThreadMessages = q({
-  args: { threadId: v.id("threads") },
-  handler: async (ctx, { threadId }) => {
+  args: { token: v.string(), threadId: v.id("threads") },
+  handler: async (ctx, { token, threadId }) => {
+    const user = await requireUser(ctx, token);
+    const thread = await ctx.db.get(threadId);
+    if (!thread) return [];
+    if (user.role !== "admin" && thread.clientId !== user._id) return [];
     return await ctx.db
       .query("messages")
       .withIndex("by_thread", (q) => q.eq("threadId", threadId))
@@ -529,11 +653,15 @@ export const getThreadMessages = q({
 
 export const createThread = m({
   args: {
+    token: v.string(),
     subject: v.string(),
     clientId: v.id("users"),
     projectId: v.optional(v.id("projects")),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { token, ...args }) => {
+    const user = await requireUser(ctx, token);
+    // Clients can only create threads for themselves
+    if (user.role !== "admin" && args.clientId !== user._id) throw new Error("FORBIDDEN");
     const now = Date.now();
     return await ctx.db.insert("threads", {
       ...args,
@@ -545,19 +673,22 @@ export const createThread = m({
 
 export const sendMessage = m({
   args: {
+    token: v.string(),
     threadId: v.id("threads"),
     body: v.string(),
-    senderId: v.id("users"),
-    senderRole: v.union(v.literal("admin"), v.literal("client")),
   },
-  handler: async (ctx, { threadId, body, senderId, senderRole }) => {
+  handler: async (ctx, { token, threadId, body }) => {
+    const user = await requireUser(ctx, token);
+    const thread = await ctx.db.get(threadId);
+    if (!thread) throw new Error("Thread not found");
+    if (user.role !== "admin" && thread.clientId !== user._id) throw new Error("FORBIDDEN");
     const now = Date.now();
     await ctx.db.patch(threadId, { lastMessageAt: now });
     return await ctx.db.insert("messages", {
       threadId,
       body,
-      senderId,
-      senderRole,
+      senderId: user._id,
+      senderRole: user.role,
       createdAt: now,
     });
   },
@@ -566,8 +697,10 @@ export const sendMessage = m({
 // ─── Modules ────────────────────────────────────────────────────
 
 export const listModules = q({
-  args: { clientId: v.id("users") },
-  handler: async (ctx, { clientId }) => {
+  args: { token: v.string(), clientId: v.id("users") },
+  handler: async (ctx, { token, clientId }) => {
+    const user = await requireUser(ctx, token);
+    if (user.role !== "admin" && clientId !== user._id) return [];
     return await ctx.db
       .query("modules")
       .withIndex("by_client", (q) => q.eq("clientId", clientId))
@@ -576,21 +709,24 @@ export const listModules = q({
 });
 
 export const toggleModule = m({
-  args: { id: v.id("modules"), enabled: v.boolean() },
-  handler: async (ctx, { id, enabled }) => {
+  args: { token: v.string(), id: v.id("modules"), enabled: v.boolean() },
+  handler: async (ctx, { token, id, enabled }) => {
+    await requireAdmin(ctx, token);
     await ctx.db.patch(id, { enabled });
   },
 });
 
 export const updateModuleConfig = m({
-  args: { id: v.id("modules"), config: v.any() },
-  handler: async (ctx, { id, config }) => {
+  args: { token: v.string(), id: v.id("modules"), config: v.any() },
+  handler: async (ctx, { token, id, config }) => {
+    await requireAdmin(ctx, token);
     await ctx.db.patch(id, { config });
   },
 });
 
 export const addModule = m({
   args: {
+    token: v.string(),
     clientId: v.id("users"),
     title: v.string(),
     slug: v.string(),
@@ -600,7 +736,8 @@ export const addModule = m({
     config: v.optional(v.any()),
     enabled: v.boolean(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { token, ...args }) => {
+    await requireAdmin(ctx, token);
     return await ctx.db.insert("modules", { ...args, createdAt: Date.now() });
   },
 });
@@ -609,16 +746,23 @@ export const addModule = m({
 
 export const listActivity = q({
   args: {
+    token: v.string(),
     clientId: v.optional(v.id("users")),
     projectId: v.optional(v.id("projects")),
     limit: v.optional(v.number()),
   },
-  handler: async (ctx, { clientId, projectId, limit }) => {
-    let q = ctx.db.query("activity").order("desc");
-    let results = await q.collect();
-
-    if (clientId) {
-      results = results.filter((a) => a.clientId === clientId);
+  handler: async (ctx, { token, clientId, projectId, limit }) => {
+    const user = await requireUser(ctx, token);
+    const scope = scopeClientId(user, clientId);
+    let results;
+    if (scope.clientId) {
+      results = await ctx.db
+        .query("activity")
+        .withIndex("by_client", (q) => q.eq("clientId", scope.clientId!))
+        .order("desc")
+        .collect();
+    } else {
+      results = await ctx.db.query("activity").order("desc").collect();
     }
     if (projectId) {
       results = results.filter((a) => a.projectId === projectId);
@@ -632,198 +776,37 @@ export const listActivity = q({
 
 export const logActivity = m({
   args: {
+    token: v.string(),
     clientId: v.optional(v.id("users")),
     projectId: v.optional(v.id("projects")),
     type: v.union(v.literal("comment"), v.literal("update"), v.literal("upload"), v.literal("milestone"), v.literal("invoice")),
     message: v.string(),
-    userId: v.optional(v.id("users")),
   },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert("activity", { ...args, createdAt: Date.now() });
+  handler: async (ctx, { token, ...args }) => {
+    // userId comes from the session, never from the caller
+    const user = await requireUser(ctx, token);
+    return await ctx.db.insert("activity", {
+      ...args,
+      userId: user._id,
+      createdAt: Date.now(),
+    });
   },
 });
 
 // ─── Seed Data ──────────────────────────────────────────────────
+// SECURITY: seed functions are disabled in production. They were publicly callable,
+// letting anyone wipe the DB via resetAndSeed. Re-enable only for local dev.
 
 export const seed = m({
   args: {},
   handler: async (ctx) => {
-    // Check if already seeded
-    const existing = await ctx.db.query("users").first();
-    if (existing) return "Already seeded";
-
-    // Create admin
-    const adminPassHash = await hashPassword("Remybrica-1");
-    const adminId = await ctx.db.insert("users", {
-      name: "Etia",
-      email: "etiawork@gmail.com",
-      passwordHash: adminPassHash,
-      role: "admin",
-      status: "active",
-      createdAt: Date.now(),
-    });
-
-    // Create sample client
-    const clientPassHash = await hashPassword("demo123");
-    const clientId = await ctx.db.insert("users", {
-      name: "Sarah Johnson",
-      email: "sarah@techcorp.com",
-      passwordHash: clientPassHash,
-      role: "client",
-      company: "TechCorp International",
-      phone: "+1 (555) 123-4567",
-      status: "active",
-      createdAt: Date.now(),
-    });
-
-    // Create sample project
-    const projectId = await ctx.db.insert("projects", {
-      title: "Website Redesign",
-      slug: "website-redesign",
-      description: "Complete redesign of the corporate website",
-      brief: "Full redesign including homepage, about, services, and contact pages.",
-      status: "active",
-      progress: 75,
-      category: "Website",
-      clientId,
-      startDate: "2026-01-15",
-      deadline: "2026-05-15",
-      tags: ["design", "development"],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-
-    // Deliverables
-    await ctx.db.insert("deliverables", { projectId, title: "Homepage mockup", completed: true, order: 1 });
-    await ctx.db.insert("deliverables", { projectId, title: "UI style guide", completed: true, order: 2 });
-    await ctx.db.insert("deliverables", { projectId, title: "Front-end development", completed: false, order: 3 });
-    await ctx.db.insert("deliverables", { projectId, title: "QA testing & launch", completed: false, order: 4 });
-
-    // Sample invoice
-    await ctx.db.insert("invoices", {
-      number: "INV-2026-001",
-      clientId,
-      projectId,
-      status: "sent",
-      issueDate: "2026-04-01",
-      dueDate: "2026-04-30",
-      items: [
-        { description: "Website Design", quantity: 1, unitPrice: 3000, total: 3000 },
-        { description: "Front-end Development", quantity: 1, unitPrice: 4000, total: 4000 },
-        { description: "QA Testing", quantity: 1, unitPrice: 1000, total: 1000 },
-      ],
-      subtotal: 8000,
-      taxRate: 10,
-      taxAmount: 800,
-      total: 8800,
-      currency: "USD",
-      notes: "Payment due within 30 days.",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-
-    // Sample module
-    await ctx.db.insert("modules", {
-      clientId,
-      title: "AI Marketing Workflow",
-      slug: "ai-marketing",
-      description: "AI-powered marketing automation",
-      category: "AI Workflow",
-      enabled: true,
-      createdAt: Date.now(),
-    });
-
-    return "Seed complete! Admin: etiawork@gmail.com (Remybrica-1), Client: sarah@techcorp.com (demo123)";
+    throw new Error("DISABLED: seed functions are blocked in production. Use the Convex dashboard or local dev.");
   },
 });
 
 export const resetAndSeed = m({
   args: {},
   handler: async (ctx) => {
-    // Delete all data from all tables
-    const tables = ["users", "projects", "invoices", "files", "threads", "messages", "deliverables", "modules", "activity"] as const;
-    for (const table of tables) {
-      const docs = await ctx.db.query(table).collect();
-      for (const doc of docs) {
-        await ctx.db.delete(doc._id);
-      }
-    }
-    // Re-seed
-    const adminPassHash = await hashPassword("Remybrica-1");
-    const adminId = await ctx.db.insert("users", {
-      name: "Etia",
-      email: "etiawork@gmail.com",
-      passwordHash: adminPassHash,
-      role: "admin",
-      status: "active",
-      createdAt: Date.now(),
-    });
-
-    const clientPassHash = await hashPassword("demo123");
-    const clientId = await ctx.db.insert("users", {
-      name: "Sarah Johnson",
-      email: "sarah@techcorp.com",
-      passwordHash: clientPassHash,
-      role: "client",
-      company: "TechCorp International",
-      phone: "+1 (555) 123-4567",
-      status: "active",
-      createdAt: Date.now(),
-    });
-
-    const projectId = await ctx.db.insert("projects", {
-      title: "Website Redesign",
-      slug: "website-redesign",
-      description: "Complete redesign of the corporate website",
-      brief: "Full redesign including homepage, about, services, and contact pages.",
-      status: "active",
-      progress: 75,
-      category: "Website",
-      clientId,
-      startDate: "2026-01-15",
-      deadline: "2026-05-15",
-      tags: ["design", "development"],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-
-    await ctx.db.insert("deliverables", { projectId, title: "Homepage mockup", completed: true, order: 1 });
-    await ctx.db.insert("deliverables", { projectId, title: "UI style guide", completed: true, order: 2 });
-    await ctx.db.insert("deliverables", { projectId, title: "Front-end development", completed: false, order: 3 });
-    await ctx.db.insert("deliverables", { projectId, title: "QA testing & launch", completed: false, order: 4 });
-
-    await ctx.db.insert("invoices", {
-      number: "INV-2026-001",
-      clientId,
-      projectId,
-      status: "sent",
-      issueDate: "2026-04-01",
-      dueDate: "2026-04-30",
-      items: [
-        { description: "Website Design", quantity: 1, unitPrice: 3000, total: 3000 },
-        { description: "Front-end Development", quantity: 1, unitPrice: 4000, total: 4000 },
-        { description: "QA Testing", quantity: 1, unitPrice: 1000, total: 1000 },
-      ],
-      subtotal: 8000,
-      taxRate: 10,
-      taxAmount: 800,
-      total: 8800,
-      currency: "USD",
-      notes: "Payment due within 30 days.",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-
-    await ctx.db.insert("modules", {
-      clientId,
-      title: "AI Marketing Workflow",
-      slug: "ai-marketing",
-      description: "AI-powered marketing automation",
-      category: "AI Workflow",
-      enabled: true,
-      createdAt: Date.now(),
-    });
-
-    return "Reset & seed complete! Admin: etiawork@gmail.com (Remybrica-1), Client: sarah@techcorp.com (demo123)";
+    throw new Error("DISABLED: seed functions are blocked in production. Use the Convex dashboard or local dev.");
   },
 });

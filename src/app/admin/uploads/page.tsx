@@ -56,7 +56,7 @@ export default function AdminUploadsPage() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"grid" | "list">("grid");
 
-  const files = useQuery(api.projects.listFiles, {});
+  const files = useQuery(api.projects.listFiles, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
   const deleteFile = useMutation(api.projects.deleteFile);
 
   if (user?.role !== "admin") {
@@ -149,7 +149,7 @@ export default function AdminUploadsPage() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive"
-                          onClick={() => deleteFile({ id: file._id })}
+                          onClick={() => deleteFile({ token: localStorage.getItem("oookea_session") || "", id: file._id })}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>

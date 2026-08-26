@@ -20,10 +20,10 @@ export default function AdminMessagesPage() {
   const [reply, setReply] = useState("");
   const [search, setSearch] = useState("");
 
-  const threads = useQuery(api.projects.listThreads, {});
+  const threads = useQuery(api.projects.listThreads, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
   const messages = useQuery(
     api.projects.getThreadMessages,
-    selected ? { threadId: selected as Id<"threads"> } : "skip"
+    selected ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  threadId: selected as Id<"threads"> } : "skip"
   );
   const sendMessage = useMutation(api.projects.sendMessage);
 
@@ -48,11 +48,8 @@ export default function AdminMessagesPage() {
 
   const handleReply = async () => {
     if (!reply.trim() || !selected || !user) return;
-    await sendMessage({
-      threadId: selected as Id<"threads">,
+    await sendMessage({ token: localStorage.getItem("oookea_session") || "", threadId: selected as Id<"threads">,
       body: reply,
-      senderId: user.id as Id<"users">,
-      senderRole: "admin",
     });
     setReply("");
   };

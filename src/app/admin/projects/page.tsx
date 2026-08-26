@@ -83,7 +83,12 @@ function CreateProjectDialog() {
 
   const createProject = useMutation(api.projects.createProject);
 
-  const clients = useQuery(api.projects.listClients);
+  const clients = useQuery(
+    api.projects.listClients,
+    typeof window !== "undefined" && localStorage.getItem("oookea_session")
+      ? { token: localStorage.getItem("oookea_session") || "" }
+      : "skip"
+  );
 
   const handleSubmit = async () => {
     if (!client || !title || !category) return;
@@ -91,6 +96,7 @@ function CreateProjectDialog() {
     const slug = title.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
 
     await createProject({
+      token: localStorage.getItem("oookea_session") || "",
       title,
       slug,
       description,
@@ -218,7 +224,7 @@ function AdminProjectCard({ project }: { project: { _id: Id<"projects">; title: 
   const catColor = categoryColors[project.category] || categoryColors.Other;
 
   // Fetch client name
-  const client = useQuery(api.projects.getUserById, { id: project.clientId });
+  const client = useQuery(api.projects.getUserById, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: project.clientId }) as any; // safe-stripped record
 
   return (
     <Card className="group border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5">
@@ -285,8 +291,13 @@ export default function AdminProjectsPage() {
   const router = useRouter();
   const [filter, setFilter] = useState("all");
 
-  const projects = useQuery(api.projects.listProjects, {});
-  const clients = useQuery(api.projects.listClients);
+  const projects = useQuery(api.projects.listProjects, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
+  const clients = useQuery(
+    api.projects.listClients,
+    typeof window !== "undefined" && localStorage.getItem("oookea_session")
+      ? { token: localStorage.getItem("oookea_session") || "" }
+      : "skip"
+  ) as any[] | undefined; // safe-stripped records
 
   // Admin guard
   useEffect(() => {

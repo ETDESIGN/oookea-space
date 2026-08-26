@@ -72,12 +72,12 @@ export default function MessagesPage() {
 
   const threads = useQuery(
     api.projects.listThreads,
-    clientId ? { clientId } : {}
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" }
   );
 
   const selectedThreadMessages = useQuery(
     api.projects.getThreadMessages,
-    selectedThreadId ? { threadId: selectedThreadId as Id<"threads"> } : "skip"
+    selectedThreadId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  threadId: selectedThreadId as Id<"threads"> } : "skip"
   );
 
   const sendMessage = useMutation(api.projects.sendMessage);
@@ -102,18 +102,16 @@ export default function MessagesPage() {
   const handleSend = async () => {
     if (!replyText.trim() || !selectedThreadId) return;
     await sendMessage({
+      token: localStorage.getItem("oookea_session") || "",
       threadId: selectedThreadId as Id<"threads">,
       body: replyText,
-      senderId: user?.id as Id<"users">,
-      senderRole: user?.role === "admin" ? "admin" : "client",
     });
     // Keep the dashboard activity feed alive
-    await logActivity({
+    await logActivity({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), 
       clientId: selectedThread?.clientId,
       projectId: selectedThread?.projectId,
       type: "comment",
       message: `${selectedThread?.subject ?? "Message"}: new message from ${user?.name ?? "user"}`,
-      userId: user?.id as Id<"users"> | undefined,
     }).catch(() => {});
     setReplyText("");
   };
@@ -124,23 +122,22 @@ export default function MessagesPage() {
     try {
       // For clients, their own ID is the thread owner; admins pick a client later in admin views
       const ownerId = user.role === "admin" ? (user.id as Id<"users">) : (user.id as Id<"users">);
-      const threadId = await createThread({
+      const threadId = await createThread({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), 
         subject: newSubject.trim(),
         clientId: ownerId,
       });
       if (newBody.trim()) {
         await sendMessage({
+          token: localStorage.getItem("oookea_session") || "",
           threadId: threadId as Id<"threads">,
           body: newBody.trim(),
-          senderId: user.id as Id<"users">,
-          senderRole: user.role === "admin" ? "admin" : "client",
         });
       }
       setSelectedThreadId(threadId as string);
       setShowNewThread(false);
       setNewSubject("");
       setNewBody("");
-    } finally {
+    } finally { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), 
       setCreating(false);
     }
   };

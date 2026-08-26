@@ -14,7 +14,7 @@ export default function DeliverablesPage() {
 
   const modules = useQuery(
     api.projects.listModules,
-    user?.id ? { clientId: user.id as Id<"users"> } : "skip"
+    user?.id ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId: user.id as Id<"users"> } : "skip"
   );
 
   // Find the first vault-type module for this client

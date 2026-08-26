@@ -37,9 +37,9 @@ export default function AdminDashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const clients = useQuery(api.projects.listClients, {});
-  const projects = useQuery(api.projects.listProjects, {});
-  const invoices = useQuery(api.projects.listInvoices, {});
+  const clients = useQuery(api.projects.listClients, { token: localStorage.getItem("oookea_session") || "" });
+  const projects = useQuery(api.projects.listProjects, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
+  const invoices = useQuery(api.projects.listInvoices, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
 
   useEffect(() => {
     if (user && user.role !== "admin") {

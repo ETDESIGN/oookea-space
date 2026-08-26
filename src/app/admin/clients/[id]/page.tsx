@@ -58,19 +58,19 @@ export default function ClientDetailPage() {
 
   const client = useQuery(
     api.projects.getUserById,
-    clientId ? { id: clientId as Id<"users"> } : "skip"
-  );
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: clientId as Id<"users"> } : "skip"
+  ) as any; // safe-stripped user record (no passwordHash)
   const projects = useQuery(
     api.projects.listProjects,
-    clientId ? { clientId: clientId as Id<"users"> } : "skip"
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId: clientId as Id<"users"> } : "skip"
   );
   const invoices = useQuery(
     api.projects.listInvoices,
-    clientId ? { clientId: clientId as Id<"users"> } : "skip"
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId: clientId as Id<"users"> } : "skip"
   );
   const modules = useQuery(
     api.projects.listModules,
-    clientId ? { clientId: clientId as Id<"users"> } : "skip"
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId: clientId as Id<"users"> } : "skip"
   );
   const updateClient = useMutation(api.projects.updateClient);
   const toggleModule = useMutation(api.projects.toggleModule);
@@ -109,26 +109,26 @@ export default function ClientDetailPage() {
     if (!client) return;
     const newStatus = client.status === "active" ? "inactive" : "active";
     setClientActive(newStatus === "active");
-    await updateClient({
+    await updateClient({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), 
       id: client._id as Id<"users">,
       status: newStatus as "active" | "inactive",
     });
   };
 
   const handleToggleModule = async (moduleId: string, enabled: boolean) => {
-    await toggleModule({ id: moduleId as Id<"modules">, enabled });
+    await toggleModule({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: moduleId as Id<"modules">, enabled });
   };
 
   const handleResetPassword = async () => {
     if (!client || !newPassword || newPassword.length < 6) return;
-    await resetClientPassword({ id: client._id as Id<"users">, newPassword });
+    await resetClientPassword({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: client._id as Id<"users">, newPassword });
     setResetPwDialogOpen(false);
     setNewPassword("");
   };
 
   const handleDeleteClient = async () => {
     if (!client) return;
-    await deleteClientMutation({ id: client._id as Id<"users"> });
+    await deleteClientMutation({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: client._id as Id<"users"> });
     window.location.href = "/admin/clients";
   };
 
@@ -168,7 +168,7 @@ export default function ClientDetailPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
                         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
-                          {client.name.split(" ").map((n) => n[0]).join("")}
+                          {client.name.split(" ").map((n: string) => n[0]).join("")}
                         </div>
                         <div>
                           <h2 className="text-xl font-bold text-foreground">{client.name}</h2>

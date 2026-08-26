@@ -53,21 +53,21 @@ function AuthInner({ children }: { children: ReactNode }) {
   // Fetch user from Convex when we have a stored ID
   const convexUser = useQuery(
     api.projects.getUserById,
-    storedUserId ? { id: storedUserId as Id<"users"> } : "skip"
+    storedUserId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: storedUserId as Id<"users"> } : "skip"
   );
 
   useEffect(() => {
     if (convexUser !== undefined) {
       if (convexUser) {
         setUser({
-          id: convexUser._id,
-          name: convexUser.name,
-          email: convexUser.email,
-          role: convexUser.role as "admin" | "client",
-          company: convexUser.company ?? undefined,
-          phone: convexUser.phone ?? undefined,
-          avatar: convexUser.avatar ?? undefined,
-          status: convexUser.status as "active" | "inactive",
+          id: (convexUser as any)._id,
+          name: (convexUser as any).name,
+          email: (convexUser as any).email,
+          role: (convexUser as any).role as "admin" | "client",
+          company: (convexUser as any).company ?? undefined,
+          phone: (convexUser as any).phone ?? undefined,
+          avatar: (convexUser as any).avatar ?? undefined,
+          status: (convexUser as any).status as "active" | "inactive",
         });
       } else {
         localStorage.removeItem("oookea_user_id");
@@ -84,17 +84,19 @@ function AuthInner({ children }: { children: ReactNode }) {
       const result = await convex!.mutation(api.projects.loginUser, { email, password });
       if (result) {
         const userData: User = {
-          id: result._id,
-          name: result.name,
-          email: result.email,
-          role: result.role as "admin" | "client",
-          company: result.company ?? undefined,
-          phone: result.phone ?? undefined,
-          status: result.status as "active" | "inactive",
+          id: (result as any)._id,
+          name: (result as any).name,
+          email: (result as any).email,
+          role: (result as any).role as "admin" | "client",
+          company: (result as any).company ?? undefined,
+          phone: (result as any).phone ?? undefined,
+          status: (result as any).status as "active" | "inactive",
         };
         setUser(userData);
-        localStorage.setItem("oookea_user_id", result._id);
-        setStoredUserId(result._id);
+        localStorage.setItem("oookea_user_id", (result as any)._id);
+        // Persist the server-issued session token — every Convex call sends it
+        localStorage.setItem("oookea_session", (result as any).sessionToken);
+        setStoredUserId((result as any)._id);
         return { success: true };
       }
       return { success: false, error: "Invalid email or password" };
@@ -104,8 +106,14 @@ function AuthInner({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    // Invalidate the server-side session too
+    const token = localStorage.getItem("oookea_session");
+    if (token && convex) {
+      convex.mutation(api.projects.logoutUser, { token }).catch(() => {});
+    }
     setUser(null);
     localStorage.removeItem("oookea_user_id");
+    localStorage.removeItem("oookea_session");
     setStoredUserId(null);
   }, []);
 

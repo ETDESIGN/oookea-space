@@ -152,6 +152,16 @@ export default defineSchema({
     .index("by_client", ["clientId"])
     .index("by_client_slug", ["clientId", "slug"]),
 
+  // ─── Sessions ──────────────────────────────────────────────────
+  sessions: defineTable({
+    userId: v.id("users"),
+    token: v.string(),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_token", ["token"])
+    .index("by_user", ["userId"]),
+
   // ─── Activity Log ─────────────────────────────────────────────
   activity: defineTable({
     clientId: v.optional(v.id("users")),

@@ -42,10 +42,13 @@ function formatTimeAgo(timestamp: number): string {
 }
 
 export function ActivityFeed() {
-  const { user } = useAuth();
+    const { user } = useAuth();
   const clientId = user?.role === "admin" ? undefined : (user?.id as Id<"users">);
-  const activityArgs = clientId ? { clientId, limit: 5 } : { limit: 5 };
-  const activity = useQuery(api.projects.listActivity, activityArgs);
+  const sessionToken = typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : "";
+  const activityArgs = clientId
+    ? { token: sessionToken, clientId, limit: 5 }
+    : { token: sessionToken, limit: 5 };
+  const activity = useQuery(api.projects.listActivity, sessionToken ? activityArgs : "skip");
 
   if (activity === undefined) {
     return (

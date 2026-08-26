@@ -58,13 +58,13 @@ export default function InvoiceDetailPage({
 
   const invoice = useQuery(
     api.projects.getInvoice,
-    id ? { id: id as Id<"invoices"> } : "skip"
+    id ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: id as Id<"invoices"> } : "skip"
   );
 
   // Fetch client info for the invoice
   const client = useQuery(
     api.projects.getUserById,
-    invoice ? { id: invoice.clientId } : "skip"
+    invoice ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: invoice.clientId } : "skip"
   );
 
   const handleDownloadPDF = useCallback(async () => {
@@ -77,9 +77,9 @@ export default function InvoiceDetailPage({
           issueDate={invoice.issueDate}
           dueDate={invoice.dueDate}
           status={invoice.status}
-          clientName={client?.name || user?.name || "Client"}
-          clientEmail={client?.email || user?.email || ""}
-          clientCompany={client?.company || user?.company}
+          clientName={(client as any)?.name || user?.name || "Client"}
+          clientEmail={(client as any)?.email || user?.email || ""}
+          clientCompany={(client as any)?.company || user?.company}
           items={invoice.items}
           subtotal={invoice.subtotal}
           taxRate={invoice.taxRate}

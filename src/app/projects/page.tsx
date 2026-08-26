@@ -28,7 +28,7 @@ export default function ProjectsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const clientId = user?.role === "admin" ? undefined : (user?.id as Id<"users">);
-  const projects = useQuery(api.projects.listProjects, { clientId });
+  const projects = useQuery(api.projects.listProjects, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId });
 
   const projectList = projects ?? [];
 

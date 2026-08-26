@@ -39,14 +39,14 @@ export default function ProjectDetailPage() {
   const slug = params.slug;
   const [newComment, setNewComment] = useState("");
 
-  const project = useQuery(api.projects.getProject, { slug });
+  const project = useQuery(api.projects.getProject, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  slug });
   const deliverables = useQuery(
     api.projects.listDeliverables,
-    project ? { projectId: project._id } : "skip"
+    project ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  projectId: project._id } : "skip"
   );
   const activity = useQuery(
     api.projects.listActivity,
-    project ? { projectId: project._id, limit: 10 } : "skip"
+    project ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  projectId: project._id, limit: 10 } : "skip"
   );
 
   const toggleDeliverable = useMutation(api.projects.toggleDeliverable);
@@ -141,7 +141,7 @@ export default function ProjectDetailPage() {
                       {deliverables.map((d) => (
                         <button
                           key={d._id}
-                          onClick={() => toggleDeliverable({ id: d._id, completed: !d.completed })}
+                          onClick={() => toggleDeliverable({ token: localStorage.getItem("oookea_session") || "", id: d._id, completed: !d.completed })}
                           className="flex w-full items-center gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:bg-background"
                         >
                           {d.completed ? (

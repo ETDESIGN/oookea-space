@@ -40,7 +40,7 @@ export default function SettingsPage() {
 
   const profile = useQuery(
     api.projects.getUserById,
-    user?.id ? { id: user.id as Id<"users"> } : "skip"
+    user?.id ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: user.id as Id<"users"> } : "skip"
   );
 
   const updateProfile = useMutation(api.projects.updateProfile);
@@ -48,9 +48,9 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (profile) {
-      setName(profile.name ?? "");
-      setPhone(profile.phone ?? "");
-      setCompany(profile.company ?? "");
+      setName((profile as any).name ?? "");
+      setPhone((profile as any).phone ?? "");
+      setCompany((profile as any).company ?? "");
       if ((profile as any).notifications) {
         setNotifications((profile as any).notifications);
       }
@@ -73,7 +73,7 @@ export default function SettingsPage() {
     if (!user?.id) return;
     setSaving(true);
     try {
-      await updateProfile({
+      await updateProfile({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), 
         id: user.id as Id<"users">,
         name,
         phone: phone || undefined,
@@ -96,7 +96,7 @@ export default function SettingsPage() {
     if (newPw.length < 6) { setPwError("Password must be at least 6 characters"); return; }
     setPwSaving(true);
     try {
-      await changePassword({ id: user.id as Id<"users">, currentPassword: currentPw, newPassword: newPw });
+      await changePassword({ token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  id: user.id as Id<"users">, currentPassword: currentPw, newPassword: newPw });
       setCurrentPw(""); setNewPw(""); setConfirmPw("");
       setPwSaved(true);
       setTimeout(() => setPwSaved(false), 2500);
@@ -141,7 +141,7 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" value={profile?.email ?? user?.email ?? ""} disabled className="border-border bg-background text-muted-foreground" />
+                <Input id="email" value={(profile as any)?.email ?? user?.email ?? ""} disabled className="border-border bg-background text-muted-foreground" />
                 <p className="text-xs text-muted-foreground">Contact your account manager to change your email.</p>
               </div>
               <div className="space-y-2">
