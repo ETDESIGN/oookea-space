@@ -162,6 +162,24 @@ export default defineSchema({
     .index("by_token", ["token"])
     .index("by_user", ["userId"]),
 
+  // ─── Notifications ────────────────────────────────────────────
+  notifications: defineTable({
+    userId: v.id("users"),          // recipient
+    type: v.union(
+      v.literal("message"),
+      v.literal("invoice"),
+      v.literal("project"),
+      v.literal("file")
+    ),
+    title: v.string(),
+    body: v.optional(v.string()),
+    link: v.optional(v.string()),   // in-app route, e.g. /invoices/xyz
+    read: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId", "createdAt"])
+    .index("by_user_unread", ["userId", "read"]),
+
   // ─── Activity Log ─────────────────────────────────────────────
   activity: defineTable({
     clientId: v.optional(v.id("users")),

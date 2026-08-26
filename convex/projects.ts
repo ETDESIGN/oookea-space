@@ -4,31 +4,111 @@ import { Id } from "./_generated/dataModel";
 import { SESSION_TTL_MS, requireUser, requireAdmin, scopeClientId } from "./auth";
 
 // ─── Password Hashing ───────────────────────────────────────────
+// Format history:
+//   v0 (legacy):  bare sha256 hex                      — no salt, fast
+//   v1:           "salt:sha256(salt+password)" hex     — salted, fast
+//   v2 (current): "pbkdf2$iter$salt$hash"              — PBKDF2-SHA256, 100k iters
+// verifyPassword accepts all three; successful logins transparently upgrade
+// the stored hash to the current format.
 
-async function hashPassword(password: string, salt?: string): Promise<string> {
-  if (!salt) {
-    salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
-  }
+const PBKDF2_ITERATIONS = 100_000;
+
+function randomSalt(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function pbkdf2(password: string, salt: string): Promise<string> {
   const encoder = new TextEncoder();
-  const data = encoder.encode(salt + password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-  return `${salt}:${hash}`;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode(salt),
+      iterations: PBKDF2_ITERATIONS,
+      hash: "SHA-256",
+    },
+    key,
+    256
+  );
+  return Array.from(new Uint8Array(bits))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
-async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  // stored is "salt:hash" — re-hash with the SAME salt, never a fresh random one
-  const [salt] = stored.split(":");
-  if (!salt) return false;
-  const inputHash = await hashPassword(password, salt);
-  return inputHash === stored;
+/** Hash a password with the current (v2) format. */
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomSalt();
+  const hash = await pbkdf2(password, salt);
+  return `pbkdf2$${PBKDF2_ITERATIONS}$${salt}$${hash}`;
 }
 
-// Legacy format = bare sha256 hex (no colon). On successful login we transparently
-// upgrade the stored hash to salted format — one-time migration per user, no bulk job needed.
-function isLegacyHash(stored: string): boolean {
-  return !stored.includes(":") && /^[0-9a-f]{64}$/.test(stored);
+/**
+ * Verify a password against any historical format.
+ * Returns { ok, needsUpgrade } so callers can transparently re-hash.
+ */
+async function verifyPassword(
+  password: string,
+  stored: string
+): Promise<{ ok: boolean; needsUpgrade: boolean }> {
+  // v0: bare sha256 hex
+  if (!stored.includes(":") && !stored.includes("$") && /^[0-9a-f]{64}$/.test(stored)) {
+    const encoder = new TextEncoder();
+    const digest = await crypto.subtle.digest("SHA-256", encoder.encode(password));
+    const hex = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return { ok: hex === stored, needsUpgrade: true };
+  }
+  // v2: pbkdf2$iter$salt$hash
+  if (stored.startsWith("pbkdf2$")) {
+    const [, iterStr, salt, hash] = stored.split("$");
+    const computed = await pbkdf2Iter(password, salt, parseInt(iterStr, 10));
+    return { ok: computed === hash, needsUpgrade: parseInt(iterStr, 10) < PBKDF2_ITERATIONS };
+  }
+  // v1: salt:sha256(salt+password)
+  const idx = stored.indexOf(":");
+  if (idx > 0) {
+    const salt = stored.slice(0, idx);
+    const encoder = new TextEncoder();
+    const digest = await crypto.subtle.digest("SHA-256", encoder.encode(salt + password));
+    const hex = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return { ok: salt + ":" + hex === stored, needsUpgrade: true };
+  }
+  return { ok: false, needsUpgrade: true };
+}
+
+async function pbkdf2Iter(password: string, salt: string, iterations: number): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode(salt),
+      iterations,
+      hash: "SHA-256",
+    },
+    key,
+    256
+  );
+  return Array.from(new Uint8Array(bits))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 // ─── Users ──────────────────────────────────────────────────────
@@ -42,28 +122,13 @@ export const loginUser = m({
       .first();
     if (!user) return null;
 
-    // Accept both salted ("salt:hash") and legacy unsalted (bare sha256) hashes.
-    // Legacy hashes are upgraded to salted on successful login.
-    let valid = false;
-    const stored = user.passwordHash;
-    if (isLegacyHash(stored)) {
-      const encoder = new TextEncoder();
-      const digest = await crypto.subtle.digest(
-        "SHA-256",
-        encoder.encode(password)
-      );
-      const hex = Array.from(new Uint8Array(digest))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-      valid = hex === stored;
-      if (valid) {
-        // Transparent one-time upgrade to salted format
-        await ctx.db.patch(user._id, {
-          passwordHash: await hashPassword(password),
-        });
-      }
-    } else {
-      valid = await verifyPassword(password, stored);
+    // verifyPassword handles all historical formats (v0/v1/v2)
+    const { ok: valid, needsUpgrade } = await verifyPassword(password, user.passwordHash);
+    if (valid && needsUpgrade) {
+      // Transparent one-time upgrade to the current format
+      await ctx.db.patch(user._id, {
+        passwordHash: await hashPassword(password),
+      });
     }
     if (!valid) return null;
     // Deactivated accounts cannot sign in
@@ -212,7 +277,7 @@ export const changePassword = m({
     if (user._id !== id) throw new Error("FORBIDDEN");
     const target = await ctx.db.get(id);
     if (!target) throw new Error("User not found");
-    const valid = await verifyPassword(currentPassword, target.passwordHash);
+    const { ok: valid } = await verifyPassword(currentPassword, target.passwordHash);
     if (!valid) throw new Error("Current password is incorrect");
     if (newPassword.length < 6) throw new Error("New password must be at least 6 characters");
     const passwordHash = await hashPassword(newPassword);
@@ -522,7 +587,27 @@ export const updateInvoiceStatus = m({
   args: { token: v.string(), id: v.id("invoices"), status: v.union(v.literal("draft"), v.literal("sent"), v.literal("paid"), v.literal("overdue"), v.literal("cancelled")) },
   handler: async (ctx, { token, id, status }) => {
     await requireAdmin(ctx, token);
+    const invoice = await ctx.db.get(id);
     await ctx.db.patch(id, { status, updatedAt: Date.now() });
+
+    // Notify the client when an invoice is sent or marked paid
+    if (invoice && invoice.status !== status && (status === "sent" || status === "paid")) {
+      await ctx.db.insert("notifications", {
+        userId: invoice.clientId,
+        type: "invoice",
+        title:
+          status === "sent"
+            ? `New invoice ${invoice.number}`
+            : `Invoice ${invoice.number} marked as paid`,
+        body:
+          status === "sent"
+            ? `Amount due: ${invoice.total.toLocaleString()} ${invoice.currency}. Due ${invoice.dueDate}.`
+            : "Thank you — payment confirmed.",
+        link: `/invoices/${id}`,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
   },
 });
 
@@ -684,13 +769,45 @@ export const sendMessage = m({
     if (user.role !== "admin" && thread.clientId !== user._id) throw new Error("FORBIDDEN");
     const now = Date.now();
     await ctx.db.patch(threadId, { lastMessageAt: now });
-    return await ctx.db.insert("messages", {
+    const messageId = await ctx.db.insert("messages", {
       threadId,
       body,
       senderId: user._id,
       senderRole: user.role,
       createdAt: now,
     });
+
+    // Notify the OTHER party in real time
+    if (user.role === "admin") {
+      // Admin replied → notify the client who owns the thread
+      await ctx.db.insert("notifications", {
+        userId: thread.clientId,
+        type: "message",
+        title: "New message from your team",
+        body: body.slice(0, 120),
+        link: "/messages",
+        read: false,
+        createdAt: now,
+      });
+    } else {
+      // Client wrote → notify all admins
+      const admins = await ctx.db
+        .query("users")
+        .filter((q) => q.eq(q.field("role"), "admin"))
+        .collect();
+      for (const admin of admins) {
+        await ctx.db.insert("notifications", {
+          userId: admin._id,
+          type: "message",
+          title: `New message from ${user.name}`,
+          body: body.slice(0, 120),
+          link: "/admin/messages",
+          read: false,
+          createdAt: now,
+        });
+      }
+    }
+    return messageId;
   },
 });
 

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -60,9 +60,20 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const isAdmin = user?.role === "admin";
-  const clientId = isAdmin ? undefined : (user?.id as Id<"users"> | undefined);
-  const threads = useQuery(api.projects.listThreads, clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" });
-  const notifCount = threads?.length ?? 0;
+  const sessionToken = typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : "";
+  const threads = useQuery(api.projects.listThreads, { token: sessionToken });
+
+  // Real-time notifications
+  const notifications = useQuery(
+    api.notifications.listNotifications,
+    sessionToken ? { token: sessionToken, limit: 10 } : "skip"
+  );
+  const unread = useQuery(
+    api.notifications.unreadCount,
+    sessionToken ? { token: sessionToken } : "skip"
+  );
+  const markAllRead = useMutation(api.notifications.markAllRead);
+  const notifCount = unread ?? 0;
 
   const initials = user?.name
     ? user.name
@@ -113,18 +124,68 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           </Button>
 
           {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative text-muted-foreground hover:text-foreground"
-          >
-            <Bell className="h-5 w-5" />
-            {notifCount > 0 && (
-              <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#EF4444] text-[10px] font-bold text-white">
-                {notifCount}
-              </span>
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-muted-foreground hover:text-foreground"
+              >
+                <Bell className="h-5 w-5" />
+                {notifCount > 0 && (
+                  <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#EF4444] px-0.5 text-[10px] font-bold text-white">
+                    {notifCount > 9 ? "9+" : notifCount}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 p-0">
+              <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+                <p className="text-sm font-semibold text-foreground">Notifications</p>
+                {notifCount > 0 && (
+                  <button
+                    className="text-xs font-medium text-primary hover:underline"
+                    onClick={() => markAllRead({ token: sessionToken })}
+                  >
+                    Mark all read
+                  </button>
+                )}
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                {(notifications ?? []).length === 0 ? (
+                  <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    You&apos;re all caught up 🎉
+                  </p>
+                ) : (
+                  (notifications ?? []).map((n) => (
+                    <button
+                      key={(n as any)._id}
+                      className={`flex w-full flex-col items-start gap-0.5 border-b border-border px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted ${
+                        !(n as any).read ? "bg-primary/5" : ""
+                      }`}
+                      onClick={() => {
+                        if ((n as any).link) router.push((n as any).link);
+                      }}
+                    >
+                      <span className="flex w-full items-center gap-2">
+                        {!(n as any).read && (
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                        )}
+                        <span className="flex-1 truncate text-sm font-medium text-foreground">
+                          {(n as any).title}
+                        </span>
+                      </span>
+                      {(n as any).body && (
+                        <span className="line-clamp-2 pl-4 text-xs text-muted-foreground">
+                          {(n as any).body}
+                        </span>
+                      )}
+                    </button>
+                  ))
+                )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* User Dropdown */}
           <DropdownMenu>
