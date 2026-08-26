@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Oookea Space — Client Portal
 
-## Getting Started
+Customer-facing project portal for **Oookea — Digital Atelier**. Clients see
+their projects, live progress, invoices (+ PDF download), a real file vault,
+and messaging — all in real time via Convex subscriptions.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router) + React 19 + TypeScript
+- Convex (database, file storage, real-time functions)
+- Tailwind CSS v4 + shadcn/ui + Framer Motion
+- Deployed on Netlify (auto-deploy from `main`)
+
+## Security model
+
+- Custom session auth: login issues a random 32-byte token stored server-side
+  (`sessions` table, 30-day TTL). Every Convex function validates the token.
+- Passwords: PBKDF2-SHA256, 100k iterations (transparent upgrade from legacy
+  formats on login).
+- Server-side authorization on every function: clients are forced to their own
+  data scope; admin operations reject non-admin tokens; password hashes are
+  never returned to the client.
+- Seed functions are disabled in production.
+
+## Development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npx convex dev        # link a Convex deployment (interactive)
+cp .env.local.example .env.local   # set NEXT_PUBLIC_CONVEX_URL
+npx next dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_CONVEX_URL` | Convex deployment URL |
+| `NEXT_PUBLIC_APP_URL` | Canonical app URL |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Structure
 
-## Learn More
+```
+convex/
+  auth.ts         # session helpers (requireUser/requireAdmin/scopeClientId)
+  users.ts        # auth, sessions, client management, password hashing
+  projects_impl.ts# projects + deliverables
+  invoices.ts     # invoices (+ client notifications on send/paid)
+  files.ts        # Convex storage-backed file vault
+  messages.ts     # threads + messages (+ cross-party notifications)
+  misc.ts         # modules, activity log, disabled seed functions
+  notifications.ts# per-user notification feed
+src/
+  app/            # client pages + /admin console + /api/file/[storageId]
+  components/     # UI (header bell = live notification feed)
+  lib/auth.tsx    # AuthProvider, ProtectedRoute, session token storage
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Credentials
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Managed outside this repo. See the team password manager / internal wiki.

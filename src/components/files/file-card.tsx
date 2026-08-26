@@ -47,14 +47,17 @@ interface FileCardProps {
 export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
   const config = fileTypeConfig[file.type] || fileTypeConfig.other;
   const Icon = config.icon;
+  // Real preview: any Convex-backed image gets a live thumbnail from its URL
+  const isRealFile = file.url.startsWith("/api/file/");
+  const previewUrl = isRealFile && (file.type === "image" || file.type === "design") ? file.url : file.thumbnail;
 
   if (viewMode === "list") {
     return (
       <div className="flex items-center gap-4 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30 hover:shadow-sm">
-        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", config.bg)}>
-          {file.thumbnail ? (
+        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg", config.bg)}>
+          {previewUrl ? (
             <img
-              src={file.thumbnail}
+              src={previewUrl}
               alt={file.name}
               className="h-10 w-10 rounded-lg object-cover"
             />
@@ -85,9 +88,9 @@ export function FileCard({ file, viewMode = "grid" }: FileCardProps) {
     <Card className="group border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5">
       {/* Thumbnail Area */}
       <div className="relative flex h-36 items-center justify-center overflow-hidden rounded-t-xl bg-background">
-        {file.type === "image" && file.thumbnail ? (
+        {previewUrl ? (
           <img
-            src={file.thumbnail}
+            src={previewUrl}
             alt={file.name}
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
