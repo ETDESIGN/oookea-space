@@ -135,19 +135,16 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
           {/* Notifications */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative text-muted-foreground hover:text-foreground"
-              >
-                <Bell className="h-5 w-5" />
-                {notifCount > 0 && (
-                  <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#EF4444] px-0.5 text-[10px] font-bold text-white">
-                    {notifCount > 9 ? "9+" : notifCount}
-                  </span>
-                )}
-              </Button>
+            <DropdownMenuTrigger
+              className="relative inline-flex shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+              {notifCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#EF4444] px-0.5 text-[10px] font-bold text-white">
+                  {notifCount > 9 ? "9+" : notifCount}
+                </span>
+              )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80 p-0">
               <div className="flex items-center justify-between border-b border-border px-4 py-2.5">

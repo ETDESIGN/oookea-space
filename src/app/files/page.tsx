@@ -53,7 +53,9 @@ export default function FilesPage() {
 
   const convexFiles = useQuery(
     api.projects.listFiles,
-    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : (isAdmin ? { token: localStorage.getItem("oookea_session") || "" } : "skip")
+    clientId
+      ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId }
+      : (isAdmin && typeof window !== "undefined" ? { token: localStorage.getItem("oookea_session") || "" } : "skip")
   );
 
   const generateUploadUrl = useMutation(api.projects.generateUploadUrl);

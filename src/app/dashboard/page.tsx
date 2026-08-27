@@ -19,15 +19,15 @@ export default function DashboardPage() {
 
   const projects = useQuery(
     api.projects.listProjects,
-    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" }
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : (typeof window !== "undefined" ? { token: localStorage.getItem("oookea_session") || "" } : "skip")
   );
   const invoices = useQuery(
     api.projects.listInvoices,
-    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" }
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : (typeof window !== "undefined" ? { token: localStorage.getItem("oookea_session") || "" } : "skip")
   );
   const threads = useQuery(
     api.projects.listThreads,
-    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" }
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : (typeof window !== "undefined" ? { token: localStorage.getItem("oookea_session") || "" } : "skip")
   );
 
   const activeProjects = projects?.filter((p) => p.status === "active").length ?? 0;

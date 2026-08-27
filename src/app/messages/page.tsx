@@ -74,7 +74,7 @@ export default function MessagesPage() {
 
   const threads = useQuery(
     api.projects.listThreads,
-    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : { token: localStorage.getItem("oookea_session") || "" }
+    clientId ? { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),  clientId } : (typeof window !== "undefined" ? { token: localStorage.getItem("oookea_session") || "" } : "skip")
   );
 
   const selectedThreadMessages = useQuery(

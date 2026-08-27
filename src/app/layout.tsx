@@ -6,6 +6,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { ToastProvider } from "@/components/ui/toast";
+import { ServiceWorkerRegister } from "@/components/studio/sw-register";
 import { ThemeProvider } from "@/lib/theme";
 
 const inter = Inter({
@@ -47,11 +48,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ToastProvider><AuthProvider>{children}</AuthProvider></ToastProvider>
         </ThemeProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); }`,
-          }}
-        />
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

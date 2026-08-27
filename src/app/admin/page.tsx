@@ -37,7 +37,7 @@ export default function AdminDashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const clients = useQuery(api.projects.listClients, { token: localStorage.getItem("oookea_session") || "" });
+  const clients = useQuery(api.projects.listClients, typeof window !== "undefined" ? { token: localStorage.getItem("oookea_session") || "" } : "skip");
   const projects = useQuery(api.projects.listProjects, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
   const invoices = useQuery(api.projects.listInvoices, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
 
