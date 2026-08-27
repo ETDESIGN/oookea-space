@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { EmptyState, BrandLoader } from "@/components/studio/illustrations";
+import { BrandExtractor } from "@/components/admin/brand-extractor";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -144,6 +145,10 @@ export default function BrandKitPage() {
     <ProtectedRoute>
       <AppLayout>
         <div className="space-y-8">
+          {isAdmin && (
+            <BrandExtractor onSaved={() => window.location.reload()} />
+          )}
+
           {/* Header */}
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>

@@ -270,6 +270,22 @@ export const getGalleryForEmail = q({
   },
 });
 
+
+// ─── Session lookup (for API routes) ────────────────────────────
+export const getUserBySession = q({
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    const user = await requireUser(ctx, token);
+    return {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      company: user.company ?? null,
+    };
+  },
+});
+
 export const listClients = q({
   args: { token: v.string() },
   handler: async (ctx, { token }) => {
