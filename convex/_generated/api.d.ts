@@ -14,6 +14,7 @@ import type * as analytics from "../analytics.js";
 import type * as approvals from "../approvals.js";
 import type * as auth from "../auth.js";
 import type * as booking from "../booking.js";
+import type * as brandKit from "../brandKit.js";
 import type * as caseStudies from "../caseStudies.js";
 import type * as files from "../files.js";
 import type * as invoices from "../invoices.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   approvals: typeof approvals;
   auth: typeof auth;
   booking: typeof booking;
+  brandKit: typeof brandKit;
   caseStudies: typeof caseStudies;
   files: typeof files;
   invoices: typeof invoices;

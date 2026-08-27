@@ -14,3 +14,4 @@ export * from "./actionQueue";
 export * from "./caseStudies";
 export * from "./booking";
 export * from "./pins";
+export * from "./brandKit";

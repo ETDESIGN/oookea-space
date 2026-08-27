@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { SidebarBrand } from "@/components/layout/sidebar-brand";
 import {
   LayoutDashboard,
+  SwatchBook,
   BookOpen,
   TrendingUp,
   FolderKanban,
@@ -34,6 +35,7 @@ const clientNavItems = [
   { label: "Deliverables", href: "/deliverables", icon: Package },
   { label: "Projects", href: "/projects", icon: FolderKanban },
   { label: "Case Studies", href: "/case-studies", icon: BookOpen },
+  { label: "Brand Kit", href: "/brand-kit", icon: SwatchBook },
   { label: "Invoices", href: "/invoices", icon: FileText },
   { label: "File Vault", href: "/files", icon: FileIcon },
   { label: "Messages", href: "/messages", icon: MessageSquare },

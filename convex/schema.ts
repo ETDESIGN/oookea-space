@@ -212,6 +212,39 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_link", ["linkToken", "createdAt"]),
 
+  // ─── Brand Kits (per-client brand source of truth) ─────────────
+  brandKits: defineTable({
+    clientId: v.id("users"),
+    tagline: v.optional(v.string()),
+    primaryLogo: v.optional(v.string()),
+    primaryLogoName: v.optional(v.string()),
+    monoLogo: v.optional(v.string()),
+    monoLogoName: v.optional(v.string()),
+    logoLockupNote: v.optional(v.string()),
+    colors: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          hex: v.string(),
+          usage: v.optional(v.string()),
+        })
+      )
+    ),
+    fonts: v.optional(
+      v.array(
+        v.object({
+          role: v.string(),
+          family: v.string(),
+          note: v.optional(v.string()),
+        })
+      )
+    ),
+    toneOfVoice: v.optional(v.string()),
+    usageNotes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_client", ["clientId"]),
+
   // ─── Deliverable pins (visual annotations) ─────────────────────
   deliverablePins: defineTable({
     deliverableId: v.id("deliverables"),
