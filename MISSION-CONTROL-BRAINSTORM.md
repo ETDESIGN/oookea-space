@@ -113,3 +113,25 @@ Tile framework = generic widget loader so new feeds are config + a small widget 
 - **Round 2 (foundation):** fix DNS cutover (`space.oookea.com` → Netlify, apex optional) · `integrations` schema + connector framework · webhooks receiver · Vercel/Cloudflare/GitHub connectors · `/admin/mission-control` v1 with global status strip + service tiles · heartbeat endpoint + 3 first heartbeats (NEAR bot, Paperclip, WA bridge)
 - **Round 3 (money + fleet):** Stripe feed · client-health signals (`lastLoginAt`) · deadlines/unapproved queue · ntfy push · event feed
 - **Round 4 (harmonize):** Tier-2 containers if wanted · Glance-inspired widget polish · per-tile drilldown pages
+
+---
+
+## 6. Session state — end of Round 1 (2026-10-07)
+
+**Done this round:**
+- Health check executed and verified (results in §0)
+- Local repo re-cloned to `~/Documents/DEV/oookea-space` (replaced the old empty folder)
+- Integration research: 40+ sources scanned (dashboards, monitoring, webhooks, automation, catalogs)
+- This brainstorm committed as `57c1938`
+
+**Verified working credentials — locations only (NEVER put secrets in this public repo):**
+- Vercel REST: token file `~/Documents/DEV/.vercel-token` (user `etdesign`) — ✅ tested, 28 projects listed
+- Cloudflare: Global API key (kept in local KEYS.md / agent vault) — ✅ tested, 7 zones incl. `oookea.com`
+- GitHub: `gh` CLI authed as `ETDESIGN` (repo + workflow scopes) — ✅
+- Netlify + Convex: **no tokens found on this machine** — E to provide (blocks DNS cutover + schema pushes, §4.1)
+- Stripe: TEST mode only (caneles) — no live keys yet
+
+**Next session picks up at:**
+1. E answers the 6 decisions in §4 (minimum: NETLIFY_AUTH_TOKEN + CONVEX_DEPLOY_KEY)
+2. Execute `space.oookea.com` DNS cutover (Cloudflare zone ready, one CNAME)
+3. Round 2 build per §5 (integrations schema → webhook receiver → connectors → mission-control v1 → heartbeats)
