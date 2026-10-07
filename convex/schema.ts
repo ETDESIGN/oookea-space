@@ -306,4 +306,63 @@ export default defineSchema({
   })
     .index("by_client", ["clientId"])
     .index("by_project", ["projectId"]),
+
+  // ─── Mission Control: Integrations ─────────────────────────────
+  // One row per external provider (vercel/netlify/cloudflare/github/internal).
+  // Credentials are NEVER stored here — only a reference + the inbound
+  // webhook secret providers use to authenticate pushes to us.
+  integrations: defineTable({
+    provider: v.string(), // "vercel" | "netlify" | "cloudflare" | "github" | "internal"
+    name: v.string(),
+    credentialRef: v.optional(v.string()), // WHERE the secret lives, never the secret
+    webhookSecret: v.optional(v.string()), // inbound push auth (Netlify/etc.)
+    status: v.union(
+      v.literal("ok"),
+      v.literal("setup"),   // credentials not provided yet
+      v.literal("error"),
+      v.literal("unknown")
+    ),
+    detail: v.optional(v.string()),        // human-readable last status line
+    enabled: v.boolean(),
+    lastSyncAt: v.optional(v.number()),
+    lastEventAt: v.optional(v.number()),
+    lastEventOk: v.optional(v.boolean()),
+    lastError: v.optional(v.string()),
+    config: v.optional(v.any()),
+    createdAt: v.number(),
+  }).index("by_provider", ["provider"]),
+
+  // ─── Mission Control: Integration Events (audit trail) ─────────
+  integrationEvents: defineTable({
+    integrationId: v.id("integrations"),
+    provider: v.string(),
+    event: v.string(),                     // "deploy_created", "snapshot", "heartbeat", "setup"…
+    ok: v.boolean(),
+    summary: v.string(),
+    payload: v.optional(v.any()),
+    createdAt: v.number(),
+  })
+    .index("by_integration", ["integrationId", "createdAt"])
+    .index("by_created", ["createdAt"]),
+
+  // ─── Mission Control: Heartbeats (cron dead-man's-switch) ──────
+  // Crons ping GET /api/heartbeat/:token after each run. Silence past
+  // the expected interval (with grace) = "missed" = red tile.
+  heartbeats: defineTable({
+    name: v.string(),
+    token: v.string(),                     // random, part of the ping URL
+    expectedIntervalSec: v.number(),       // how often the job SHOULD run
+    enabled: v.boolean(),
+    lastBeatAt: v.optional(v.number()),
+    lastNote: v.optional(v.string()),
+    lastOk: v.optional(v.boolean()),
+    consecutiveMisses: v.number(),
+    status: v.union(
+      v.literal("waiting"),   // created, never beaten yet
+      v.literal("ok"),
+      v.literal("missed"),
+      v.literal("paused")
+    ),
+    createdAt: v.number(),
+  }).index("by_token", ["token"]),
 });

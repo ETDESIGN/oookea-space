@@ -25,6 +25,7 @@ import {
   HardDrive,
   ArrowLeft,
   Package,
+  Gauge,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -43,6 +44,7 @@ const clientNavItems = [
 ];
 
 const adminNavItems = [
+  { label: "Mission Control", href: "/admin/mission-control", icon: Gauge },
   { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Analytics", href: "/admin/analytics", icon: TrendingUp },
   { label: "Clients", href: "/admin/clients", icon: Users },

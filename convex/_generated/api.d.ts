@@ -17,6 +17,9 @@ import type * as booking from "../booking.js";
 import type * as brandKit from "../brandKit.js";
 import type * as caseStudies from "../caseStudies.js";
 import type * as files from "../files.js";
+import type * as heartbeats from "../heartbeats.js";
+import type * as http from "../http.js";
+import type * as integrations from "../integrations.js";
 import type * as invoices from "../invoices.js";
 import type * as messages from "../messages.js";
 import type * as misc from "../misc.js";
@@ -25,6 +28,7 @@ import type * as pins from "../pins.js";
 import type * as projects from "../projects.js";
 import type * as projects_impl from "../projects_impl.js";
 import type * as reviewLinks from "../reviewLinks.js";
+import type * as snapshots from "../snapshots.js";
 import type * as users from "../users.js";
 
 import type {
@@ -43,6 +47,9 @@ declare const fullApi: ApiFromModules<{
   brandKit: typeof brandKit;
   caseStudies: typeof caseStudies;
   files: typeof files;
+  heartbeats: typeof heartbeats;
+  http: typeof http;
+  integrations: typeof integrations;
   invoices: typeof invoices;
   messages: typeof messages;
   misc: typeof misc;
@@ -51,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   projects: typeof projects;
   projects_impl: typeof projects_impl;
   reviewLinks: typeof reviewLinks;
+  snapshots: typeof snapshots;
   users: typeof users;
 }>;
 

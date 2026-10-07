@@ -97,14 +97,16 @@ Tile framework = generic widget loader so new feeds are config + a small widget 
 
 ---
 
-## 4. Decisions needed from E (reply inline)
+## 4. Decisions — ANSWERED by E (2026-10-07)
 
-1. **Deploy access:** want me to pull **NETLIFY_AUTH_TOKEN** + **CONVEX_DEPLOY_KEY** (Netlify UI → user settings → tokens; Convex dashboard → settings → deploy key) and drop them in `KEYS.md` convention? Needed for: domain cutover execution + Convex schema pushes. (I can do the DNS cutover the moment I have the Netlify target — everything else is ready on Cloudflare.)
-2. **Mission Control default landing:** make `/admin/mission-control` the page admins land on (replacing current dashboard), or keep both with a switcher?
-3. **Self-hosted tier:** stand up the Tier-2 Docker stack (Kuma/Gatus/Beszel/ntfy) on the estudio Linux box, or keep Mission Control 100% API-fed with zero extra containers for now?
-4. **Old `oookea-space` project on Vercel** (deployment ERROR, abandoned mirror): delete from Vercel, or leave?
-5. **`oookea.com` apex:** still points at dead A2 hosting (suspended-page). Point apex + www at Netlify too (parking page / portfolio), or leave the domain dark for now?
-6. **Emoji shortcut tiles:** in — or strictly icon-based (selfh.st/icons + lucide)?
+1. **Keys:** E will pull NETLIFY_AUTH_TOKEN + CONVEX_DEPLOY_KEY himself (step-by-step given in chat). Blocks DNS cutover + schema pushes until then.
+2. **Admin landing:** KEEP SWITCHER — `/admin/mission-control` exists alongside the current dashboard, no forced redirect.
+3. **Tier-2 self-hosted:** undecided pending a recommendation (asked for more detail). Default lean: start 100% API-fed, add containers later only for gaps.
+4. **Old `oookea-space` Vercel mirror:** E confirmed not used by anything → **DELETED 2026-10-07** (verified: project had only its default `oookea-space.vercel.app` domain, no custom domains, no aliases; DELETE → 204, GET → 404).
+5. **`oookea.com` apex:** E has plans for a SEPARATE future website on the apex — DO NOT touch apex/www/A2 records. Only create `space.oookea.com` → Netlify. Email records stay untouched (as always).
+6. **Tiles:** strictly ICON-BASED (selfh.st/icons + lucide) — Hermes's call, emoji-free for a professional look.
+
+**Money model note (E):** NO direct payment system will be added. Instead, manual payment instructions ("how to pay our account") shown to clients. Layer 2 = invoices + payment-instructions content, NOT a Stripe live checkout feed.
 
 ---
 
