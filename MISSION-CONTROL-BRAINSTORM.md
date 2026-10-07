@@ -118,22 +118,21 @@ Tile framework = generic widget loader so new feeds are config + a small widget 
 
 ---
 
-## 6. Session state — end of Round 1 (2026-10-07)
+## 6. Session state — end of Round 2 build (2026-10-07, late)
 
-**Done this round:**
-- Health check executed and verified (results in §0)
-- Local repo re-cloned to `~/Documents/DEV/oookea-space` (replaced the old empty folder)
-- Integration research: 40+ sources scanned (dashboards, monitoring, webhooks, automation, catalogs)
-- This brainstorm committed as `57c1938`
+**Done this round (commit `e4f4bd8`, LIVE on Netlify):**
+- Full Mission Control backend: `integrations`/`integrationEvents`/`heartbeats` tables, webhook receiver (`/webhook/:provider`, timing-safe secret check), heartbeat endpoint (`/heartbeat/:token[/fail]`), snapshot actions (Vercel/Cloudflare/GitHub — internal, env-var-aware, setup-aware), crons (10-min heartbeat sweep + hourly snapshots).
+- Next.js proxies: `/api/webhook/*`, `/api/heartbeat/*` → Convex site (quiet-kudu-739.convex.site).
+- `/admin/mission-control` UI: global status strip, integration tiles with Sync-now + secret rotate/copy, heartbeat monitor CRUD with copyable ping URLs, events feed. Sidebar entry added (switcher kept).
+- Verified: `tsc --noEmit` clean, `next build` clean, deploy live (route 200).
+- DNS: CNAME `space.oookea.com` → `incredible-puffpuff-8e526b.netlify.app` created + propagated (target verified serving "Oookea — Digital Atelier").
+- Vercel mirror project deleted (204→404 verified).
+- `_generated/api.d.ts` hand-extended (heartbeats/http/integrations/snapshots) — codegen regenerates on first `convex dev` with deploy key; verify diff then.
+- Local `.env.local` created (CONVEX_DEPLOYMENT/CONVEX_URL/NEXT_PUBLIC_CONVEX_URL) — gitignored.
 
-**Verified working credentials — locations only (NEVER put secrets in this public repo):**
-- Vercel REST: token file `~/Documents/DEV/.vercel-token` (user `etdesign`) — ✅ tested, 28 projects listed
-- Cloudflare: Global API key (kept in local KEYS.md / agent vault) — ✅ tested, 7 zones incl. `oookea.com`
-- GitHub: `gh` CLI authed as `ETDESIGN` (repo + workflow scopes) — ✅
-- Netlify + Convex: **no tokens found on this machine** — E to provide (blocks DNS cutover + schema pushes, §4.1)
-- Stripe: TEST mode only (caneles) — no live keys yet
+**Blocked on E's keys (tomorrow):**
+1. **NETLIFY_AUTH_TOKEN** (or E clicks: Netlify → Site configuration → Domain management → Add domain → `space.oookea.com`) → cert auto-issues via the existing CNAME → HTTPS live.
+2. **CONVEX_DEPLOY_KEY** → `npx convex dev` once: pushes schema (3 new tables) + registers crons + regenerates `_generated` (review the hand-added diff) + then set env vars VERCEL_TOKEN / CLOUDFLARE_EMAIL / CLOUDFLARE_GLOBAL_KEY / GITHUB_TOKEN in dashboard.
+3. Then: generate webhook secret per provider in the UI → add Netlify outgoing webhook (notify on deploy_created etc.); add heartbeat pings to NEAR bot, Paperclip cron, WA bridge.
 
-**Next session picks up at:**
-1. E answers the 6 decisions in §4 (minimum: NETLIFY_AUTH_TOKEN + CONVEX_DEPLOY_KEY)
-2. Execute `space.oookea.com` DNS cutover (Cloudflare zone ready, one CNAME)
-3. Round 2 build per §5 (integrations schema → webhook receiver → connectors → mission-control v1 → heartbeats)
+**E's decisions locked (§4):** switcher kept · icons only · apex reserved for future separate site · no payment processor (manual instructions) · Tier-2 deferred (start 100% API-fed).
