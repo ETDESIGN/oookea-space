@@ -441,6 +441,39 @@ export default defineSchema({
     latencyHistory: v.optional(
       v.array(v.object({ t: v.number(), ms: v.number(), ok: v.boolean() }))
     ),
+    // Where the work lives: local folders, docs, Obsidian
+    folders: v.optional(
+      v.object({
+        local: v.optional(v.string()),   // path on this Mac (/Users/e/...)
+        remote: v.optional(v.string()),  // path on another box (estudio:/home/e/...)
+        docs: v.optional(v.string()),    // docs folder path
+        obsidian: v.optional(v.string()),// obsidian:// URI
+      })
+    ),
+    // Access & credentials. Production keys stay in KEYS.md — this holds
+    // demo/admin logins + references only.
+    access: v.optional(
+      v.object({
+        demo: v.optional(
+          v.object({
+            url: v.optional(v.string()),
+            user: v.optional(v.string()),
+            pass: v.optional(v.string()),
+            note: v.optional(v.string()),
+          })
+        ),
+        admin: v.optional(
+          v.object({
+            url: v.optional(v.string()),
+            user: v.optional(v.string()),
+            pass: v.optional(v.string()),
+            note: v.optional(v.string()),
+          })
+        ),
+        keysRef: v.optional(v.string()), // e.g. "KEYS.md › Caneles › Stripe test keys"
+        notes: v.optional(v.string()),
+      })
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

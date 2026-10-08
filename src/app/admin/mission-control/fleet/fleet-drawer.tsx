@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
+import { useState } from "react";
 import {
   X,
   ExternalLink,
@@ -17,6 +18,15 @@ import {
   User,
   Layers,
   Link2,
+  Folder,
+  FolderOpen,
+  FileText,
+  BookMarked,
+  Copy,
+  Check,
+  KeyRound,
+  Lock,
+  LogIn,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -45,6 +55,44 @@ const LINK_ICONS: Record<string, typeof Globe> = {
   chat: MessageSquare,
   web: Globe,
 };
+
+/** Copy-to-clipboard chip (for paths & credentials). */
+function CopyChip({ value, label }: { value: string; label?: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+        } catch {
+          // clipboard blocked (non-secure ctx) — select-style fallback
+          const ta = document.createElement("textarea");
+          ta.value = value;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1600);
+      }}
+      className="group flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors hover:border-primary/40 hover:bg-muted/40"
+      title="Click to copy"
+    >
+      {copied ? (
+        <Check className="h-3.5 w-3.5 shrink-0 text-[#22C55E]" />
+      ) : (
+        <Copy className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 group-hover:text-muted-foreground" />
+      )}
+      <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">
+        {label ?? value}
+      </span>
+      <span className="shrink-0 text-[10px] text-muted-foreground/50">
+        {copied ? "copied" : ""}
+      </span>
+    </button>
+  );
+}
 
 export function FleetDrawer({
   app,
@@ -86,6 +134,17 @@ export function FleetDrawer({
       }
     | undefined;
   const links = (app.links ?? []) as { label: string; url: string; kind?: string }[];
+  const folders = app.folders as
+    | { local?: string; remote?: string; docs?: string; obsidian?: string }
+    | undefined;
+  const access = app.access as
+    | {
+        demo?: { url?: string; user?: string; pass?: string; note?: string };
+        admin?: { url?: string; user?: string; pass?: string; note?: string };
+        keysRef?: string;
+        notes?: string;
+      }
+    | undefined;
 
   const uptimeText =
     up !== null ? `${up.toFixed(up >= 99 ? 1 : 2)}%` : app.lastPingAt ? "first day" : "no checks yet";
@@ -293,6 +352,112 @@ export function FleetDrawer({
                     {d}
                   </code>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {/* Folders — where the work lives */}
+          {folders && (folders.local || folders.remote || folders.docs || folders.obsidian) && (
+            <section>
+              <h3 className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <Folder className="h-3.5 w-3.5" /> Files & folders
+              </h3>
+              <div className="space-y-1.5">
+                {folders.local && (
+                  <CopyChip value={folders.local} label={folders.local.replace(/^\/Users\/e/, "~")} />
+                )}
+                {folders.remote && (
+                  <CopyChip value={folders.remote} label={folders.remote} />
+                )}
+                {folders.docs && (
+                  <CopyChip value={folders.docs} label={folders.docs.replace(/^\/Users\/e/, "~")} />
+                )}
+                {folders.obsidian && (
+                  <a
+                    href={folders.obsidian}
+                    className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40"
+                  >
+                    <BookMarked className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="flex-1 truncate">Open in Obsidian</span>
+                    <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+                  </a>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Access — demo & admin logins, key references */}
+          {access && (access.demo || access.admin || access.keysRef || access.notes) && (
+            <section>
+              <h3 className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <KeyRound className="h-3.5 w-3.5" /> Access
+              </h3>
+              <div className="space-y-2">
+                {access.demo && (
+                  <div className="rounded-lg border border-dashed p-2.5">
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <FlaskConical className="h-3 w-3" /> Demo login
+                    </p>
+                    {access.demo.url && (
+                      <a
+                        href={access.demo.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 flex items-center gap-1 text-sm text-primary hover:underline"
+                      >
+                        <LogIn className="h-3 w-3" /> {access.demo.url.replace(/^https?:\/\//, "")}
+                      </a>
+                    )}
+                    <div className="mt-1 space-y-1">
+                      {access.demo.user && (
+                        <CopyChip value={access.demo.user} label={`user: ${access.demo.user}`} />
+                      )}
+                      {access.demo.pass && (
+                        <CopyChip value={access.demo.pass} label={`pass: ${"•".repeat(Math.min(access.demo.pass.length, 10))}`} />
+                      )}
+                    </div>
+                    {access.demo.note && (
+                      <p className="mt-1 text-[11px] text-muted-foreground">{access.demo.note}</p>
+                    )}
+                  </div>
+                )}
+                {access.admin && (
+                  <div className="rounded-lg border border-dashed p-2.5">
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <Lock className="h-3 w-3" /> Admin login
+                    </p>
+                    {access.admin.url && (
+                      <a
+                        href={access.admin.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 flex items-center gap-1 text-sm text-primary hover:underline"
+                      >
+                        <LogIn className="h-3 w-3" /> {access.admin.url.replace(/^https?:\/\//, "")}
+                      </a>
+                    )}
+                    <div className="mt-1 space-y-1">
+                      {access.admin.user && (
+                        <CopyChip value={access.admin.user} label={`user: ${access.admin.user}`} />
+                      )}
+                      {access.admin.pass && (
+                        <CopyChip value={access.admin.pass} label={`pass: ${"•".repeat(Math.min(access.admin.pass.length, 10))}`} />
+                      )}
+                    </div>
+                    {access.admin.note && (
+                      <p className="mt-1 text-[11px] text-muted-foreground">{access.admin.note}</p>
+                    )}
+                  </div>
+                )}
+                {access.keysRef && (
+                  <p className="rounded-lg border border-dashed p-2.5 text-xs leading-relaxed text-muted-foreground">
+                    <span className="font-semibold text-foreground/80">🔑 Keys: </span>
+                    {access.keysRef}
+                  </p>
+                )}
+                {access.notes && (
+                  <p className="text-xs leading-relaxed text-muted-foreground">{access.notes}</p>
+                )}
               </div>
             </section>
           )}

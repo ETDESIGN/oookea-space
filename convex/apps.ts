@@ -73,6 +73,36 @@ const appShape = {
       tagline: v.optional(v.string()),
     })
   ),
+  folders: v.optional(
+    v.object({
+      local: v.optional(v.string()),
+      remote: v.optional(v.string()),
+      docs: v.optional(v.string()),
+      obsidian: v.optional(v.string()),
+    })
+  ),
+  access: v.optional(
+    v.object({
+      demo: v.optional(
+        v.object({
+          url: v.optional(v.string()),
+          user: v.optional(v.string()),
+          pass: v.optional(v.string()),
+          note: v.optional(v.string()),
+        })
+      ),
+      admin: v.optional(
+        v.object({
+          url: v.optional(v.string()),
+          user: v.optional(v.string()),
+          pass: v.optional(v.string()),
+          note: v.optional(v.string()),
+        })
+      ),
+      keysRef: v.optional(v.string()),
+      notes: v.optional(v.string()),
+    })
+  ),
 };
 
 /** Upsert a batch by name (idempotent seeding + editing). */
