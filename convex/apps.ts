@@ -42,6 +42,27 @@ const appShape = {
   statusNote: v.optional(v.string()),
   pinned: v.optional(v.boolean()),
   order: v.number(),
+  brandIcon: v.optional(v.string()),
+  links: v.optional(
+    v.array(
+      v.object({
+        label: v.string(),
+        url: v.string(),
+        kind: v.optional(v.string()), // app|repo|staging|dashboard|docs|chat|web
+      })
+    )
+  ),
+  info: v.optional(
+    v.object({
+      purpose: v.optional(v.string()),
+      stack: v.optional(v.array(v.string())),
+      domains: v.optional(v.array(v.string())),
+      launched: v.optional(v.string()),
+      owner: v.optional(v.string()),
+      notes: v.optional(v.string()),
+      blocks: v.optional(v.array(v.object({ title: v.string(), body: v.string() }))),
+    })
+  ),
 };
 
 /** Upsert a batch by name (idempotent seeding + editing). */

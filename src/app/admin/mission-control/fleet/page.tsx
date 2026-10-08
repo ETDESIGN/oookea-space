@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { api } from "../../../../../convex/_generated/api";
 import { Doc } from "../../../../../convex/_generated/dataModel";
+import { FleetDrawer } from "./fleet-drawer";
 
 // ─── Fleet — the Launchpad of everything E runs ───────────────────
 // v2 (research-driven upgrade):
@@ -130,6 +131,12 @@ export default function FleetPage() {
 
   const [filter, setFilter] = useState<"all" | AppCategory>("all");
   const [search, setSearch] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const selectedApp = useMemo(
+    () => (apps ?? []).find((a) => a._id === selectedId) ?? null,
+    [apps, selectedId]
+  );
 
   useEffect(() => {
     if (user && user.role !== "admin") {
@@ -378,15 +385,11 @@ export default function FleetPage() {
       </>
     );
     const cls =
-      "group flex h-full flex-col rounded-xl border bg-card p-4 text-left shadow-sm transition-all hover:border-primary/40 hover:shadow-md";
-    return app.url ? (
-      <a key={app._id} href={app.url} target="_blank" rel="noopener noreferrer" className={cls}>
+      "group flex h-full cursor-pointer flex-col rounded-xl border bg-card p-4 text-left shadow-sm transition-all hover:border-primary/40 hover:shadow-md";
+    return (
+      <button key={app._id} className={cls} onClick={() => setSelectedId(app._id)}>
         {Inner}
-      </a>
-    ) : (
-      <div key={app._id} className={cls}>
-        {Inner}
-      </div>
+      </button>
     );
   };
 
@@ -560,6 +563,12 @@ export default function FleetPage() {
           </p>
         </div>
       </AppLayout>
+      <FleetDrawer
+        app={selectedApp}
+        status={selectedApp ? derive(selectedApp) : "ok"}
+        checks={selectedApp ? checksByApp.get(selectedApp._id as unknown as string) ?? [] : []}
+        onClose={() => setSelectedId(null)}
+      />
     </ProtectedRoute>
   );
 }

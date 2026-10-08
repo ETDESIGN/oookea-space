@@ -402,6 +402,30 @@ export default defineSchema({
     lastMs: v.optional(v.number()),
     lastOk: v.optional(v.boolean()),
     lastStatusCode: v.optional(v.number()),
+    // Info-tab extras
+    brandIcon: v.optional(v.string()),           // simpleicons slug → cdn.simpleicons.org
+    links: v.optional(                           // structured link list
+      v.array(
+        v.object({
+          label: v.string(),
+          url: v.string(),
+          kind: v.optional(v.string()), // app|repo|staging|dashboard|docs|chat|web
+        })
+      )
+    ),
+    info: v.optional(
+      v.object({
+        purpose: v.optional(v.string()),
+        stack: v.optional(v.array(v.string())),
+        domains: v.optional(v.array(v.string())),
+        launched: v.optional(v.string()),
+        owner: v.optional(v.string()),
+        notes: v.optional(v.string()),
+        blocks: v.optional(
+          v.array(v.object({ title: v.string(), body: v.string() }))
+        ),
+      })
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_category", ["category"]),
