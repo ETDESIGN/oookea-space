@@ -116,7 +116,10 @@ export const sweepHeartbeats = internalMutation({
     for (const hb of rows) {
       if (!hb.enabled) continue;
       const graceMs = hb.expectedIntervalSec * 1000 * 1.5 + 60_000;
-      const isLate = hb.lastBeatAt === undefined || now - hb.lastBeatAt > graceMs;
+      // A monitor that has NEVER beaten stays "waiting" (grey) — it was
+      // likely just created and not wired yet. Only beat-then-silence
+      // counts as "missed".
+      const isLate = hb.lastBeatAt !== undefined && now - hb.lastBeatAt > graceMs;
       if (isLate && hb.status !== "missed") {
         await ctx.db.patch(hb._id, { status: "missed" });
         newlyMissed++;

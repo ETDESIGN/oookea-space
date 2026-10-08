@@ -16,6 +16,7 @@ import type * as auth from "../auth.js";
 import type * as booking from "../booking.js";
 import type * as brandKit from "../brandKit.js";
 import type * as caseStudies from "../caseStudies.js";
+import type * as crons from "../crons.js";
 import type * as files from "../files.js";
 import type * as heartbeats from "../heartbeats.js";
 import type * as http from "../http.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   booking: typeof booking;
   brandKit: typeof brandKit;
   caseStudies: typeof caseStudies;
+  crons: typeof crons;
   files: typeof files;
   heartbeats: typeof heartbeats;
   http: typeof http;

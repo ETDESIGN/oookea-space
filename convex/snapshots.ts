@@ -208,7 +208,20 @@ export const markIntegration = internalMutation({
       .query("integrations")
       .withIndex("by_provider", (p) => p.eq("provider", provider))
       .first();
-    if (!integ) return;
+    if (!integ) {
+      // Cold start: create the row so the tile appears (e.g. first Sync now).
+      const label = provider.charAt(0).toUpperCase() + provider.slice(1);
+      await ctx.db.insert("integrations", {
+        provider,
+        name: label,
+        enabled: true,
+        status,
+        detail,
+        lastSyncAt: now,
+        createdAt: now,
+      });
+      return;
+    }
     await ctx.db.patch(integ._id, {
       status,
       detail: detail ?? integ.detail,
@@ -226,10 +239,21 @@ export const logEvent = internalMutation({
     payload: v.optional(v.any()),
   },
   handler: async (ctx, { provider, event, ok, summary, payload }) => {
-    const integ = await ctx.db
+    let integ = await ctx.db
       .query("integrations")
       .withIndex("by_provider", (p) => p.eq("provider", provider))
       .first();
+    if (!integ) {
+      const label = provider.charAt(0).toUpperCase() + provider.slice(1);
+      const id = await ctx.db.insert("integrations", {
+        provider,
+        name: label,
+        enabled: true,
+        status: "unknown",
+        createdAt: Date.now(),
+      });
+      integ = await ctx.db.get(id);
+    }
     if (!integ) return;
     await ctx.db.insert("integrationEvents", {
       integrationId: integ._id,
