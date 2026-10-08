@@ -365,4 +365,39 @@ export default defineSchema({
     ),
     createdAt: v.number(),
   }).index("by_token", ["token"]),
+
+  // ─── Mission Control: Apps (the fleet / launcher) ───────────────
+  // Every project, product and piece of infra E runs, as one icon grid.
+  // Health is derived: statusOverride > linked heartbeat > linked Vercel
+  // project deploy state > default ok.
+  apps: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    category: v.union(
+      v.literal("client"),
+      v.literal("product"),
+      v.literal("internal"),
+      v.literal("infra"),
+      v.literal("trading")
+    ),
+    icon: v.optional(v.string()),          // lucide icon key
+    iconUrl: v.optional(v.string()),       // external SVG (selfh.st etc.)
+    url: v.optional(v.string()),           // main link (opens in new tab)
+    repoUrl: v.optional(v.string()),
+    vercelProject: v.optional(v.string()), // auto-health: latest prod deploy
+    heartbeatName: v.optional(v.string()), // auto-health: linked monitor
+    statusOverride: v.optional(
+      v.union(
+        v.literal("ok"),
+        v.literal("issue"),
+        v.literal("offline"),
+        v.literal("planned")
+      )
+    ),
+    statusNote: v.optional(v.string()),
+    pinned: v.optional(v.boolean()),
+    order: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_category", ["category"]),
 });

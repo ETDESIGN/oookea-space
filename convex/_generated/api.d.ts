@@ -12,6 +12,7 @@ import type * as _shared from "../_shared.js";
 import type * as actionQueue from "../actionQueue.js";
 import type * as analytics from "../analytics.js";
 import type * as approvals from "../approvals.js";
+import type * as apps from "../apps.js";
 import type * as auth from "../auth.js";
 import type * as booking from "../booking.js";
 import type * as brandKit from "../brandKit.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   actionQueue: typeof actionQueue;
   analytics: typeof analytics;
   approvals: typeof approvals;
+  apps: typeof apps;
   auth: typeof auth;
   booking: typeof booking;
   brandKit: typeof brandKit;

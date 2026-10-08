@@ -1,6 +1,7 @@
 import { v } from "convex/values";
-import { internalAction, internalMutation } from "./_generated/server";
+import { internalAction, internalMutation, query as q } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { requireAdmin } from "./auth";
 
 // ─── Mission Control: provider snapshot refreshers ────────────────
 // Actions (external fetch allowed). Called by "Sync now" buttons and
@@ -46,15 +47,18 @@ export const refreshVercel = internalAction({
       });
       if (!r.ok) throw new Error(`Vercel API ${r.status}`);
       const projects = (r.body as { projects?: { name: string; id: string }[] }).projects ?? [];
-      const reds = [];
-      for (const p of projects.slice(0, 30)) {
+      const states: { name: string; state: string }[] = [];
+      const reds: string[] = [];
+      for (const p of projects.slice(0, 60)) {
         const d = await fetchJson(
           `https://api.vercel.com/v6/deployments?projectId=${p.id}&limit=1&target=production`,
           { Authorization: `Bearer ${token}` }
         );
         const dep = (d.body as { deployments?: { readyState?: string; state?: string }[] })
           .deployments?.[0];
-        if (dep && (dep.readyState === "ERROR" || dep.state === "ERROR")) reds.push(p.name);
+        const state = dep?.readyState ?? dep?.state ?? "UNKNOWN";
+        states.push({ name: p.name, state });
+        if (state === "ERROR") reds.push(p.name);
       }
       const summary = `${projects.length} projects, ${reds.length} failing production deploy${reds.length ? `: ${reds.join(", ")}` : ""}`;
       await ctx.runMutation(internal.snapshots.markIntegration, {
@@ -67,7 +71,7 @@ export const refreshVercel = internalAction({
         event: "snapshot",
         ok: reds.length === 0,
         summary,
-        payload: { projectCount: projects.length, failing: reds },
+        payload: { projectCount: projects.length, failing: reds, projects: states },
       });
       return { status: "ok" as const, detail: summary };
     } catch (e) {
@@ -191,6 +195,21 @@ export const refreshNetlify = internalAction({
       ...mark("No NETLIFY_AUTH_TOKEN yet — deploy webhooks push events here; add token later for history backfill"),
     });
     return { status: "setup" as const, detail: "Netlify token pending" };
+  },
+});
+
+/** Latest Vercel snapshot (all project deploy states) for the fleet page. */
+export const latestVercelSnapshot = q({
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    await requireAdmin(ctx, token);
+    const events = await ctx.db
+      .query("integrationEvents")
+      .withIndex("by_created")
+      .order("desc")
+      .take(60);
+    const snap = events.find((e) => e.provider === "vercel" && e.event === "snapshot");
+    return snap ?? null;
   },
 });
 
