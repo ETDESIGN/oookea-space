@@ -28,6 +28,7 @@ import {
 import { api } from "../../../../../convex/_generated/api";
 import { Doc } from "../../../../../convex/_generated/dataModel";
 import { FleetDrawer } from "./fleet-drawer";
+import { Sparkline } from "./sparkline";
 
 // ─── Fleet — the Launchpad of everything E runs ───────────────────
 // v2 (research-driven upgrade):
@@ -206,7 +207,7 @@ export default function FleetPage() {
     try {
       const r = await requestPingAll({ token });
       setPingNote(
-        `${r.probed} probed · ${r.up} up · ${r.down} down${
+        `${r.probed} probed · ${r.up} up · ${r.down} down · ${r.flips} flip${r.flips === 1 ? "" : "s"}${
           r.worst.length ? ` — down: ${r.worst.map((w) => w.name).join(", ")}` : ""
         }`
       );
@@ -330,6 +331,15 @@ export default function FleetPage() {
             <p className="mt-1 text-[11px] text-muted-foreground/70">{app.statusNote}</p>
           )}
         </div>
+
+        {/* Latency sparkline (last 48 probes) */}
+        {app.latencyHistory && app.latencyHistory.length > 3 && (
+          <div className="mt-2">
+            <Sparkline
+              points={app.latencyHistory.map((h) => ({ t: h.t, v: h.ms, ok: h.ok }))}
+            />
+          </div>
+        )}
 
         {/* 30-day uptime strip (honest greys for no data) */}
         <div className="mt-3 flex h-4 items-end gap-[2px]" aria-hidden="true">

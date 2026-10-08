@@ -63,6 +63,16 @@ const appShape = {
       blocks: v.optional(v.array(v.object({ title: v.string(), body: v.string() }))),
     })
   ),
+  publicStatus: v.optional(
+    v.object({
+      slug: v.string(),
+      enabled: v.boolean(),
+      brandName: v.string(),
+      logoUrl: v.optional(v.string()),
+      accentColor: v.optional(v.string()),
+      tagline: v.optional(v.string()),
+    })
+  ),
 };
 
 /** Upsert a batch by name (idempotent seeding + editing). */

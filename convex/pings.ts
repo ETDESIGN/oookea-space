@@ -66,6 +66,7 @@ type PingAllResult = {
   probed: number;
   up: number;
   down: number;
+  flips: number;
   worst: { name: string; ok: boolean; ms: number; status: number }[];
 };
 
@@ -77,9 +78,11 @@ export const pingAllApps = internalAction({
       _id: unknown;
       name: string;
       url: string;
+      lastOk?: boolean;
     }[];
     let up = 0;
     let down = 0;
+    let flips = 0;
     const results: { name: string; ok: boolean; ms: number; status: number }[] = [];
     for (let i = 0; i < apps.length; i += CONCURRENCY) {
       const batch = apps.slice(i, i + CONCURRENCY);
@@ -96,9 +99,34 @@ export const pingAllApps = internalAction({
           ms: r.ms,
           status: r.status,
         });
+        // Flip detection: previous state known AND different → log + push
+        if (app.lastOk !== undefined && app.lastOk !== r.ok) {
+          flips++;
+          const pushed = r.ok
+            ? await pushNtfy(
+                `✅ ${app.name} is back up`,
+                `Probe OK · ${r.ms}ms · HTTP ${r.status}`,
+                "low",
+                ["white_check_mark", "oookea"]
+              )
+            : await pushNtfy(
+                `🔴 ${app.name} is DOWN`,
+                `Probe failed · ${r.ms}ms · ${r.status === 0 ? "timeout" : `HTTP ${r.status}`}`,
+                "high",
+                ["rotating_light", "oookea"]
+              );
+          await logFlip(
+            ctx.runMutation.bind(ctx) as (ref: never, args: never) => Promise<unknown>,
+            app.name,
+            app.lastOk,
+            r.ok,
+            r.ms,
+            pushed === true
+          );
+        }
       }
     }
-    return { probed: apps.length, up, down, worst: results.filter((r) => !r.ok) };
+    return { probed: apps.length, up, down, flips, worst: results.filter((r) => !r.ok) };
   },
 });
 
@@ -138,11 +166,15 @@ export const recordPing = internalMutation({
   },
   handler: async (ctx, { appId, ok, ms, status }) => {
     const now = Date.now();
+    const app = await ctx.db.get(appId);
+    const hist = (app?.latencyHistory ?? []).slice(-47);
+    hist.push({ t: now, ms, ok });
     await ctx.db.patch(appId, {
       lastPingAt: now,
       lastMs: ms,
       lastOk: ok,
       lastStatusCode: status,
+      latencyHistory: hist,
       updatedAt: now,
     });
     const day = utcDay(now);
@@ -169,6 +201,53 @@ export const recordPing = internalMutation({
     }
   },
 });
+
+// ─── Flip detection + push (action layer) ──────────────────────────
+
+const NTFY_URL = process.env.NTFY_URL || "https://ntfy.sh/oookea-alerts-e";
+
+async function pushNtfy(title: string, body: string, priority: string, tags: string[]) {
+  try {
+    await fetch(NTFY_URL, {
+      method: "POST",
+      headers: { Title: title, Priority: priority, Tags: tags.join(",") },
+      body,
+      signal: AbortSignal.timeout(8_000),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Log a flip into the events feed (self-creates the "internal" tile). */
+async function logFlip(
+  runMutation: (ref: never, args: never) => Promise<unknown>,
+  appName: string,
+  from: boolean,
+  to: boolean,
+  ms: number,
+  pushed: boolean
+) {
+  await runMutation(
+    internal.snapshots.markIntegration as never,
+    {
+      provider: "internal",
+      status: "ok",
+      detail: "Fleet probe engine",
+    } as never
+  );
+  await runMutation(
+    internal.snapshots.logEvent as never,
+    {
+      provider: "internal",
+      event: "probe_flip",
+      ok: to,
+      summary: `${appName} went ${to ? "UP" : "DOWN"} (${ms}ms)${pushed ? " · pushed" : ""}`,
+      payload: { app: appName, from, to, ms, pushed },
+    } as never
+  );
+}
 
 /** Uptime rollups for the last N days, all apps (fleet page). */
 export const recentChecks = q({

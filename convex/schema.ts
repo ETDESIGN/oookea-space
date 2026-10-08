@@ -426,11 +426,26 @@ export default defineSchema({
         ),
       })
     ),
+    // Public status-page publication (per-client branded pages at /status/:slug)
+    publicStatus: v.optional(
+      v.object({
+        slug: v.string(),
+        enabled: v.boolean(),
+        brandName: v.string(),
+        logoUrl: v.optional(v.string()),
+        accentColor: v.optional(v.string()),
+        tagline: v.optional(v.string()),
+      })
+    ),
+    // Rolling probe latency history for sparklines (capped at 48 points)
+    latencyHistory: v.optional(
+      v.array(v.object({ t: v.number(), ms: v.number(), ok: v.boolean() }))
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_category", ["category"]),
-
-  // ─── Mission Control: App daily check rollups (uptime bars) ─────
+  })
+    .index("by_category", ["category"])
+    .index("by_public_slug", ["publicStatus.slug"]),
   // One doc per app per UTC day. Feeds the 30-day uptime bar strip.
   appChecks: defineTable({
     appId: v.id("apps"),

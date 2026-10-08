@@ -30,6 +30,7 @@ import type * as pings from "../pings.js";
 import type * as pins from "../pins.js";
 import type * as projects from "../projects.js";
 import type * as projects_impl from "../projects_impl.js";
+import type * as publicStatus from "../publicStatus.js";
 import type * as reviewLinks from "../reviewLinks.js";
 import type * as snapshots from "../snapshots.js";
 import type * as users from "../users.js";
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   pins: typeof pins;
   projects: typeof projects;
   projects_impl: typeof projects_impl;
+  publicStatus: typeof publicStatus;
   reviewLinks: typeof reviewLinks;
   snapshots: typeof snapshots;
   users: typeof users;
