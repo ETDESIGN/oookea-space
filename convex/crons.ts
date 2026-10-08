@@ -39,4 +39,12 @@ crons.hourly(
   {}
 );
 
+// Fleet HTTP probes — every 15 min, all apps with a URL.
+crons.interval(
+  "app-pings",
+  { minutes: 15 },
+  internal.pings.pingAllApps,
+  {}
+);
+
 export default crons;

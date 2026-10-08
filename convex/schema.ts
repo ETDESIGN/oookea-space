@@ -397,7 +397,25 @@ export default defineSchema({
     statusNote: v.optional(v.string()),
     pinned: v.optional(v.boolean()),
     order: v.number(),
+    // Live HTTP probe results (written by the ping engine)
+    lastPingAt: v.optional(v.number()),
+    lastMs: v.optional(v.number()),
+    lastOk: v.optional(v.boolean()),
+    lastStatusCode: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_category", ["category"]),
+
+  // ─── Mission Control: App daily check rollups (uptime bars) ─────
+  // One doc per app per UTC day. Feeds the 30-day uptime bar strip.
+  appChecks: defineTable({
+    appId: v.id("apps"),
+    day: v.string(), // "2026-10-09" (UTC)
+    pings: v.number(),
+    fails: v.number(),
+    msSum: v.number(),
+    lastMs: v.optional(v.number()),
+  })
+    .index("by_app_day", ["appId", "day"])
+    .index("by_day", ["day"]),
 });

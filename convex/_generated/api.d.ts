@@ -26,6 +26,7 @@ import type * as invoices from "../invoices.js";
 import type * as messages from "../messages.js";
 import type * as misc from "../misc.js";
 import type * as notifications from "../notifications.js";
+import type * as pings from "../pings.js";
 import type * as pins from "../pins.js";
 import type * as projects from "../projects.js";
 import type * as projects_impl from "../projects_impl.js";
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   misc: typeof misc;
   notifications: typeof notifications;
+  pings: typeof pings;
   pins: typeof pins;
   projects: typeof projects;
   projects_impl: typeof projects_impl;
