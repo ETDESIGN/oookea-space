@@ -69,6 +69,8 @@ export default function ClientsManagementPage() {
 
   const clients = useQuery(api.projects.listClients, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
   const projects = useQuery(api.projects.listProjects, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
+  const health = useQuery(api.clients.clientHealth, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
+  const healthMap = new Map((health ?? []).map((h) => [h.id, h]));
   const createClient = useMutation(api.projects.createClient);
   const updateClient = useMutation(api.projects.updateClient);
   const deleteClientMutation = useMutation(api.projects.deleteClient);
@@ -365,6 +367,7 @@ export default function ClientsManagementPage() {
                       <TableHead className="hidden md:table-cell">Email</TableHead>
                       <TableHead className="hidden sm:table-cell">Company</TableHead>
                       <TableHead className="text-center">Projects</TableHead>
+                      <TableHead className="text-center">Health</TableHead>
                       <TableHead className="text-center">Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -402,6 +405,31 @@ export default function ClientsManagementPage() {
                           </TableCell>
                           <TableCell className="text-center font-medium text-foreground">
                             {pCount}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {(() => {
+                              const h = healthMap.get(client._id);
+                              if (!h) return <span className="text-xs text-muted-foreground">—</span>;
+                              const meta =
+                                h.health === "red"
+                                  ? { dot: "bg-[#EF4444]", label: `${h.daysQuiet}d quiet` }
+                                  : h.health === "yellow"
+                                    ? { dot: "bg-[#F59E0B]", label: `${h.daysQuiet}d quiet` }
+                                    : { dot: "bg-[#22C55E]", label: `${h.daysQuiet}d` };
+                              return (
+                                <span
+                                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+                                  title={
+                                    `${h.daysQuiet} days since last contact` +
+                                    (h.overdueInvoices ? ` · ${h.overdueInvoices} overdue` : "") +
+                                    (h.openCommitments ? ` · ${h.openCommitments} open commitments` : "")
+                                  }
+                                >
+                                  <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
+                                  {meta.label}
+                                </span>
+                              );
+                            })()}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge

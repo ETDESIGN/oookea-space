@@ -132,7 +132,30 @@ export const collectSignals = internalQuery({
       [];
     const failing = projects.filter((p) => p.state === "ERROR");
 
-    return { downApps, missedHbs, failing };
+    // R3b/c signals: overdue invoices, stale waiting-on-client, quiet clients
+    const today = new Date().toISOString().slice(0, 10);
+    const invoices = await ctx.db.query("invoices").collect();
+    const overdueInv = invoices.filter((i) => i.status === "overdue");
+    const commitments = await ctx.db.query("commitments").collect();
+    const staleWaiting = commitments.filter(
+      (w) => w.status === "waiting_client" && (w.waitingSince ?? 0) < Date.now() - 5 * 86_400_000
+    );
+    const users = await ctx.db.query("users").collect();
+    const threads = await ctx.db.query("threads").collect();
+    const lastMsg = new Map<string, number>();
+    for (const t of threads) {
+      const k = t.clientId as unknown as string;
+      lastMsg.set(k, Math.max(lastMsg.get(k) ?? 0, t.lastMessageAt));
+    }
+    const quietClients = users
+      .filter((u) => u.role === "client" && u.status === "active")
+      .map((u) => {
+        const last = Math.max(u.lastLoginAt ?? 0, lastMsg.get(u._id as unknown as string) ?? 0, u.createdAt);
+        return { name: u.name, days: Math.floor((Date.now() - last) / 86_400_000) };
+      })
+      .filter((r) => r.days > 35);
+
+    return { downApps, missedHbs, failing, overdueInv, staleWaiting, quietClients, today };
   },
 });
 
@@ -210,13 +233,16 @@ type QueueUpsertArgs = {
 export const syncQueue = internalAction({
   args: {},
   handler: async (ctx): Promise<{ inserted: number; resolved: number }> => {
-    const { downApps, missedHbs, failing } = (await ctx.runQuery(
+    const { downApps, missedHbs, failing, overdueInv, staleWaiting, quietClients } = (await ctx.runQuery(
       internal.brief.collectSignals,
       {}
     )) as {
       downApps: { _id: unknown; name: string; url?: string; lastStatusCode?: number; lastMs?: number }[];
       missedHbs: { name: string }[];
       failing: { name: string; state: string }[];
+      overdueInv: { number: string; total: number; dueDate: string }[];
+      staleWaiting: { _id: unknown; title: string; clientName?: string }[];
+      quietClients: { name: string; days: number }[];
     };
 
     let inserted = 0;
@@ -257,6 +283,40 @@ export const syncQueue = internalAction({
         source: "vercel",
       });
     }
+    for (const inv of overdueInv) {
+      want.set(`invoice:${inv.number}`, {
+        dedupeKey: `invoice:${inv.number}`,
+        kind: "invoice",
+        severity: "warning",
+        title: `Invoice ${inv.number} is overdue`,
+        detail: `Not paid ${inv.dueDate < new Date().toISOString().slice(0, 10) ? "since" : "due"} ${inv.dueDate}. Follow up with the client.`,
+        source: "money",
+      });
+    }
+    for (const w of staleWaiting) {
+      want.set(`waiting:${String(w._id)}`, {
+        dedupeKey: `waiting:${String(w._id)}`,
+        kind: "deadline",
+        severity: "info",
+        title: `Nudge client: ${w.title}`,
+        detail: `Waiting on the client for 5+ days${w.clientName ? ` (${w.clientName})` : ""}. One message usually unblocks it.`,
+        actionLabel: "Open commitments",
+        actionUrl: "/admin/mission-control/commitments",
+        source: "clients",
+      });
+    }
+    for (const q of quietClients) {
+      want.set(`quiet:${q.name}`, {
+        dedupeKey: `quiet:${q.name}`,
+        kind: "quiet-client",
+        severity: "info",
+        title: `${q.name} has gone quiet (${q.days} days)`,
+        detail: "No logins or messages for 35+ days. A short check-in keeps the relationship warm.",
+        actionLabel: "Open clients",
+        actionUrl: "/admin/clients",
+        source: "clients",
+      });
+    }
 
     // Insert/update wanted rows
     for (const args of want.values()) {
@@ -269,15 +329,11 @@ export const syncQueue = internalAction({
       _id: unknown;
       dedupeKey?: string;
     }[];
+    const AUTO_FAMILIES = ["app-down:", "hb-missed:", "vercel-fail:", "invoice:", "quiet:"];
     for (const row of open) {
       const key = row.dedupeKey ?? "";
-      if (key.startsWith("app-down:") && !want.has(key)) {
-        await ctx.runMutation(internal.brief.resolveQueued, { dedupeKey: key });
-        resolved++;
-      } else if (key.startsWith("hb-missed:") && !want.has(key)) {
-        await ctx.runMutation(internal.brief.resolveQueued, { dedupeKey: key });
-        resolved++;
-      } else if (key.startsWith("vercel-fail:") && !want.has(key)) {
+      const family = AUTO_FAMILIES.find((f) => key.startsWith(f));
+      if (family && !want.has(key)) {
         await ctx.runMutation(internal.brief.resolveQueued, { dedupeKey: key });
         resolved++;
       }

@@ -494,6 +494,29 @@ export default defineSchema({
     .index("by_app_day", ["appId", "day"])
     .index("by_day", ["day"]),
 
+  // ─── R3c: Commitments — every promise to a client gets a date ────
+  // "Waiting on client" items go stale → the Action Queue nudges E to
+  // follow up. This is where small-business work usually dies; not here.
+  commitments: defineTable({
+    title: v.string(),
+    clientId: v.optional(v.id("users")),
+    projectId: v.optional(v.id("projects")),
+    dueDate: v.string(),                     // "2026-10-15"
+    status: v.union(
+      v.literal("open"),                     // E owes action
+      v.literal("waiting_client"),           // ball in client's court
+      v.literal("done"),
+      v.literal("cancelled")
+    ),
+    nextAction: v.optional(v.string()),      // the physical next step
+    notes: v.optional(v.string()),
+    waitingSince: v.optional(v.number()),    // when it flipped to waiting_client
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_client", ["clientId"]),
+
   // ─── R3b: Payment instructions (no processor — manual pay page) ──
   // Single row. Shown to clients on sent/overdue invoices so they know
   // exactly how to pay. Bank details here are MEANT to be client-visible.
