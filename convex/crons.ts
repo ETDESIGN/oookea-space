@@ -63,4 +63,12 @@ crons.daily(
   {}
 );
 
+// Invoice hygiene — flip past-due sent invoices to overdue (03:00 UTC = 11:00 HKT).
+crons.daily(
+  "invoice-overdue-sweep",
+  { hourUTC: 3, minuteUTC: 0 },
+  internal.invoices.sweepOverdue,
+  {}
+);
+
 export default crons;

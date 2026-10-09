@@ -17,7 +17,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Search, Plus, Eye, CheckCircle2, Trash2, FileText, DollarSign, AlertCircle, Clock, X,
+  Search, Plus, Eye, CheckCircle2, Trash2, FileText, DollarSign, AlertCircle, Clock, X, Landmark,
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
@@ -62,6 +62,41 @@ export default function AdminInvoicesPage() {
   const clients = useQuery(api.projects.listClients, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
   const createInvoice = useMutation(api.projects.createInvoice);
   const updateStatus = useMutation(api.projects.updateInvoiceStatus);
+  const money = useQuery(api.payment.moneyOverview, { token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""), });
+  const paySettings = useQuery(api.payment.getPaymentSettings, {});
+  const savePay = useMutation(api.payment.savePaymentSettings);
+  const [payOpen, setPayOpen] = useState(false);
+  const [pay, setPay] = useState({ accountName: "", bankName: "", accountNumber: "", swiftBic: "", instructions: "", contactEmail: "", methodLabel: "", methodValue: "" });
+
+  const openPayEditor = () => {
+    setPay({
+      accountName: paySettings?.accountName ?? "",
+      bankName: paySettings?.bankName ?? "",
+      accountNumber: paySettings?.accountNumber ?? "",
+      swiftBic: paySettings?.swiftBic ?? "",
+      instructions: paySettings?.instructions ?? "",
+      contactEmail: paySettings?.contactEmail ?? "",
+      methodLabel: paySettings?.methods?.[0]?.label ?? "",
+      methodValue: paySettings?.methods?.[0]?.value ?? "",
+    });
+    setPayOpen(true);
+  };
+
+  const handleSavePay = async () => {
+    await savePay({
+      token: (typeof window !== "undefined" ? localStorage.getItem("oookea_session") || "" : ""),
+      accountName: pay.accountName || undefined,
+      bankName: pay.bankName || undefined,
+      accountNumber: pay.accountNumber || undefined,
+      swiftBic: pay.swiftBic || undefined,
+      instructions: pay.instructions || undefined,
+      contactEmail: pay.contactEmail || undefined,
+      methods: pay.methodLabel && pay.methodValue
+        ? [{ label: pay.methodLabel, value: pay.methodValue }]
+        : undefined,
+    });
+    setPayOpen(false);
+  };
 
   if (user?.role !== "admin") {
     return (
@@ -131,10 +166,10 @@ export default function AdminInvoicesPage() {
   };
 
   const stats = [
-    { label: "Total Invoiced", value: formatCurrency(totalInvoiced), icon: DollarSign, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Paid", value: formatCurrency(totalPaid), icon: CheckCircle2, color: "text-[#22C55E]", bg: "bg-[#22C55E]/10" },
-    { label: "Outstanding", value: formatCurrency(totalOutstanding), icon: Clock, color: "text-[#F59E0B]", bg: "bg-[#F59E0B]/10" },
-    { label: "Overdue", value: formatCurrency(totalOverdue), icon: AlertCircle, color: "text-destructive", bg: "bg-[#EF4444]/10" },
+    { label: "Total Invoiced", value: formatCurrency(money?.totals.invoiced ?? totalInvoiced), icon: DollarSign, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Paid", value: formatCurrency(money?.totals.paid ?? totalPaid), icon: CheckCircle2, color: "text-[#22C55E]", bg: "bg-[#22C55E]/10" },
+    { label: "Outstanding", value: formatCurrency(money?.totals.outstanding ?? totalOutstanding), icon: Clock, color: "text-[#F59E0B]", bg: "bg-[#F59E0B]/10" },
+    { label: "Overdue", value: formatCurrency(money?.totals.overdue ?? totalOverdue), icon: AlertCircle, color: "text-destructive", bg: "bg-[#EF4444]/10" },
   ];
 
   return (
@@ -144,12 +179,30 @@ export default function AdminInvoicesPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Invoice Management</h1>
-              <p className="mt-1 text-muted-foreground">Create, manage, and track all client invoices.</p>
+              <p className="mt-1 text-muted-foreground">
+                Create, manage, and track all client invoices.
+                {money && !money.settingsConfigured && (
+                  <span className="ml-2 text-[#F59E0B]">Payment instructions not configured yet.</span>
+                )}
+              </p>
             </div>
-            <Button className="gap-2 bg-primary hover:bg-primary/90" onClick={() => setDialogOpen(true)}>
-              <Plus className="h-4 w-4" />
-              Create Invoice
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" className="gap-2 border-border" onClick={openPayEditor}>
+                <Landmark className="h-4 w-4" />
+                Payment instructions
+                {paySettings && (
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      money?.settingsConfigured ? "bg-[#22C55E]" : "bg-[#F59E0B]"
+                    }`}
+                  />
+                )}
+              </Button>
+              <Button className="gap-2 bg-primary hover:bg-primary/90" onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4" />
+                Create Invoice
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -297,6 +350,58 @@ export default function AdminInvoicesPage() {
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
                 <Button className="bg-primary hover:bg-primary/90" onClick={handleCreate} disabled={!newClient || !newDueDate || lineItems.every((li) => !li.description)}>Create Invoice</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Payment instructions editor (R3b) */}
+          <Dialog open={payOpen} onOpenChange={setPayOpen}>
+            <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Payment instructions</DialogTitle>
+                <DialogDescription>
+                  Clients see this on sent &amp; overdue invoices — no payment processor, just clear instructions.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-3">
+                <div className="grid gap-1.5">
+                  <Label>Account name</Label>
+                  <Input value={pay.accountName} onChange={(e) => setPay({ ...pay, accountName: e.target.value })} placeholder="ETDESIGN Ltd" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Bank name</Label>
+                  <Input value={pay.bankName} onChange={(e) => setPay({ ...pay, bankName: e.target.value })} placeholder="HSBC Hong Kong" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Account number / IBAN</Label>
+                  <Input value={pay.accountNumber} onChange={(e) => setPay({ ...pay, accountNumber: e.target.value })} placeholder="XXX-XXXX-XXXX" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>SWIFT / BIC</Label>
+                  <Input value={pay.swiftBic} onChange={(e) => setPay({ ...pay, swiftBic: e.target.value })} placeholder="HSBCHKHHHKH" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="grid gap-1.5">
+                    <Label>Alternative method</Label>
+                    <Input value={pay.methodLabel} onChange={(e) => setPay({ ...pay, methodLabel: e.target.value })} placeholder="PayMe / Wise / USDT" />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Its value (tag/link)</Label>
+                    <Input value={pay.methodValue} onChange={(e) => setPay({ ...pay, methodValue: e.target.value })} placeholder="+852 …" />
+                  </div>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Extra instructions</Label>
+                  <textarea value={pay.instructions} onChange={(e) => setPay({ ...pay, instructions: e.target.value })} placeholder="Use the invoice number as payment reference…" rows={3} className="flex w-full rounded-lg border border-input bg-card px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Confirmation contact</Label>
+                  <Input value={pay.contactEmail} onChange={(e) => setPay({ ...pay, contactEmail: e.target.value })} placeholder="hello@oookea.com" />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setPayOpen(false)}>Cancel</Button>
+                <Button className="bg-primary hover:bg-primary/90" onClick={handleSavePay}>Save instructions</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

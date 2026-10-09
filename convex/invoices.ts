@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query as q, mutation as m } from "./_generated/server";
+import { query as q, mutation as m, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { requireUser, requireAdmin, scopeClientId } from "./auth";
 // ─── Invoices ───────────────────────────────────────────────────
@@ -75,6 +75,26 @@ export const createInvoice = m({
       createdAt: now,
       updatedAt: now,
     });
+  },
+});
+
+/** Flip sent→overdue for invoices past their due date (daily cron). */
+export const sweepOverdue = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const sent = await ctx.db
+      .query("invoices")
+      .withIndex("by_status", (r) => r.eq("status", "sent"))
+      .collect();
+    let flipped = 0;
+    for (const inv of sent) {
+      if (inv.dueDate < today) {
+        await ctx.db.patch(inv._id, { status: "overdue", updatedAt: Date.now() });
+        flipped++;
+      }
+    }
+    return { flipped };
   },
 });
 

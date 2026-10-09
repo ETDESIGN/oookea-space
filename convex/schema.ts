@@ -494,6 +494,29 @@ export default defineSchema({
     .index("by_app_day", ["appId", "day"])
     .index("by_day", ["day"]),
 
+  // ─── R3b: Payment instructions (no processor — manual pay page) ──
+  // Single row. Shown to clients on sent/overdue invoices so they know
+  // exactly how to pay. Bank details here are MEANT to be client-visible.
+  paymentSettings: defineTable({
+    accountName: v.optional(v.string()),   // legal name on the account
+    bankName: v.optional(v.string()),
+    accountNumber: v.optional(v.string()), // IBAN or account number
+    swiftBic: v.optional(v.string()),
+    methods: v.optional(                   // alternative rails
+      v.array(
+        v.object({
+          label: v.string(),               // "PayMe", "Wise", "Revolut", "Crypto (USDT)"
+          value: v.string(),               // link / tag / address
+          note: v.optional(v.string()),
+        })
+      )
+    ),
+    instructions: v.optional(v.string()),  // free-text paragraph (reference policy, etc.)
+    contactEmail: v.optional(v.string()),  // "paid? email us here"
+    defaultCurrency: v.optional(v.string()),
+    updatedAt: v.number(),
+  }),
+
   // ─── Mission Control: Action Queue (R3a) ────────────────────────
   // Everything needing E's attention becomes one dismissible row.
   // Auto-inserted by syncQueue (probe down, heartbeat missed, deploy

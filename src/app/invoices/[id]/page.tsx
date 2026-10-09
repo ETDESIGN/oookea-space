@@ -26,6 +26,7 @@ import {
   Calendar,
   Hash,
   Loader2,
+  Banknote,
 } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { useQuery } from "convex/react";
@@ -37,6 +38,86 @@ function formatCurrency(amount: number): string {
     style: "currency",
     currency: "USD",
   }).format(amount);
+}
+
+/** How-to-pay card — reads E's public payment settings. */
+function PaymentInstructions() {
+  const settings = useQuery(api.payment.getPaymentSettings, {});
+  if (settings === undefined) return null;
+  if (!settings) return null;
+  const hasBank = settings.accountNumber || settings.bankName || settings.accountName;
+  if (!hasBank && !(settings.methods && settings.methods.length) && !settings.instructions) {
+    return null;
+  }
+  return (
+    <>
+      <Separator className="my-8 bg-border" />
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Banknote className="h-4 w-4 text-primary" />
+          How to pay this invoice
+        </p>
+        <div className="mt-3 space-y-3 text-sm">
+          {hasBank && (
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Bank transfer
+              </p>
+              {settings.accountName && (
+                <p className="text-foreground">
+                  <span className="text-muted-foreground">Account name: </span>
+                  {settings.accountName}
+                </p>
+              )}
+              {settings.bankName && (
+                <p className="text-foreground">
+                  <span className="text-muted-foreground">Bank: </span>
+                  {settings.bankName}
+                </p>
+              )}
+              {settings.accountNumber && (
+                <p className="text-foreground font-mono">
+                  <span className="font-sans text-muted-foreground">Account / IBAN: </span>
+                  {settings.accountNumber}
+                </p>
+              )}
+              {settings.swiftBic && (
+                <p className="text-foreground font-mono">
+                  <span className="font-sans text-muted-foreground">SWIFT/BIC: </span>
+                  {settings.swiftBic}
+                </p>
+              )}
+            </div>
+          )}
+          {settings.methods && settings.methods.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Other ways to pay
+              </p>
+              {settings.methods.map((m: { label: string; value: string; note?: string }) => (
+                <p key={m.label} className="text-foreground">
+                  <span className="text-muted-foreground">{m.label}: </span>
+                  <span className="font-mono">{m.value}</span>
+                  {m.note && <span className="block text-xs text-muted-foreground">{m.note}</span>}
+                </p>
+              ))}
+            </div>
+          )}
+          {settings.instructions && (
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {settings.instructions}
+            </p>
+          )}
+          {settings.contactEmail && (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Mail className="h-3 w-3" />
+              Paid already? Tell us at {settings.contactEmail} and we&apos;ll mark it paid the same day.
+            </p>
+          )}
+        </div>
+      </div>
+    </>
+  );
 }
 
 function formatDate(dateStr: string): string {
@@ -307,6 +388,11 @@ export default function InvoiceDetailPage({
                     </div>
                   </div>
                 </div>
+
+                {/* How to pay — manual payment instructions (no processor) */}
+                {(invoice.status === "sent" || invoice.status === "overdue") && (
+                  <PaymentInstructions />
+                )}
 
                 {/* Notes */}
                 {invoice.notes && (
