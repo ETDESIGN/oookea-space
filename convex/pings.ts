@@ -206,15 +206,26 @@ export const recordPing = internalMutation({
 
 const NTFY_URL = process.env.NTFY_URL || "https://ntfy.sh/oookea-alerts-e";
 
+const NTFY_TOPIC = process.env.NTFY_URL ? process.env.NTFY_URL.replace("https://ntfy.sh/", "") : "oookea-alerts-e";
+
 async function pushNtfy(title: string, body: string, priority: string, tags: string[]) {
   try {
-    await fetch(NTFY_URL, {
+    // Header mode. Headers must be latin-1 → strip non-latin1 from the title
+    // (emoji go in `tags` as ntfy short-names, rendered client-side; the body
+    // is UTF-8 so arrows/emoji are fine there). ntfy's JSON publish mode is
+    // currently returning 40024 "body must be valid JSON" — do not use it.
+    const safeTitle = title.replace(/[—–]/g, "-").replace(/[^\x20-\x7E]/g, "");
+    const res = await fetch("https://ntfy.sh/oookea-alerts-e", {
       method: "POST",
-      headers: { Title: title, Priority: priority, Tags: tags.join(",") },
+      headers: {
+        Title: safeTitle,
+        Priority: priority,
+        Tags: tags.join(","),
+      },
       body,
       signal: AbortSignal.timeout(8_000),
     });
-    return true;
+    return res.ok;
   } catch {
     return false;
   }

@@ -44,7 +44,9 @@ consider passphase-only references + KEYS.md links for prod-grade secrets. Admin
 
 ## Proposed build order (Round 3)
 
-- **R3a — Morning Brief + Action Queue** (dashboard irreplaceable; ntfy/Discord push exists)
+- **R3a — Morning Brief + Action Queue** ✅ SHIPPED 2026-10-10
+  (actionQueue table, brief.ts sync/send, queue-sync cron 10min, brief cron 08:00 HKT,
+  MC dashboard panel with Done/Snooze, ntfy header-mode push — JSON mode broken ntfy-side 40024)
 - **R3b — Money view** (invoices, payment-instructions page, Client Vault downloads)
 - **R3c — Commitments queue + client health scorecard + last-contact tracking**
 - **R3d — Client value reports** (what-changed drafts, monthly recap, GA4 inject)

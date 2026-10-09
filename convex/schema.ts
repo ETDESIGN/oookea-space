@@ -490,4 +490,27 @@ export default defineSchema({
   })
     .index("by_app_day", ["appId", "day"])
     .index("by_day", ["day"]),
+
+  // ─── Mission Control: Action Queue (R3a) ────────────────────────
+  // Everything needing E's attention becomes one dismissible row.
+  // Auto-inserted by syncQueue (probe down, heartbeat missed, deploy
+  // failing), auto-resolved when the condition clears. R3b/c add
+  // invoices/deadlines/quiet-client items through the same table.
+  actionQueue: defineTable({
+    kind: v.string(),              // app-down | hb-missed | vercel-fail | invoice | deadline | quiet-client
+    severity: v.union(v.literal("critical"), v.literal("warning"), v.literal("info")),
+    title: v.string(),
+    detail: v.optional(v.string()),
+    actionLabel: v.optional(v.string()),
+    actionUrl: v.optional(v.string()),
+    source: v.string(),            // pings | heartbeats | vercel | manual | money | clients
+    appId: v.optional(v.id("apps")),
+    status: v.union(v.literal("open"), v.literal("done"), v.literal("snoozed")),
+    snoozedUntil: v.optional(v.number()),
+    dedupeKey: v.optional(v.string()), // one open row per key
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+  })
+    .index("by_status", ["status", "createdAt"])
+    .index("by_dedupe", ["dedupeKey", "status"]),
 });

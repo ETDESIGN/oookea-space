@@ -28,6 +28,11 @@ import {
   Power,
 } from "lucide-react";
 import { api } from "../../../../convex/_generated/api";
+import {
+  Inbox,
+  Send,
+  BellOff,
+} from "lucide-react";
 
 // ─── Mission Control — Round 2 v1 ────────────────────────────────
 // Tile grid: integrations (provider health) + heartbeats (cron
@@ -120,6 +125,12 @@ export default function MissionControlPage() {
     api.integrations.listIntegrations,
     token ? { token } : "skip"
   );
+  const queue = useQuery(api.brief.listQueue, token ? { token } : "skip");
+  const completeItem = useMutation(api.brief.completeItem);
+  const snoozeItem = useMutation(api.brief.snoozeItem);
+  const requestBrief = useAction(api.brief.requestBrief);
+  const [briefing, setBriefing] = useState(false);
+  const [briefNote, setBriefNote] = useState<string | null>(null);
   const heartbeats = useQuery(
     api.heartbeats.listHeartbeats,
     token ? { token } : "skip"
@@ -259,6 +270,109 @@ export default function MissionControlPage() {
               )}
             </div>
           </div>
+
+          {/* Action Queue (R3a) — one dismissible list of everything needing E */}
+          {queue !== undefined && (
+            <section
+              className={`rounded-xl border p-4 ${
+                queue.length > 0
+                  ? "border-[#F59E0B]/30 bg-[#F59E0B]/5"
+                  : "border-[#22C55E]/30 bg-[#22C55E]/5"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2
+                  className={`flex items-center gap-2 text-sm font-semibold uppercase tracking-wide ${
+                    queue.length > 0 ? "text-[#F59E0B]" : "text-[#22C55E]"
+                  }`}
+                >
+                  <Inbox className="h-4 w-4" />
+                  Action Queue
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                    {queue.length}
+                  </span>
+                </h2>
+                <button
+                  className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+                  disabled={briefing}
+                  onClick={async () => {
+                    setBriefing(true);
+                    setBriefNote(null);
+                    try {
+                      const r = await requestBrief({ token });
+                      setBriefNote(r.pushed ? "pushed to your phone ✓" : "push failed (ntfy unreachable)");
+                    } catch {
+                      setBriefNote("failed");
+                    } finally {
+                      setBriefing(false);
+                      setTimeout(() => setBriefNote(null), 6000);
+                    }
+                  }}
+                >
+                  <Send className={`h-3 w-3 ${briefing ? "animate-pulse" : ""}`} />
+                  Send brief now
+                </button>
+              </div>
+              {briefNote && (
+                <p className="mt-1 text-right text-[11px] text-muted-foreground">{briefNote}</p>
+              )}
+              {queue.length === 0 ? (
+                <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                  <CircleCheck className="h-4 w-4 text-[#22C55E]" />
+                  All clear — nothing needs you. The 8:00 brief will tell you if that changes.
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {queue.map((item) => {
+                    const sev =
+                      item.severity === "critical"
+                        ? { dot: "bg-[#EF4444]", text: "text-[#EF4444]" }
+                        : item.severity === "warning"
+                          ? { dot: "bg-[#F59E0B]", text: "text-[#F59E0B]" }
+                          : { dot: "bg-[#64748B]", text: "text-muted-foreground" };
+                    return (
+                      <li
+                        key={String(item._id)}
+                        className="flex flex-col gap-2 rounded-lg border bg-background p-3 sm:flex-row sm:items-center"
+                      >
+                        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${sev.dot}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground">
+                            {item.actionUrl ? (
+                              <a href={item.actionUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                {item.title}
+                              </a>
+                            ) : (
+                              item.title
+                            )}
+                          </p>
+                          {item.detail && (
+                            <p className="text-xs text-muted-foreground">{item.detail}</p>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button
+                            className="rounded-md border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                            onClick={() => snoozeItem({ token, id: item._id as never })}
+                          >
+                            <BellOff className="mr-1 inline h-3 w-3" />
+                            4h
+                          </button>
+                          <button
+                            className="rounded-md border border-[#22C55E]/40 bg-[#22C55E]/10 px-2.5 py-1 text-xs font-medium text-[#22C55E] transition-colors hover:bg-[#22C55E]/20"
+                            onClick={() => completeItem({ token, id: item._id as never })}
+                          >
+                            <CircleCheck className="mr-1 inline h-3 w-3" />
+                            Done
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          )}
 
           {/* Integrations */}
           <section className="space-y-3">

@@ -47,4 +47,20 @@ crons.interval(
   {}
 );
 
+// Action Queue reconciler — every 10 min: sources ⇄ queue rows.
+crons.interval(
+  "queue-sync",
+  { minutes: 10 },
+  internal.brief.syncQueue,
+  {}
+);
+
+// Morning brief — 00:00 UTC = 08:00 HKT push via ntfy.
+crons.daily(
+  "morning-brief",
+  { hourUTC: 0, minuteUTC: 0 },
+  internal.brief.sendMorningBrief,
+  {}
+);
+
 export default crons;
