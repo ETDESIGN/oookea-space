@@ -25,13 +25,17 @@ type QueueItem = {
 };
 
 async function pushNtfy(title: string, body: string, priority: string, tags: string[]) {
+  // Topic from NTFY_URL env (private channel; the random topic name IS the credential).
+  const topic = (process.env.NTFY_URL || "https://ntfy.sh/oookea-alerts-e")
+    .replace("https://ntfy.sh/", "")
+    .replace(/^\/+|\/+$/g, "");
   try {
     // Header mode. Headers must be latin-1 → strip non-latin1 from the title
     // (emoji go in `tags` as ntfy short-names, rendered client-side; the body
     // is UTF-8 so arrows/emoji are fine there). ntfy's JSON publish mode is
     // currently returning 40024 "body must be valid JSON" — do not use it.
     const safeTitle = title.replace(/[—–]/g, "-").replace(/[^\x20-\x7E]/g, "");
-    const res = await fetch("https://ntfy.sh/oookea-alerts-e", {
+    const res = await fetch(`https://ntfy.sh/${topic}`, {
       method: "POST",
       headers: {
         Title: safeTitle,
@@ -107,7 +111,11 @@ export const collectSignals = internalQuery({
   handler: async (ctx) => {
     const apps = await ctx.db.query("apps").collect();
     const downApps = apps.filter(
-      (a) => a.lastPingAt !== undefined && a.lastOk === false && !a.statusOverride
+      (a) =>
+        a.lastPingAt !== undefined &&
+        a.lastOk === false &&
+        !a.statusOverride &&
+        !a.probeExclude
     );
 
     const hbs = await ctx.db.query("heartbeats").collect();

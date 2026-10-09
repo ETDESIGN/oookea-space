@@ -146,7 +146,7 @@ export const appsToPing = internalQuery({
   args: {},
   handler: async (ctx) => {
     const apps = await ctx.db.query("apps").collect();
-    return apps.filter((a) => !!a.url);
+    return apps.filter((a) => !!a.url && !a.probeExclude);
   },
 });
 

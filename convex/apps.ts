@@ -42,6 +42,7 @@ const appShape = {
   statusNote: v.optional(v.string()),
   pinned: v.optional(v.boolean()),
   order: v.number(),
+  probeExclude: v.optional(v.boolean()),
   brandIcon: v.optional(v.string()),
   links: v.optional(
     v.array(

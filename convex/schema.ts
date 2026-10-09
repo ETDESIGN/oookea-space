@@ -441,6 +441,9 @@ export default defineSchema({
     latencyHistory: v.optional(
       v.array(v.object({ t: v.number(), ms: v.number(), ok: v.boolean() }))
     ),
+    // Exclude from the HTTP probe sweep (e.g. API-only backends with no
+    // public root route — a 404 there means nothing about health).
+    probeExclude: v.optional(v.boolean()),
     // Where the work lives: local folders, docs, Obsidian
     folders: v.optional(
       v.object({
