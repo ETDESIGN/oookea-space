@@ -47,7 +47,10 @@ consider passphase-only references + KEYS.md links for prod-grade secrets. Admin
 - **R3a — Morning Brief + Action Queue** ✅ SHIPPED 2026-10-10
   (actionQueue table, brief.ts sync/send, queue-sync cron 10min, brief cron 08:00 HKT,
   MC dashboard panel with Done/Snooze, ntfy header-mode push — JSON mode broken ntfy-side 40024)
-- **R3b — Money view** (invoices, payment-instructions page, Client Vault downloads)
+- **R3b — Money view** ✅ SHIPPED 2026-10-10
+  (paymentSettings table + convex/payment.ts moneyOverview; "How to pay" card on client invoice pages
+  for sent/overdue; admin editor dialog + KPI strip; daily overdue sweep 03:00 UTC; Client Vault = pre-existing /files.
+  E still to fill real bank details via the admin editor.)
 - **R3c — Commitments queue + client health scorecard + last-contact tracking**
 - **R3d — Client value reports** (what-changed drafts, monthly recap, GA4 inject)
 - **R3e — Cmd+K palette + incident objects** (polish layer)
