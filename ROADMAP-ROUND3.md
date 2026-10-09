@@ -51,6 +51,9 @@ consider passphase-only references + KEYS.md links for prod-grade secrets. Admin
   (paymentSettings table + convex/payment.ts moneyOverview; "How to pay" card on client invoice pages
   for sent/overdue; admin editor dialog + KPI strip; daily overdue sweep 03:00 UTC; Client Vault = pre-existing /files.
   E still to fill real bank details via the admin editor.)
-- **R3c — Commitments queue + client health scorecard + last-contact tracking**
+- **R3c — Commitments queue + client health + quiet-client nudges** ✅ SHIPPED 2026-10-10
+  (commitments table + /admin/mission-control/commitments; clientHealth transparent rules on
+  lastLogin/thread lastMessage; Clients table Health column; Action Queue reconciles overdue
+  invoices + stale waiting-on-client (5d) + quiet clients (35d); verified live: Florian red/43d)
 - **R3d — Client value reports** (what-changed drafts, monthly recap, GA4 inject)
 - **R3e — Cmd+K palette + incident objects** (polish layer)
