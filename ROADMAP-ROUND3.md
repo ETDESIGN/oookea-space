@@ -55,5 +55,12 @@ consider passphase-only references + KEYS.md links for prod-grade secrets. Admin
   (commitments table + /admin/mission-control/commitments; clientHealth transparent rules on
   lastLogin/thread lastMessage; Clients table Health column; Action Queue reconciles overdue
   invoices + stale waiting-on-client (5d) + quiet clients (35d); verified live: Florian red/43d)
-- **R3d — Client value reports** (what-changed drafts, monthly recap, GA4 inject)
-- **R3e — Cmd+K palette + incident objects** (polish layer)
+- **R3d — Client value reports** ✅ SHIPPED 2026-10-10
+  (reports table + reports.ts generateDraft from REAL data — probe uptime rollups, completed
+  commitments, resolved incidents, settled invoices; /admin/reports generate→edit→publish;
+  clientReports portal query; verified live: Sarah Johnson draft @ 92.67% honest uptime)
+- **R3e — Incidents + Cmd+K palette** ✅ SHIPPED 2026-10-10 — ROUND 3 COMPLETE
+  (incidents table; probe engine auto-opens on DOWN / auto-resolves on UP, same tx;
+  /admin/incidents with client-safe timeline; public status pages show open+past incidents;
+  AdminPalette ⌘K — apps Enter=site ⌘Enter=repo, pages, clients; lifecycle verified live end-to-end)
+- Deferred from R3d: GA4 inject into reports (needs GA4 Data API wiring; SA hermes-analytics@caneles-analytics-6784.iam.gserviceaccount.com exists)
