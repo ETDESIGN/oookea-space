@@ -199,6 +199,41 @@ export const recordPing = internalMutation({
         lastMs: ms,
       });
     }
+    // R3e: auto-incident lifecycle — DOWN opens (if none open), UP resolves.
+    const openInc = await ctx.db
+      .query("incidents")
+      .withIndex("by_app", (i) => i.eq("appId", appId))
+      .collect();
+    const hasOpen = openInc.some((i) => i.status !== "resolved");
+    if (!ok && !hasOpen) {
+      await ctx.db.insert("incidents", {
+        appId,
+        title: `${app?.name ?? "Service"} is not responding`,
+        severity: "major",
+        status: "investigating",
+        startedAt: now,
+        updates: [
+          {
+            at: now,
+            body: "Automated monitoring detected a disruption. Investigation started.",
+          },
+        ],
+      });
+    } else if (ok && hasOpen) {
+      for (const inc of openInc) {
+        if (inc.status !== "resolved") {
+          await ctx.db.patch(inc._id, {
+            status: "resolved",
+            resolvedAt: now,
+            autoResolved: true,
+            updates: [
+              ...(inc.updates ?? []),
+              { at: now, body: "Service restored. Monitoring confirms recovery." },
+            ],
+          });
+        }
+      }
+    }
   },
 });
 

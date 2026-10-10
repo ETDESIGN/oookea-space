@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Sidebar } from "./sidebar";
 import { MobileTabBar } from "@/components/layout/mobile-tabbar";
 import { Header } from "./header";
+import { AdminPalette } from "./admin-palette";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -26,6 +27,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <MobileTabBar />
+      <AdminPalette />
     </div>
   );
 }

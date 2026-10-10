@@ -27,6 +27,9 @@ import {
   Package,
   Gauge,
   LayoutGrid,
+  ListChecks,
+  FileHeart,
+  Siren,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -47,6 +50,9 @@ const clientNavItems = [
 const adminNavItems = [
   { label: "Mission Control", href: "/admin/mission-control", icon: Gauge },
   { label: "Fleet", href: "/admin/mission-control/fleet", icon: LayoutGrid },
+  { label: "Commitments", href: "/admin/mission-control/commitments", icon: ListChecks },
+  { label: "Value Reports", href: "/admin/reports", icon: FileHeart },
+  { label: "Incidents", href: "/admin/incidents", icon: Siren },
   { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Analytics", href: "/admin/analytics", icon: TrendingUp },
   { label: "Clients", href: "/admin/clients", icon: Users },

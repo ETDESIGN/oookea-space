@@ -113,6 +113,42 @@ export const getPage = q({
     const overall = hasOutage ? "outage" : hasDegraded ? "degraded" : "operational";
 
     const brand = enabled[0].publicStatus!;
+    // Incidents: open ones for this slug's apps — reassuring language.
+    const groupApps = apps.filter(
+      (a) => a.publicStatus && a.publicStatus.enabled
+    );
+    const incidentsRaw = await ctx.db.query("incidents").collect();
+    const appNameOf = new Map(apps.map((a) => [a._id, a.name]));
+    const openIncidents = incidentsRaw
+      .filter((i) => i.status !== "resolved" && groupApps.some((a) => a._id === i.appId))
+      .map((i) => ({
+        app: appNameOf.get(i.appId) ?? "Service",
+        title: i.title,
+        severity: i.severity,
+        startedAt: i.startedAt,
+        impact: i.impact ?? null,
+        latestUpdate:
+          i.updates && i.updates.length > 0 ? i.updates[i.updates.length - 1].body : null,
+      }));
+    const pastIncidents = incidentsRaw
+      .filter((i) => {
+        if (i.status !== "resolved" || !i.resolvedAt) return false;
+        if (!groupApps.some((a) => a._id === i.appId)) return false;
+        return Date.now() - i.resolvedAt < 14 * 86_400_000;
+      })
+      .sort((a, b) => (b.resolvedAt ?? 0) - (a.resolvedAt ?? 0))
+      .slice(0, 5)
+      .map((i) => ({
+        app: appNameOf.get(i.appId) ?? "Service",
+        title: i.title,
+        startedAt: i.startedAt,
+        resolvedAt: i.resolvedAt ?? null,
+        durationMin:
+          i.resolvedAt
+            ? Math.max(1, Math.round((i.resolvedAt - i.startedAt) / 60000))
+            : null,
+      }));
+
     return {
       slug,
       brandName: brand.brandName,
@@ -121,6 +157,7 @@ export const getPage = q({
       tagline: brand.tagline ?? null,
       overall,
       apps: items,
+      incidents: { open: openIncidents, past: pastIncidents },
       generatedAt: Date.now(),
     };
   },

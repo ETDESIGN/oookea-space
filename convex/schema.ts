@@ -494,6 +494,61 @@ export default defineSchema({
     .index("by_app_day", ["appId", "day"])
     .index("by_day", ["day"]),
 
+  // ─── R3d: Client value reports — retention collateral ───────────
+  // E generates a draft (uptime from probes, work shipped, money), edits,
+  // publishes → client sees it in their portal. Plain English, no jargon.
+  reports: defineTable({
+    clientId: v.optional(v.id("users")),
+    title: v.string(),
+    periodStart: v.string(),              // "2026-10-01"
+    periodEnd: v.string(),
+    status: v.union(v.literal("draft"), v.literal("published")),
+    summary: v.string(),                  // the plain-English "what changed"
+    wins: v.optional(v.array(v.string())),
+    metrics: v.optional(
+      v.array(
+        v.object({
+          label: v.string(),              // "Uptime", "Deploys shipped", "GA4 sessions"
+          value: v.string(),              // "99.98%", "14", "12,340"
+          note: v.optional(v.string()),
+        })
+      )
+    ),
+    appIds: v.optional(v.array(v.id("apps"))), // uptime rollup sources
+    publishedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_client", ["clientId"])
+    .index("by_status", ["status"]),
+
+  // ─── R3e: Incidents — one object per outage, client-safe language ─
+  // Auto-opened when a probe flips DOWN, auto-resolved on UP. E enriches
+  // impact/updates; public status pages show open ones reassuringly.
+  incidents: defineTable({
+    appId: v.id("apps"),
+    title: v.string(),
+    severity: v.union(
+      v.literal("minor"),
+      v.literal("major"),
+      v.literal("critical")
+    ),
+    status: v.union(
+      v.literal("investigating"),
+      v.literal("monitoring"),
+      v.literal("resolved")
+    ),
+    impact: v.optional(v.string()),       // client-facing sentence
+    startedAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+    updates: v.optional(
+      v.array(v.object({ at: v.number(), body: v.string() }))
+    ),
+    autoResolved: v.optional(v.boolean()),
+  })
+    .index("by_app", ["appId"])
+    .index("by_status", ["status"]),
+
   // ─── R3c: Commitments — every promise to a client gets a date ────
   // "Waiting on client" items go stale → the Action Queue nudges E to
   // follow up. This is where small-business work usually dies; not here.
