@@ -12,6 +12,9 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
+// Placeholder nodes — deliberately NOT portal data (login is public).
+const STATIC_LABELS = ["caneles.hk", "brand", "code", "design", "atelier", "craft", "web", "photo", "space", "data", "form", "type"];
+
 interface PulseData {
   clientCount: number;
   projects: Array<{ slug: string }>;
@@ -34,8 +37,9 @@ function prettify(slug: string): string {
 }
 
 export function AtelierPulse() {
-  const pulse = useQuery(api.projects.getAtelierPulse, {}) as PulseData | undefined;
-  const slugs = (pulse?.projects ?? []).map((p) => p.slug).filter(Boolean);
+  // NOTE: no live portal data here — the login page is public. Static labels only.
+  const pulse = undefined as PulseData | undefined;
+  const slugs = STATIC_LABELS;
 
   // distribute nodes across rings, evenly per ring with a staggered offset
   const perRing: string[][] = RINGS.map(() => []);

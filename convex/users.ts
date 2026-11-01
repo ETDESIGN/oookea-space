@@ -271,22 +271,6 @@ export const getGalleryForEmail = q({
 });
 
 
-// ─── Atelier pulse (public, login visual) ────────────────────────
-// Pre-login pulse data for the login page's default visual: live counts
-// and project slugs ONLY — no titles, no names, no emails.
-export const getAtelierPulse = q({
-  args: {},
-  handler: async (ctx) => {
-    const clients = (await ctx.db.query("users").collect()).filter(
-      (u: any) => u.role === "client"
-    );
-    const projects = await ctx.db.query("projects").collect();
-    return {
-      clientCount: clients.length,
-      projects: projects.slice(0, 12).map((p) => ({ slug: p.slug ?? "" })),
-    };
-  },
-});
 
 
 // ─── Session lookup (for API routes) ────────────────────────────
