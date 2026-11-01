@@ -25,7 +25,11 @@ const RINGS = [
 
 function prettify(slug: string): string {
   if (slug === "caneles-hk") return "caneles.hk";
-  const words = slug.split("-").filter(Boolean).slice(0, 3).join(" ");
+  const words = slug
+    .split("-")
+    .filter((w) => w && !/^\d{4,}$/.test(w)) // strip timestamp-ish tokens
+    .slice(0, 3)
+    .join(" ");
   return words || "atelier";
 }
 
@@ -39,20 +43,6 @@ export function AtelierPulse() {
 
   return (
     <div className="absolute inset-0 bg-gradient-to-br from-[#111114] via-[#0A0A0B] to-[#15121f]">
-      <style>{`
-        @keyframes ap-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes ap-counter { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
-        @keyframes ap-ping {
-          0% { transform: translate(-50%, -50%) scale(0.35); opacity: 0.32; }
-          70% { opacity: 0.04; }
-          100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-        }
-        .ap-anim, .ap-anim * { animation-play-state: running; }
-        @media (prefers-reduced-motion: reduce) {
-          .ap-anim *, .ap-ping { animation: none !important; }
-        }
-      `}</style>
-
       {/* faint oversized watermark */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none">
         <span className="font-display text-[280px] font-black leading-none text-white/[0.03]">O</span>
