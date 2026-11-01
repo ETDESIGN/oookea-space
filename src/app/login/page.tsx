@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Palette, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { AtelierPulse } from "@/components/atelier-pulse";
+import { LatentBloom } from "@/components/latent-bloom";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,15 +21,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showForgotPw, setShowForgotPw] = useState(false);
 
-  // Live brand + gallery lookup as the user types a known email
+  // Live brand lookup as the user types a known email
   const typedBrand = useQuery(
     api.projects.getBrandForEmail,
     email.includes("@") ? { email } : "skip"
   ) as { name: string | null; brandLogo: string | null; brandColor: string | null } | null | undefined;
-  const gallery = useQuery(
-    api.projects.getGalleryForEmail,
-    email.includes("@") ? { email } : "skip"
-  ) as string[] | null | undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,60 +49,12 @@ export default function LoginPage() {
     }
   };
 
-  const galleryImages = gallery ?? [];
-  const [galleryIdx, setGalleryIdx] = useState(0);
-  useEffect(() => {
-    if (galleryImages.length < 2) return;
-    const t = setInterval(() => setGalleryIdx((i) => (i + 1) % galleryImages.length), 7000);
-    return () => clearInterval(t);
-  }, [galleryImages.length]);
 
   return (
     <div className="flex min-h-screen bg-[#0A0A0B]">
-      {/* ── Left: client work gallery (only their projects' imagery) ── */}
+      {/* ── Left: Latent Bloom (diffusion field; client logo stage when known) ── */}
       <div className="studio-noise relative hidden w-1/2 overflow-hidden lg:block">
-        {galleryImages.length > 0 ? (
-          <>
-            {galleryImages.map((src, i) => (
-              <div
-                key={src}
-                className="absolute inset-0 bg-cover bg-center transition-opacity duration-[1600ms] ease-in-out"
-                style={{
-                  backgroundImage: `url(${src})`,
-                  opacity: i === galleryIdx ? 1 : 0,
-                  transform: i === galleryIdx ? "scale(1.06)" : "scale(1)",
-                  transition: "opacity 1600ms ease-in-out, transform 8000ms ease-out",
-                }}
-              />
-            ))}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0B] via-[#0A0A0B]/30 to-transparent" />
-            {/* gallery footer */}
-            <div className="absolute bottom-8 left-8 right-8">
-              {typedBrand?.name && (
-                <p className="font-display text-lg font-semibold uppercase tracking-[0.14em] text-white/90">
-                  {typedBrand.name}
-                </p>
-              )}
-              <p className="mt-1 text-xs text-white/50">
-                Work delivered by Oookea — Digital Atelier
-              </p>
-              {galleryImages.length > 1 && (
-                <div className="mt-4 flex gap-1.5">
-                  {galleryImages.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setGalleryIdx(i)}
-                      className={`h-1 rounded-full transition-all ${i === galleryIdx ? "w-8 bg-white/80" : "w-3 bg-white/25"}`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          /* Default: the Atelier Pulse — live portal data as orbiting nodes */
-          <AtelierPulse />
-        )}
+        <LatentBloom brandLogo={typedBrand?.brandLogo ?? null} brandColor={typedBrand?.brandColor ?? null} />
       </div>
 
       {/* ── Right: form ── */}

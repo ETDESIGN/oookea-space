@@ -257,14 +257,3 @@
   animation: oookea-pulse 1.6s ease-in-out infinite;
 }
 
-/* ── Atelier Pulse (login visual) ─────────────────────────────── */
-@keyframes ap-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes ap-counter { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
-@keyframes ap-ping {
-  0% { transform: translate(-50%, -50%) scale(0.35); opacity: 0.32; }
-  70% { opacity: 0.04; }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ap-anim *, .ap-ping { animation: none !important; }
-}
