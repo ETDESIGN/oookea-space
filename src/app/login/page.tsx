@@ -58,7 +58,7 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right: form ── */}
-      <div className="flex w-full items-center justify-center px-4 lg:w-1/2">
+      <div className="relative flex w-full items-center justify-center px-4 lg:w-1/2">
         {/* Login Card */}
         <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#131315]/90 p-8 shadow-2xl shadow-black/50 backdrop-blur-xl">
           {/* Brand — co-branded lockup (updates live as the email is typed) */}
@@ -119,7 +119,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="h-11 border-white/10 bg-[#1B1B1F] focus:border-[#6366F1] focus:ring-[#6366F1]"
+                className="h-11 border-white/10 bg-[#1B1B1F] text-white placeholder:text-white/35 caret-[#6366F1] focus:border-[#6366F1] focus:ring-[#6366F1] [&:-webkit-autofill]:[-webkit-text-fill-color:#fff] [&:-webkit-autofill]:[transition:background-color_9999s_ease-out_e0s]"
               />
             </div>
 
@@ -136,7 +136,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="h-11 border-white/10 bg-[#1B1B1F] pr-10 focus:border-[#6366F1] focus:ring-[#6366F1]"
+                  className="h-11 border-white/10 bg-[#1B1B1F] pr-10 text-white placeholder:text-white/35 caret-[#6366F1] focus:border-[#6366F1] focus:ring-[#6366F1] [&:-webkit-autofill]:[-webkit-text-fill-color:#fff] [&:-webkit-autofill]:[transition:background-color_9999s_ease-out_e0s]"
                 />
                 <button
                   type="button"
@@ -192,8 +192,8 @@ export default function LoginPage() {
           </form>
         </div>
 
-        {/* Footer */}
-        <p className="mt-6 text-center text-xs text-zinc-500">
+        {/* Footer — pinned bottom-right of the screen */}
+        <p className="absolute bottom-5 right-6 text-xs text-zinc-500">
           © {new Date().getFullYear()} Oookea Digital Atelier. All rights reserved.
         </p>
       </div>
