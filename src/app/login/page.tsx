@@ -53,7 +53,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen bg-[#0A0A0B]">
       {/* ── Left: Latent Bloom (diffusion field; client logo stage when known) ── */}
-      <div className="studio-noise relative hidden w-1/2 overflow-hidden lg:block">
+      <div className="relative hidden w-1/2 overflow-hidden lg:block">
         <LatentBloom brandLogo={typedBrand?.brandLogo ?? null} brandColor={typedBrand?.brandColor ?? null} />
       </div>
 

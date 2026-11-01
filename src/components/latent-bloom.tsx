@@ -8,8 +8,8 @@
  * brand color — before the forms and the O.
  *
  * Motion design: each particle departs on its own beat (staggered
- * morphs); depth layers give parallax; the O lands with a soft bloom
- * pulse; the cursor leaves gentle vortices.
+ * morphs); depth layers give parallax; the cursor leaves gentle vortices.
+ * Background matches the page (#0A0A0B) exactly.
  *
  * No portal data, no libraries. Canvas 2D. Static single render under
  * prefers-reduced-motion.
@@ -162,7 +162,6 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
     let stage: Stage = "noise";
     let stageStart = performance.now();
     let cycle = 0;
-    let bloomPulseAt = 0; // timestamp when the O finishes landing
     const next = (): Stage => {
       if (stage === "noise") return hasLogo() ? "logo" : "form";
       if (stage === "logo") return "form";
@@ -181,9 +180,6 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
       const logoPts = logoPtsRef.current;
       const brand = brandRgbRef.current;
       const logoScale = Math.min(W, H) * 0.56;
-
-      // the O lands — arm the bloom pulse once fully settled
-      if (stage === "o" && stageAge > EASE_MS + STAGGER_MS && !bloomPulseAt) bloomPulseAt = now;
 
       ctx.fillStyle = "rgba(10,10,11,0.25)";
       ctx.fillRect(0, 0, W, H);
@@ -239,28 +235,13 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
         ctx.fill();
       }
 
-      // the O's landing bloom: one soft ring of light, fades in ~1.1s
-      if (bloomPulseAt && now - bloomPulseAt < 1100) {
-        const t = (now - bloomPulseAt) / 1100;
-        const R = Math.min(W, H) * (0.24 + t * 0.16);
-        const grad = ctx.createRadialGradient(W / 2, H / 2, R * 0.72, W / 2, H / 2, R);
-        grad.addColorStop(0, "rgba(129,140,248,0)");
-        grad.addColorStop(0.82, `rgba(129,140,248,${(0.20 * (1 - t)).toFixed(3)})`);
-        grad.addColorStop(1, "rgba(129,140,248,0)");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(W / 2, H / 2, R, 0, 6.2832);
-        ctx.fill();
-      }
-      if (stage !== "o") bloomPulseAt = 0;
-
       ctx.globalCompositeOperation = "source-over";
       if (!reduced) raf = requestAnimationFrame(draw);
     };
 
     if (reduced) {
       // static composition: the O, once
-      stage = "o"; stageStart = -1e9; bloomPulseAt = 0;
+      stage = "o"; stageStart = -1e9;
       draw(performance.now() + DURATIONS.o);
     } else {
       raf = requestAnimationFrame(draw);
@@ -275,7 +256,7 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
   }, []);
 
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-[#111114] via-[#0A0A0B] to-[#15121f]">
+    <div className="absolute inset-0 bg-[#0A0A0B]">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden="true" />
       <div className="absolute bottom-8 left-8 right-8">
         <p className="font-display text-lg font-semibold text-white/90">Oookea</p>
