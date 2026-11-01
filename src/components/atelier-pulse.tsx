@@ -10,7 +10,7 @@
  */
 
 import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { api } from "../../convex/_generated/api";
 
 interface PulseData {
   clientCount: number;
