@@ -28,6 +28,9 @@ interface Report {
   pages: Array<{ path: string; views: number; sessions: number }>;
   channels: Array<{ channel: string; sessions: number }>;
   devices: Array<{ device: string; sessions: number }>;
+  countries: Array<{ country: string; users: number }>;
+  os: Array<{ os: string; sessions: number }>;
+  browsers: Array<{ browser: string; sessions: number }>;
 }
 
 const RANGES = [7, 28, 90] as const;
@@ -270,6 +273,21 @@ export function GaDashboard({ module: mod }: { module: { config?: GaModuleConfig
                   { name: "sessions", color: accent, points: report.daily.map((d) => d.sessions) },
                 ]}
               />
+            </div>
+
+            <div className="grid gap-5 lg:grid-cols-3">
+              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                <h2 className="mb-3 text-sm font-semibold text-foreground">Countries</h2>
+                <BarList rows={(report.countries ?? []).map((c) => ({ label: c.country, value: c.users }))} accent={accent} />
+              </div>
+              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                <h2 className="mb-3 text-sm font-semibold text-foreground">Operating systems</h2>
+                <BarList rows={(report.os ?? []).map((o) => ({ label: o.os, value: o.sessions }))} accent={accent} />
+              </div>
+              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                <h2 className="mb-3 text-sm font-semibold text-foreground">Browsers</h2>
+                <BarList rows={(report.browsers ?? []).map((b) => ({ label: b.browser, value: b.sessions }))} accent={accent} />
+              </div>
             </div>
 
             <div className="grid gap-5 lg:grid-cols-2">

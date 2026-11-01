@@ -122,9 +122,9 @@ export const fetchGaReport = action({
     const d = Math.min(365, Math.max(1, Math.floor(days) || 7));
     const dateRange = { startDate: `${d}daysAgo`, endDate: "today" };
 
-    // 3. GA access token + four reports in parallel
+    // 3. GA access token + reports in parallel
     const accessToken = await getGaAccessToken();
-    const [daily, pages, channels, devices, purchases] = await Promise.all([
+    const [daily, pages, channels, devices, purchases, countries, os, browsers] = await Promise.all([
       runReport(accessToken, propertyId, {
         dateRanges: [dateRange],
         dimensions: [{ name: "date" }],
@@ -168,6 +168,27 @@ export const fetchGaReport = action({
         orderBys: [{ dimension: { dimensionName: "date" } }],
         limit: 400,
       }),
+      runReport(accessToken, propertyId, {
+        dateRanges: [dateRange],
+        dimensions: [{ name: "country" }],
+        metrics: [{ name: "totalUsers" }],
+        orderBys: [{ metric: { metricName: "totalUsers" }, desc: true }],
+        limit: 8,
+      }),
+      runReport(accessToken, propertyId, {
+        dateRanges: [dateRange],
+        dimensions: [{ name: "operatingSystem" }],
+        metrics: [{ name: "sessions" }],
+        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+        limit: 6,
+      }),
+      runReport(accessToken, propertyId, {
+        dateRanges: [dateRange],
+        dimensions: [{ name: "browser" }],
+        metrics: [{ name: "sessions" }],
+        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+        limit: 6,
+      }),
     ]);
 
     const pick = (r: any, i: number): Array<{ dim: string; val: number }> =>
@@ -190,6 +211,9 @@ export const fetchGaReport = action({
       pages: pick(pages, 0).map((x, i) => ({ path: x.dim, views: x.val, sessions: pick(pages, 1)[i]?.val ?? 0 })),
       channels: pick(channels, 0).map((x) => ({ channel: x.dim, sessions: x.val })),
       devices: pick(devices, 0).map((x) => ({ device: x.dim, sessions: x.val })),
+      countries: pick(countries, 0).map((x) => ({ country: x.dim, users: x.val })),
+      os: pick(os, 0).map((x) => ({ os: x.dim, sessions: x.val })),
+      browsers: pick(browsers, 0).map((x) => ({ browser: x.dim, sessions: x.val })),
     };
   },
 });
