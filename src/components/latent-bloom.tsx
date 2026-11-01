@@ -16,7 +16,7 @@ import { useEffect, useRef } from "react";
 type Stage = "noise" | "logo" | "form" | "o";
 
 const DURATIONS: Record<Stage, number> = { noise: 1800, logo: 5000, form: 4500, o: 5200 };
-const N = 1500;
+const N = 2100;
 const INDIGO: [number, number, number] = [129, 140, 248];
 const VIOLET: [number, number, number] = [167, 139, 250];
 
@@ -61,7 +61,7 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
             if (a <= 128) continue;
             const r = data[i], g = data[i + 1], b = data[i + 2];
             const nearWhite = r > 232 && g > 232 && b > 232; // key out white JPG backgrounds
-            if (!nearWhite && Math.random() < 0.5) pts.push([x / w - 0.5, y / h - 0.5]);
+            if (!nearWhite && Math.random() < 0.8) pts.push([x / w - 0.5, y / h - 0.5]);
           }
         if (pts.length >= 40) logoPtsRef.current = pts;
       } catch {
@@ -100,8 +100,8 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
     addEventListener("pointerleave", onLeave);
 
     // ── shape targets (u in [0,1)) ──
-    const shapeO = (u: number): [number, number] => {
-      const R = Math.min(W, H) * 0.24, a = u * 2 * Math.PI;
+    const shapeO = (u: number, wobble = 0): [number, number] => {
+      const R = Math.min(W, H) * (0.24 + wobble), a = u * 2 * Math.PI;
       return [W / 2 + R * Math.cos(a), H / 2 + R * Math.sin(a)];
     };
     const shapeRidge = (u: number): [number, number] => {
@@ -164,7 +164,7 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
       ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = "lighter";
 
-      const logoScale = Math.min(W, H) * 0.5;
+      const logoScale = Math.min(W, H) * 0.56;
       for (const p of parts) {
         let tx: number, ty: number;
         if (stage === "logo" && logoPts) {
@@ -175,7 +175,8 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
           tx = W / 2 + Math.cos(p.u * 37 + now / 4000 + cycle) * W * 0.42;
           ty = H / 2 + Math.sin(p.u * 53 + now / 3400 + cycle) * H * 0.42;
         } else {
-          const [sx, sy] = shape!(p.u);
+          const wob = (p.tint - 0.5) * 0.028; // soften the ring so additive glow stays indigo
+          const [sx, sy] = stage === "o" ? shapeO(p.u, wob) : shape!(p.u);
           tx = sx; ty = sy;
         }
         p.vx += (tx - p.x) * 0.016 * g + (Math.random() - 0.5) * 1.15 * (1 - g);
@@ -187,7 +188,7 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
 
         // color: client brand during logo stage, else indigo/violet mix
         const c = stage === "logo" && brand ? brand : p.tint < 0.78 ? INDIGO : VIOLET;
-        const alpha = 0.30 + 0.38 * g + 0.10 * Math.sin(now / 650 + p.u * 9);
+        const alpha = 0.24 + 0.30 * g + 0.08 * Math.sin(now / 650 + p.u * 9);
         ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${alpha.toFixed(3)})`;
         const s = p.bright ? 2.6 : 1.5;
         ctx.beginPath();
