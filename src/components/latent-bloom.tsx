@@ -55,8 +55,14 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
         const data = c.getImageData(0, 0, w, h).data;
         const pts: Array<[number, number]> = [];
         for (let y = 0; y < h; y++)
-          for (let x = 0; x < w; x++)
-            if (data[(y * w + x) * 4 + 3] > 128 && Math.random() < 0.5) pts.push([x / w - 0.5, y / h - 0.5]);
+          for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4;
+            const a = data[i + 3];
+            if (a <= 128) continue;
+            const r = data[i], g = data[i + 1], b = data[i + 2];
+            const nearWhite = r > 232 && g > 232 && b > 232; // key out white JPG backgrounds
+            if (!nearWhite && Math.random() < 0.5) pts.push([x / w - 0.5, y / h - 0.5]);
+          }
         if (pts.length >= 40) logoPtsRef.current = pts;
       } catch {
         // CORS-tainted canvas or decode issue — logo stage silently skipped.
