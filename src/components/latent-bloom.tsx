@@ -7,16 +7,23 @@
  * known), their logo becomes a stage of the cycle — tinted with their
  * brand color — before the forms and the O.
  *
- * No portal data, no libraries. Canvas 2D, additive glow, cursor-reactive.
- * Static single render under prefers-reduced-motion.
+ * Motion design: particles are comets in flight (speed-proportional
+ * streaks) that settle into crisp dots; each departs on its own beat
+ * (staggered morphs); three depth layers give parallax; the O lands with
+ * a soft bloom pulse; the cursor leaves gentle vortices.
+ *
+ * No portal data, no libraries. Canvas 2D. Static single render under
+ * prefers-reduced-motion.
  */
 
 import { useEffect, useRef } from "react";
 
 type Stage = "noise" | "logo" | "form" | "o";
 
-const DURATIONS: Record<Stage, number> = { noise: 1800, logo: 5000, form: 4500, o: 5200 };
+const DURATIONS: Record<Stage, number> = { noise: 2000, logo: 6000, form: 5200, o: 6000 };
 const N = 2100;
+const EASE_MS = 1500;   // per-particle morph window (staggered within it)
+const STAGGER_MS = 900; // max per-particle departure delay
 const INDIGO: [number, number, number] = [129, 140, 248];
 const VIOLET: [number, number, number] = [167, 139, 250];
 
@@ -28,12 +35,31 @@ function hexToRgb(hex: string | null | undefined): [number, number, number] | nu
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
+/** hue jitter inside the palette — keeps the brand color dominant but alive */
+function jitter(c: [number, number, number], k: number): [number, number, number] {
+  const s = 1 + (k - 0.5) * 0.35;
+  return [
+    Math.min(255, c[0] * s),
+    Math.min(255, c[1] * s),
+    Math.min(255, c[2] * s * (1 + (k - 0.5) * 0.12)),
+  ];
+}
+
+interface P {
+  x: number; y: number; vx: number; vy: number;
+  u: number;       // stable parameter within a shape
+  depth: number;   // 0 = far, 1 = near
+  stagger: number; // 0..1 departure delay within a morph
+  hue: number;     // per-particle color variance
+  bright: boolean; // a few larger stars
+}
+
 export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | null; brandColor?: string | null }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const logoPtsRef = useRef<Array<[number, number]> | null>(null);
   const brandRgbRef = useRef<[number, number, number] | null>(null);
 
-  // Sample particle target points from the client logo (alpha channel).
+  // Sample particle target points from the client logo (alpha + background keying).
   useEffect(() => {
     logoPtsRef.current = null;
     if (!brandLogo) return;
@@ -61,9 +87,9 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
             if (a <= 128) continue;
             const r = data[i], g = data[i + 1], b = data[i + 2];
             const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-            if (mx > 232 && mn > 220) continue;          // white background
-            if (mx < 60) continue;                        // black background
-            if (mx - mn < 24 && mx < 90) continue;        // faint grey noise
+            if (mx > 232 && mn > 220) continue;   // white background
+            if (mx < 60) continue;                 // black background
+            if (mx - mn < 24 && mx < 90) continue; // faint grey noise
             if (Math.random() < 0.8) pts.push([x / w - 0.5, y / h - 0.5]);
           }
         if (pts.length >= 40) logoPtsRef.current = pts;
@@ -97,7 +123,12 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
 
     const hasLogo = () => logoPtsRef.current !== null;
     const mouse = { x: -9999, y: -9999 };
-    const onMove = (e: PointerEvent) => { mouse.x = e.clientX; mouse.y = e.clientY; };
+    // cursor coords relative to the canvas (it is the left half of the page)
+    const onMove = (e: PointerEvent) => {
+      const r = cv.getBoundingClientRect();
+      mouse.x = e.clientX - r.left;
+      mouse.y = e.clientY - r.top;
+    };
     const onLeave = () => { mouse.x = -9999; };
     addEventListener("pointermove", onMove);
     addEventListener("pointerleave", onLeave);
@@ -119,17 +150,20 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
     const FORMS = [shapeRidge, shapeLattice];
     let formIdx = 0;
 
-    interface P { x: number; y: number; vx: number; vy: number; u: number; bright: boolean; tint: number }
-    const rnd = () => Array.from({ length: N }, () => ({
+    const parts: P[] = Array.from({ length: N }, () => ({
       x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0,
-      u: Math.random(), bright: Math.random() > 0.94, tint: Math.random(),
-    })) as P[];
-    const parts: P[] = rnd();
+      u: Math.random(),
+      depth: Math.random(),
+      stagger: Math.random(),
+      hue: Math.random(),
+      bright: Math.random() > 0.94,
+    }));
 
     // ── stage machine ──
     let stage: Stage = "noise";
     let stageStart = performance.now();
     let cycle = 0;
+    let bloomPulseAt = 0; // timestamp when the O finishes landing
     const next = (): Stage => {
       if (stage === "noise") return hasLogo() ? "logo" : "form";
       if (stage === "logo") return "form";
@@ -141,34 +175,28 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
 
     let raf = 0;
     let last = performance.now();
-    const strength = (now: number) => {
-      const el = now - stageStart, d = DURATIONS[stage];
-      if (stage === "noise") return 0;
-      const inS = Math.min(1, el / 1400);                 // ease in
-      const outS = Math.min(1, Math.max(0, (d - el) / 1400)); // ease out
-      return Math.min(inS, outS);
-    };
 
     const draw = (now: number) => {
-      const dt = Math.min(32, now - last) / 1000; last = now;
-      const d = DURATIONS[stage];
-      if (now - stageStart > d) { stage = next(); stageStart = now; }
-
-      const g = strength(now);
+      if (now - stageStart > DURATIONS[stage]) { stage = next(); stageStart = now; }
+      const stageAge = now - stageStart;
       const logoPts = logoPtsRef.current;
       const brand = brandRgbRef.current;
-      const shape =
-        stage === "o" ? shapeO
-        : stage === "form" ? FORMS[formIdx]
-        : stage === "logo" && logoPts ? null // logo uses per-particle pts
-        : shapeO; // fallback during noise
+      const logoScale = Math.min(W, H) * 0.56;
+
+      // the O lands — arm the bloom pulse once fully settled
+      if (stage === "o" && stageAge > EASE_MS + STAGGER_MS && !bloomPulseAt) bloomPulseAt = now;
 
       ctx.fillStyle = "rgba(10,10,11,0.25)";
       ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = "lighter";
 
-      const logoScale = Math.min(W, H) * 0.56;
       for (const p of parts) {
+        // per-particle morph progress: each departs on its own beat
+        const t0 = p.stagger * STAGGER_MS;
+        const g = stage === "noise"
+          ? 0
+          : Math.min(1, Math.max(0, (stageAge - t0) / EASE_MS));
+
         let tx: number, ty: number;
         if (stage === "logo" && logoPts) {
           const q = logoPts[Math.floor(p.u * logoPts.length) % logoPts.length];
@@ -177,34 +205,76 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
         } else if (stage === "noise") {
           tx = W / 2 + Math.cos(p.u * 37 + now / 4000 + cycle) * W * 0.42;
           ty = H / 2 + Math.sin(p.u * 53 + now / 3400 + cycle) * H * 0.42;
+        } else if (stage === "o") {
+          const wob = (p.hue - 0.5) * 0.028;
+          [tx, ty] = shapeO(p.u, wob);
         } else {
-          const wob = (p.tint - 0.5) * 0.028; // soften the ring so additive glow stays indigo
-          const [sx, sy] = stage === "o" ? shapeO(p.u, wob) : shape!(p.u);
-          tx = sx; ty = sy;
+          [tx, ty] = FORMS[formIdx](p.u);
         }
-        p.vx += (tx - p.x) * 0.016 * g + (Math.random() - 0.5) * 1.15 * (1 - g);
-        p.vy += (ty - p.y) * 0.016 * g + (Math.random() - 0.5) * 1.15 * (1 - g);
+
+        // depth-scaled spring toward target + diffusion noise
+        const spring = 0.016 * (0.55 + p.depth * 0.45);
+        p.vx += (tx - p.x) * spring * g + (Math.random() - 0.5) * 1.15 * (1 - g);
+        p.vy += (ty - p.y) * spring * g + (Math.random() - 0.5) * 1.15 * (1 - g);
+
+        // cursor: repulsion + a gentle vortex in the wake
         const dx = p.x - mouse.x, dy = p.y - mouse.y, d2 = dx * dx + dy * dy;
-        if (d2 < 15000) { const dd = Math.sqrt(d2) || 1, f = ((15000 - d2) / 15000) * 3.4; p.vx += (dx / dd) * f; p.vy += (dy / dd) * f; }
+        if (d2 < 15000) {
+          const d = Math.sqrt(d2) || 1, f = ((15000 - d2) / 15000) * 3.4;
+          p.vx += (dx / d) * f - (dy / d) * f * 0.55;
+          p.vy += (dy / d) * f + (dx / d) * f * 0.55;
+        }
         p.vx *= 0.86; p.vy *= 0.86;
         p.x += p.vx; p.y += p.vy;
 
-        // color: client brand during logo stage, else indigo/violet mix
-        const c = stage === "logo" && brand ? brand : p.tint < 0.78 ? INDIGO : VIOLET;
-        const alpha = 0.24 + 0.30 * g + 0.08 * Math.sin(now / 650 + p.u * 9);
-        ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${alpha.toFixed(3)})`;
-        const s = p.bright ? 2.6 : 1.5;
+        // color: client brand during logo stage; indigo family otherwise
+        const base = stage === "logo" && brand ? brand : p.hue < 0.78 ? INDIGO : VIOLET;
+        const c = jitter(base, p.hue);
+        const depthA = 0.35 + p.depth * 0.65;
+        const alpha = (0.22 + 0.30 * g + 0.08 * Math.sin(now / 650 + p.u * 9)) * depthA;
+        const size = (p.bright ? 2.4 : 1.5) * (0.55 + p.depth * 0.45);
+
+        const speed = Math.hypot(p.vx, p.vy);
+        if (speed > 1.6) {
+          // comet: streak grows with speed, round caps
+          const k = Math.min(7, speed * 1.35);
+          ctx.strokeStyle = `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${alpha.toFixed(3)})`;
+          ctx.lineWidth = size;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(p.x - p.vx * k, p.y - p.vy * k);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${alpha.toFixed(3)})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, size * 0.75, 0, 6.2832);
+          ctx.fill();
+        }
+      }
+
+      // the O's landing bloom: one soft ring of light, fades in ~1.1s
+      if (bloomPulseAt && now - bloomPulseAt < 1100) {
+        const t = (now - bloomPulseAt) / 1100;
+        const R = Math.min(W, H) * (0.24 + t * 0.16);
+        const grad = ctx.createRadialGradient(W / 2, H / 2, R * 0.72, W / 2, H / 2, R);
+        grad.addColorStop(0, "rgba(129,140,248,0)");
+        grad.addColorStop(0.82, `rgba(129,140,248,${(0.20 * (1 - t)).toFixed(3)})`);
+        grad.addColorStop(1, "rgba(129,140,248,0)");
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, s * 0.75, 0, 6.2832);
+        ctx.arc(W / 2, H / 2, R, 0, 6.2832);
         ctx.fill();
       }
+      if (stage !== "o") bloomPulseAt = 0;
+
       ctx.globalCompositeOperation = "source-over";
       if (!reduced) raf = requestAnimationFrame(draw);
     };
 
     if (reduced) {
       // static composition: the O, once
-      stage = "o"; stageStart = -1e9;
+      stage = "o"; stageStart = -1e9; bloomPulseAt = 0;
       draw(performance.now() + DURATIONS.o);
     } else {
       raf = requestAnimationFrame(draw);
