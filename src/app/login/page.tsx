@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Palette, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { AtelierPulse } from "@/components/atelier-pulse";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -95,7 +96,7 @@ export default function LoginPage() {
                     <button
                       key={i}
                       onClick={() => setGalleryIdx(i)}
-                      className={`h-1 rounded-full transition-all ${i === galleryIdx ? "w-8 bg-[#1B1B1F]/80" : "w-3 bg-[#1B1B1F]/25"}`}
+                      className={`h-1 rounded-full transition-all ${i === galleryIdx ? "w-8 bg-white/80" : "w-3 bg-white/25"}`}
                     />
                   ))}
                 </div>
@@ -103,16 +104,8 @@ export default function LoginPage() {
             </div>
           </>
         ) : (
-          /* Default: studio noir gradient with oversized O */
-          <div className="absolute inset-0 bg-gradient-to-br from-[#111114] via-[#0A0A0B] to-[#15121f]">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none">
-              <span className="font-display text-[280px] font-black leading-none text-white/[0.04]">O</span>
-            </div>
-            <div className="absolute bottom-8 left-8 right-8">
-              <p className="font-display text-lg font-semibold text-white/90">Oookea</p>
-              <p className="mt-1 text-xs text-white/40">Digital Atelier</p>
-            </div>
-          </div>
+          /* Default: the Atelier Pulse — live portal data as orbiting nodes */
+          <AtelierPulse />
         )}
       </div>
 
