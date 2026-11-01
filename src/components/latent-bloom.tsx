@@ -60,8 +60,11 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
             const a = data[i + 3];
             if (a <= 128) continue;
             const r = data[i], g = data[i + 1], b = data[i + 2];
-            const nearWhite = r > 232 && g > 232 && b > 232; // key out white JPG backgrounds
-            if (!nearWhite && Math.random() < 0.8) pts.push([x / w - 0.5, y / h - 0.5]);
+            const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+            if (mx > 232 && mn > 220) continue;          // white background
+            if (mx < 60) continue;                        // black background
+            if (mx - mn < 24 && mx < 90) continue;        // faint grey noise
+            if (Math.random() < 0.8) pts.push([x / w - 0.5, y / h - 0.5]);
           }
         if (pts.length >= 40) logoPtsRef.current = pts;
       } catch {
