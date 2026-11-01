@@ -7,10 +7,9 @@
  * known), their logo becomes a stage of the cycle — tinted with their
  * brand color — before the forms and the O.
  *
- * Motion design: particles are comets in flight (speed-proportional
- * streaks) that settle into crisp dots; each departs on its own beat
- * (staggered morphs); three depth layers give parallax; the O lands with
- * a soft bloom pulse; the cursor leaves gentle vortices.
+ * Motion design: each particle departs on its own beat (staggered
+ * morphs); depth layers give parallax; the O lands with a soft bloom
+ * pulse; the cursor leaves gentle vortices.
  *
  * No portal data, no libraries. Canvas 2D. Static single render under
  * prefers-reduced-motion.
@@ -234,23 +233,10 @@ export function LatentBloom({ brandLogo, brandColor }: { brandLogo?: string | nu
         const alpha = (0.22 + 0.30 * g + 0.08 * Math.sin(now / 650 + p.u * 9)) * depthA;
         const size = (p.bright ? 2.4 : 1.5) * (0.55 + p.depth * 0.45);
 
-        const speed = Math.hypot(p.vx, p.vy);
-        if (speed > 1.6) {
-          // comet: streak grows with speed, round caps
-          const k = Math.min(7, speed * 1.35);
-          ctx.strokeStyle = `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${alpha.toFixed(3)})`;
-          ctx.lineWidth = size;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.moveTo(p.x - p.vx * k, p.y - p.vy * k);
-          ctx.lineTo(p.x, p.y);
-          ctx.stroke();
-        } else {
-          ctx.fillStyle = `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${alpha.toFixed(3)})`;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, size * 0.75, 0, 6.2832);
-          ctx.fill();
-        }
+        ctx.fillStyle = `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${alpha.toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size * 0.75, 0, 6.2832);
+        ctx.fill();
       }
 
       // the O's landing bloom: one soft ring of light, fades in ~1.1s
