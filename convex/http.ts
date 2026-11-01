@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { internal, api } from "./_generated/api";
 
 // ─── Mission Control HTTP endpoints (Convex site) ─────────────────
 //   POST /webhook/:provider    — Netlify/Stripe/GitHub-style pushes (secret header)
@@ -148,5 +148,38 @@ http.route({
   method: "POST",
   handler: heartbeatHandler,
 });
+
+// ─── Client Analytics proxy ─────────────────────────────────────────
+//   POST /ga  {token, propertyId, days} — session-scoped GA4 report
+//   for client Analytics modules (see convex/ga.ts). Proxied from the
+//   Next.js app at /api/ga so browsers stay same-origin.
+const gaHandler = httpAction(async (ctx, req) => {
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "method-not-allowed" }), {
+      status: 405,
+      headers: { "content-type": "application/json" },
+    });
+  }
+  try {
+    const body = (await req.json()) as { token?: string; propertyId?: string; days?: number };
+    const report = await ctx.runAction(api.ga.fetchGaReport as never, {
+      token: body.token ?? "",
+      propertyId: body.propertyId ?? "",
+      days: body.days ?? 7,
+    } as never);
+    return new Response(JSON.stringify(report), {
+      status: 200,
+      headers: { "content-type": "application/json", "cache-control": "no-store" },
+    });
+  } catch (err: any) {
+    const msg = String(err?.message ?? err);
+    const status = msg.includes("unauthorized") ? 401 : msg.includes("forbidden") ? 403 : 502;
+    return new Response(JSON.stringify({ error: msg }), {
+      status,
+      headers: { "content-type": "application/json" },
+    });
+  }
+});
+http.route({ pathPrefix: "/ga/", method: "POST", handler: gaHandler });
 
 export default http;

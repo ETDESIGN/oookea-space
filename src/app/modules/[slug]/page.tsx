@@ -11,6 +11,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { VaultDashboard } from "@/components/vault/vault-dashboard";
+import { GaDashboard } from "@/components/analytics/ga-dashboard";
 
 type ModuleStatus = "Active" | "Beta" | "Coming Soon";
 
@@ -76,6 +77,8 @@ export default function ModuleDetailPage() {
 
   // Special rendering for vault-type modules
   const isVaultModule = mod.slug === "inerys-vault" || mod.config?.type === "vault";
+  // Analytics modules render the live GA dashboard
+  const isAnalyticsModule = mod.config?.type === "analytics";
 
   return (
     <ProtectedRoute>
@@ -96,6 +99,8 @@ export default function ModuleDetailPage() {
           {/* Vault Module — full custom dashboard */}
           {isVaultModule ? (
             <VaultDashboard config={mod.config as any} />
+          ) : isAnalyticsModule ? (
+            <GaDashboard module={mod as any} />
           ) : (
             <>
               {/* Standard Module Info Card */}

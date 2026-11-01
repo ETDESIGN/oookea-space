@@ -21,6 +21,7 @@ import type * as caseStudies from "../caseStudies.js";
 import type * as clients from "../clients.js";
 import type * as crons from "../crons.js";
 import type * as files from "../files.js";
+import type * as ga from "../ga.js";
 import type * as heartbeats from "../heartbeats.js";
 import type * as http from "../http.js";
 import type * as incidents from "../incidents.js";
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   clients: typeof clients;
   crons: typeof crons;
   files: typeof files;
+  ga: typeof ga;
   heartbeats: typeof heartbeats;
   http: typeof http;
   incidents: typeof incidents;
